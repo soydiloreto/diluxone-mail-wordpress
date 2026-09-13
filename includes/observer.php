@@ -53,7 +53,8 @@ function diluxone_mail_known_mailers(): array {
  * this there would be no way of saying who it was.
  *
  * @param mixed $callback The callback exactly as it sits in $wp_filter.
- * @return array{file: string, plugin: string, name: string}
+ * @return array{file: string, plugin: string, name: string, known: bool}
+ *         known: it is one of the mail plugins named in the list above.
  *         plugin: the folder inside wp-content/plugins, or '' if not a plugin.
  */
 function diluxone_mail_callback_origin( $callback ): array {
@@ -79,11 +80,13 @@ function diluxone_mail_callback_origin( $callback ): array {
 		$plugin = (string) strtok( substr( $file, strlen( $plugins ) ), '/' );
 	}
 
-	$name = $plugin;
+	$name  = $plugin;
+	$known = false;
 
 	foreach ( diluxone_mail_known_mailers() as $basename => $pretty ) {
 		if ( '' !== $plugin && 0 === strpos( $basename, $plugin . '/' ) ) {
-			$name = $pretty;
+			$name  = $pretty;
+			$known = true;
 			break;
 		}
 	}
@@ -92,13 +95,14 @@ function diluxone_mail_callback_origin( $callback ): array {
 		'file'   => $file,
 		'plugin' => $plugin,
 		'name'   => $name,
+		'known'  => $known,
 	);
 }
 
 /**
  * Who is hooked into a hook, this plugin aside.
  *
- * @return array<int, array{file: string, plugin: string, name: string, priority: int, callback: mixed}>
+ * @return array<int, array{file: string, plugin: string, name: string, known: bool, priority: int, callback: mixed}>
  */
 function diluxone_mail_hook_origins( string $hook ): array {
 	global $wp_filter;
@@ -147,7 +151,7 @@ function diluxone_mail_hook_origins( string $hook ): array {
  * and the result does not change while the page loads. $fresh rebuilds it,
  * for use right after detaching somebody.
  *
- * @return array<int, array{name: string, plugin: string, how: string}>
+ * @return array<int, array{name: string, plugin: string, known: bool, how: string}>
  */
 function diluxone_mail_other_mailers( bool $fresh = false ): array {
 	static $cache = null;
@@ -172,6 +176,7 @@ function diluxone_mail_other_mailers( bool $fresh = false ): array {
 			$seen[ '' !== $origin['plugin'] ? $origin['plugin'] : $file ] = array(
 				'name'   => '' !== $origin['name'] ? $origin['name'] : basename( $file ),
 				'plugin' => $origin['plugin'],
+				'known'  => $origin['known'],
 				'how'    => 'wp_mail',
 			);
 		}
@@ -188,6 +193,7 @@ function diluxone_mail_other_mailers( bool $fresh = false ): array {
 			$seen[ $key ] = array(
 				'name'   => '' !== $origin['name'] ? $origin['name'] : basename( $origin['file'] ),
 				'plugin' => $origin['plugin'],
+				'known'  => $origin['known'],
 				'how'    => $hook,
 			);
 		}
@@ -196,11 +202,41 @@ function diluxone_mail_other_mailers( bool $fresh = false ): array {
 	/**
 	 * Filters the list of plugins detected as handling the mail.
 	 *
-	 * @param array<int, array{name: string, plugin: string, how: string}> $mailers
+	 * @param array<int, array{name: string, plugin: string, known: bool, how: string}> $mailers
 	 */
 	$cache = (array) apply_filters( 'diluxone_mail_other_mailers', array_values( $seen ) );
 
 	return $cache;
+}
+
+/**
+ * The ones that actually take delivery away.
+ *
+ * Being hooked into the mail is not the same as owning it, and the difference
+ * decides whether this plugin steps aside.
+ *
+ * Replacing `wp_mail()` or returning from `pre_wp_mail` ends the send:
+ * whatever this plugin configures afterwards is never reached. A mail plugin
+ * we know by name owns delivery too, whichever hook it uses — WP Mail SMTP
+ * and FluentSMTP do their work from `phpmailer_init` and they are unambiguously
+ * the transport of that site.
+ *
+ * What is left is an unknown callback on `phpmailer_init`, and that one is not
+ * a competitor: it is a snippet adding a Reply-To, or a development mu-plugin
+ * pointing PHPMailer at a local mailbox. This plugin configures the mailer at
+ * priority 999, after everybody, so it wins anyway — and treating those as
+ * "somebody else is handling the mail" meant stepping aside for a fight
+ * already won, and refusing to set the sender while doing it.
+ *
+ * @return array<int, array{name: string, plugin: string, known: bool, how: string}>
+ */
+function diluxone_mail_mailers_delivering(): array {
+	return array_values(
+		array_filter(
+			diluxone_mail_other_mailers(),
+			static fn( array $mailer ): bool => (bool) $mailer['known'] || in_array( $mailer['how'], array( 'wp_mail', 'pre_wp_mail' ), true )
+		)
+	);
 }
 
 /**
@@ -220,7 +256,7 @@ function diluxone_mail_transport_active(): bool {
 		return true;
 	}
 
-	return array() === diluxone_mail_other_mailers();
+	return array() === diluxone_mail_mailers_delivering();
 }
 
 /**
@@ -234,7 +270,7 @@ function diluxone_mail_observer_notice(): void {
 		return;
 	}
 
-	$others = diluxone_mail_other_mailers();
+	$others = diluxone_mail_mailers_delivering();
 
 	if ( array() === $others ) {
 		return;
@@ -268,7 +304,7 @@ function diluxone_mail_take_over(): void {
 
 	diluxone_mail_save_options( array( 'diluxone_mail_mode' => 'transport' ) );
 
-	wp_safe_redirect( diluxone_mail_admin_url( 'diluxone-mail', array( 'diluxone_mail_done' => 'took-over' ) ) );
+	wp_safe_redirect( diluxone_mail_tab_url( 'sending', 'site', array( 'diluxone_mail_done' => 'took-over' ) ) );
 	exit;
 }
 add_action( 'admin_post_diluxone_mail_take_over', 'diluxone_mail_take_over' );
