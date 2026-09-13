@@ -27,7 +27,12 @@ The PHP `Version:` header in `diluxone-mail.php` and the `DILUXONE_MAIL_VERSION`
 
 Why: a developer who clones `main` between releases sees `1.2.0-dev` and immediately knows they're not looking at the published version. Without the suffix, the same clone would show `1.2.0` indistinguishable from the actual published release.
 
-The CI version-alignment rule strips the suffix from the PHP `Version:` header before comparing it to `Stable tag:` so this asymmetry is allowed mid-development. At tag time the suffix is gone and the two values must match exactly — `make release` runs the same check locally.
+The CI version-alignment rule reads the suffix as a statement of intent rather than comparing the two values blindly:
+
+- **With** a pre-release suffix, this is work in progress, so the base version only has to be **at or ahead of** `Stable tag:`. `1.1.0-dev` alongside a published `1.0.0` is the normal state of `main`. Falling *behind* fails — it would mean the plugin claims to be building something wp.org already serves.
+- **Without** a suffix, a release is being prepared and all three markers must agree exactly. `deploy.yml` re-checks the same thing against the git tag.
+
+`make release` runs the strict half locally.
 
 Accepted pre-release suffixes are `-dev`, `-alpha`, `-beta`, `-rc` (optionally followed by `.N`).
 
@@ -41,14 +46,14 @@ Once the work for the next version is merged into `main` and CI is green:
    git pull
    make release        # full quality gate + version-alignment dry-run
    ```
-   `make release` will fail if PHP `Version:` (after stripping `-dev`) and readme `Stable tag:` don't match. Don't push the tag if it complains.
+   `make release` is the strict half: it fails if `Version:` still carries a pre-release suffix (you are not at a release state yet), and it fails if the three markers — PHP `Version:`, `DILUXONE_MAIL_VERSION`, readme `Stable tag:` — don't all read the same. Don't push the tag if it complains.
 
 2. **Open a release-prep PR.** Branch name: `chore/release-X.Y.Z`. The PR does three things:
    - Drops the `-dev` suffix in `diluxone-mail.php` (the `Version:` header **and** the `DILUXONE_MAIL_VERSION` constant).
    - Updates `readme.txt`: `Stable tag:` to the new version, and adds a `= X.Y.Z =` block under `== Changelog ==` summarising user-visible changes.
    - That's it. No code changes — anything that needed code change went in earlier PRs.
 
-3. **Wait for CI to pass on the release-prep PR.** Same gates as any other PR. Notably, this is when the strict `version-alignment` step (`pr-checks.yml`) catches mismatches — `make release` should already have caught them.
+3. **Wait for CI to pass on the release-prep PR.** Same gates as any other PR. Notably, this is when the `readme-validation` job in `pr-checks.yml` switches to its strict half — no suffix means a release is being prepared — and catches mismatches `make release` should already have caught.
 
 4. **Merge** the release-prep PR (squash, as usual).
 

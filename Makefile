@@ -230,16 +230,19 @@ deploy-test: ## Copy the working tree into a real site for manual smoke-testing.
 release: check ## Pre-release validation: full quality gate + version-alignment dry-run.
 	@echo "── version alignment check ─────────────────────────────"
 	@PHP_VERSION=$$(grep -E '^[[:space:]]*\*[[:space:]]*Version:' diluxone-mail.php | head -1 | sed -E 's/.*Version:[[:space:]]*//'); \
+	 DEFINE_VERSION=$$(grep -E "DILUXONE_MAIL_VERSION'," diluxone-mail.php | head -1 | sed -E "s/.*DILUXONE_MAIL_VERSION',[[:space:]]*'([^']+)'.*/\1/"); \
 	 STABLE_TAG=$$(grep -E '^Stable tag:' readme.txt | sed -E 's/Stable tag:[[:space:]]*//'); \
 	 PHP_BASE=$$(echo $$PHP_VERSION | sed -E 's/-(dev|alpha|beta|rc).*$$//'); \
 	 echo "  PHP header Version : $$PHP_VERSION"; \
-	 echo "  PHP base (no -dev) : $$PHP_BASE"; \
+	 echo "  PHP constant       : $$DEFINE_VERSION"; \
 	 echo "  readme Stable tag  : $$STABLE_TAG"; \
-	 if [ "$$PHP_BASE" = "$$STABLE_TAG" ]; then \
-	   echo "  → match ✔"; \
-	 else \
-	   echo "  → MISMATCH ✗ (PHP base must equal readme Stable tag at tag time)"; exit 1; \
-	 fi
+	 if [ "$$PHP_VERSION" != "$$PHP_BASE" ]; then \
+	   echo "  → NOT A RELEASE STATE ✗ (Version still carries a pre-release suffix; the release-prep PR drops it)"; exit 1; \
+	 fi; \
+	 if [ "$$PHP_VERSION" != "$$DEFINE_VERSION" ] || [ "$$PHP_VERSION" != "$$STABLE_TAG" ]; then \
+	   echo "  → MISMATCH ✗ (Version, DILUXONE_MAIL_VERSION and Stable tag must all read the same when tagging)"; exit 1; \
+	 fi; \
+	 echo "  → match ✔"
 	@echo "✔ Ready to tag."
 
 # -- Cleanup -----------------------------------------------------------
