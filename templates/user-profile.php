@@ -1,6 +1,6 @@
 <?php
 /**
- * La sección del historial en la ficha de una persona.
+ * The log section on a person's profile.
  *
  * @package DiluxOneMail
  * @var array<string, mixed> $data
@@ -18,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
 <p class="description">
 	<?php
 	printf(
-		/* translators: 1: cantidad, 2: direcciones */
+		/* translators: 1: count, 2: addresses */
 		esc_html( _n( '%1$d message to %2$s.', '%1$d messages to %2$s.', (int) $data['total'], 'diluxone-mail' ) ),
 		(int) $data['total'],
 		'<code>' . esc_html( implode( '</code>, <code>', array_map( 'esc_html', $data['emails'] ) ) ) . '</code>'
@@ -46,24 +46,24 @@ defined( 'ABSPATH' ) || exit;
 			</tr>
 		</thead>
 		<tbody>
-			<?php foreach ( $data['rows'] as $diluxone_mail_fila ) : ?>
-				<?php $diluxone_mail_estado = (string) $diluxone_mail_fila['status']; ?>
+			<?php foreach ( $data['rows'] as $diluxone_mail_row ) : ?>
+				<?php $diluxone_mail_status = (string) $diluxone_mail_row['status']; ?>
 				<tr>
-					<td><?php echo esc_html( get_date_from_gmt( (string) $diluxone_mail_fila['sent_at'], (string) get_option( 'date_format' ) . ' ' . (string) get_option( 'time_format' ) ) ); ?></td>
-					<td><?php echo esc_html( '' !== (string) $diluxone_mail_fila['subject'] ? (string) $diluxone_mail_fila['subject'] : __( '(no subject)', 'diluxone-mail' ) ); ?></td>
+					<td><?php echo esc_html( get_date_from_gmt( (string) $diluxone_mail_row['sent_at'], (string) get_option( 'date_format' ) . ' ' . (string) get_option( 'time_format' ) ) ); ?></td>
+					<td><?php echo esc_html( '' !== (string) $diluxone_mail_row['subject'] ? (string) $diluxone_mail_row['subject'] : __( '(no subject)', 'diluxone-mail' ) ); ?></td>
 					<td>
-						<span class="diluxone-mail-status diluxone-mail-status--<?php echo esc_attr( $diluxone_mail_estado ); ?>"><?php echo esc_html( (string) ( $data['statuses'][ $diluxone_mail_estado ] ?? $diluxone_mail_estado ) ); ?></span>
-						<?php if ( '' !== (string) $diluxone_mail_fila['error'] ) : ?>
-							<br><code><?php echo esc_html( (string) $diluxone_mail_fila['error'] ); ?></code>
+						<span class="diluxone-mail-status diluxone-mail-status--<?php echo esc_attr( $diluxone_mail_status ); ?>"><?php echo esc_html( (string) ( $data['statuses'][ $diluxone_mail_status ] ?? $diluxone_mail_status ) ); ?></span>
+						<?php if ( '' !== (string) $diluxone_mail_row['error'] ) : ?>
+							<br><code><?php echo esc_html( (string) $diluxone_mail_row['error'] ); ?></code>
 						<?php endif; ?>
 					</td>
 					<?php if ( $data['multisite'] ) : ?>
-						<?php $diluxone_mail_sitio = get_site( (int) $diluxone_mail_fila['site_id'] ); ?>
-						<td><?php echo esc_html( $diluxone_mail_sitio instanceof WP_Site ? (string) $diluxone_mail_sitio->blogname : (string) $diluxone_mail_fila['site_id'] ); ?></td>
+						<?php $diluxone_mail_site = get_site( (int) $diluxone_mail_row['site_id'] ); ?>
+						<td><?php echo esc_html( $diluxone_mail_site instanceof WP_Site ? (string) $diluxone_mail_site->blogname : (string) $diluxone_mail_row['site_id'] ); ?></td>
 					<?php endif; ?>
 					<td>
 						<?php if ( $data['log_body'] ) : ?>
-							<a class="button button-small" href="<?php echo esc_url( diluxone_mail_resend_url( (int) $diluxone_mail_fila['id'] ) ); ?>"><?php esc_html_e( 'Resend', 'diluxone-mail' ); ?></a>
+							<a class="button button-small" href="<?php echo esc_url( diluxone_mail_resend_url( (int) $diluxone_mail_row['id'] ) ); ?>"><?php esc_html_e( 'Resend', 'diluxone-mail' ); ?></a>
 						<?php endif; ?>
 					</td>
 				</tr>

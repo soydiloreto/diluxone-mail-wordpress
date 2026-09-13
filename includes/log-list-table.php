@@ -1,13 +1,13 @@
 <?php
 /**
- * La tabla del historial global.
+ * The global log table.
  *
- * Es la única clase del plugin, y es porque WP_List_Table es una clase: la
- * paginación, los filtros y el aspecto de las tablas del escritorio salen de
- * extenderla, y reescribirlos en funciones sería copiar WordPress.
+ * It is the plugin's only class, and that is because WP_List_Table is a
+ * class: pagination, filters and the look of dashboard tables all come from
+ * extending it, and rewriting them in functions would be copying WordPress.
  *
- * Se carga a demanda desde admin-log.php, y no con el resto de includes/,
- * porque WP_List_Table sólo existe en el escritorio.
+ * It is loaded on demand from admin-log.php, and not with the rest of
+ * includes/, because WP_List_Table only exists in the dashboard.
  *
  * @package DiluxOneMail
  */
@@ -19,7 +19,7 @@ if ( ! class_exists( 'WP_List_Table' ) ) {
 }
 
 /**
- * La lista.
+ * The list.
  */
 class DiluxOne_Mail_Log_Table extends WP_List_Table {
 
@@ -35,12 +35,12 @@ class DiluxOne_Mail_Log_Table extends WP_List_Table {
 	}
 
 	/**
-	 * Las columnas.
+	 * The columns.
 	 *
 	 * @return array<string, string>
 	 */
 	public function get_columns(): array {
-		$columnas = array(
+		$columns = array(
 			'sent_at'  => __( 'Date', 'diluxone-mail' ),
 			'email'    => __( 'To', 'diluxone-mail' ),
 			'subject'  => __( 'Subject', 'diluxone-mail' ),
@@ -50,38 +50,38 @@ class DiluxOne_Mail_Log_Table extends WP_List_Table {
 		);
 
 		if ( is_multisite() && is_super_admin() ) {
-			$columnas['site_id'] = __( 'Site', 'diluxone-mail' );
+			$columns['site_id'] = __( 'Site', 'diluxone-mail' );
 		}
 
-		return $columnas;
+		return $columns;
 	}
 
-	/** Los datos de la página actual. */
+	/** The current page's data. */
 	public function prepare_items(): void {
-		$por_pagina = 30;
+		$per_page = 30;
 
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Filtros de lectura de una lista; no cambian nada.
-		$estado = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : '';
-		$busca  = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
-		$todos  = isset( $_GET['all'] ) && is_multisite() && is_super_admin();
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only filters of a list; they change nothing.
+		$status    = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : '';
+		$search    = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
+		$all_sites = isset( $_GET['all'] ) && is_multisite() && is_super_admin();
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		$consulta = diluxone_mail_log_query(
+		$query = diluxone_mail_log_query(
 			array(
-				'status'   => $estado,
-				'search'   => $busca,
-				'site_id'  => $todos ? null : get_current_blog_id(),
+				'status'   => $status,
+				'search'   => $search,
+				'site_id'  => $all_sites ? null : get_current_blog_id(),
 				'page'     => $this->get_pagenum(),
-				'per_page' => $por_pagina,
+				'per_page' => $per_page,
 			)
 		);
 
-		$this->items = $consulta['rows'];
+		$this->items = $query['rows'];
 
 		$this->set_pagination_args(
 			array(
-				'total_items' => $consulta['total'],
-				'per_page'    => $por_pagina,
+				'total_items' => $query['total'],
+				'per_page'    => $per_page,
 			)
 		);
 
@@ -89,7 +89,7 @@ class DiluxOne_Mail_Log_Table extends WP_List_Table {
 	}
 
 	/**
-	 * Una celda cualquiera.
+	 * Any cell.
 	 *
 	 * @param array<string, mixed> $item
 	 */
@@ -98,19 +98,19 @@ class DiluxOne_Mail_Log_Table extends WP_List_Table {
 			case 'sent_at':
 				return esc_html( get_date_from_gmt( (string) $item['sent_at'], (string) get_option( 'date_format' ) . ' ' . (string) get_option( 'time_format' ) ) );
 			case 'status':
-				$estados = diluxone_mail_log_statuses();
-				$estado  = (string) $item['status'];
-				$texto   = $estados[ $estado ] ?? $estado;
+				$statuses = diluxone_mail_log_statuses();
+				$status   = (string) $item['status'];
+				$text     = $statuses[ $status ] ?? $status;
 
-				if ( 'failed' === $estado && '' !== (string) $item['error'] ) {
-					$texto .= ' — ' . (string) $item['error'];
+				if ( 'failed' === $status && '' !== (string) $item['error'] ) {
+					$text .= ' — ' . (string) $item['error'];
 				}
 
-				if ( 'intercepted' === $estado && '' !== (string) $item['response'] ) {
-					$texto .= ' — ' . (string) $item['response'];
+				if ( 'intercepted' === $status && '' !== (string) $item['response'] ) {
+					$text .= ' — ' . (string) $item['response'];
 				}
 
-				return sprintf( '<span class="diluxone-mail-status diluxone-mail-status--%s">%s</span>', esc_attr( $estado ), esc_html( $texto ) );
+				return sprintf( '<span class="diluxone-mail-status diluxone-mail-status--%s">%s</span>', esc_attr( $status ), esc_html( $text ) );
 			case 'provider':
 				$key = (string) $item['provider'];
 
@@ -122,38 +122,38 @@ class DiluxOne_Mail_Log_Table extends WP_List_Table {
 			case 'source':
 				return esc_html( str_replace( array( 'plugin:', 'theme:' ), '', (string) $item['source'] ) );
 			case 'site_id':
-				$sitio = get_site( (int) $item['site_id'] );
+				$site = get_site( (int) $item['site_id'] );
 
-				return esc_html( $sitio instanceof WP_Site ? (string) $sitio->blogname : (string) $item['site_id'] );
+				return esc_html( $site instanceof WP_Site ? (string) $site->blogname : (string) $item['site_id'] );
 			default:
 				return esc_html( (string) ( $item[ $column_name ] ?? '' ) );
 		}
 	}
 
 	/**
-	 * El asunto, con las acciones de la fila.
+	 * The subject, with the row's actions.
 	 *
 	 * @param array<string, mixed> $item
 	 */
 	protected function column_subject( $item ): string {
-		$id       = (int) $item['id'];
-		$acciones = array(
+		$id      = (int) $item['id'];
+		$actions = array(
 			'view'   => sprintf( '<a href="%s">%s</a>', esc_url( diluxone_mail_admin_url( 'diluxone-mail-log', array( 'view' => $id ) ) ), esc_html__( 'Details', 'diluxone-mail' ) ),
 			'resend' => sprintf( '<a href="%s">%s</a>', esc_url( diluxone_mail_resend_url( $id ) ), esc_html__( 'Resend', 'diluxone-mail' ) ),
 		);
 
-		$asunto = (string) $item['subject'];
+		$subject = (string) $item['subject'];
 
 		return sprintf(
 			'<strong><a href="%s">%s</a></strong>%s',
 			esc_url( diluxone_mail_admin_url( 'diluxone-mail-log', array( 'view' => $id ) ) ),
-			esc_html( '' !== $asunto ? $asunto : __( '(no subject)', 'diluxone-mail' ) ),
-			$this->row_actions( $acciones )
+			esc_html( '' !== $subject ? $subject : __( '(no subject)', 'diluxone-mail' ) ),
+			$this->row_actions( $actions )
 		);
 	}
 
 	/**
-	 * El destinatario, con el tipo si no es «para».
+	 * The recipient, with the kind when it is not "to".
 	 *
 	 * @param array<string, mixed> $item
 	 */
@@ -164,7 +164,7 @@ class DiluxOne_Mail_Log_Table extends WP_List_Table {
 	}
 
 	/**
-	 * Los filtros arriba de la tabla.
+	 * The filters above the table.
 	 *
 	 * @param string $which
 	 */
@@ -173,28 +173,28 @@ class DiluxOne_Mail_Log_Table extends WP_List_Table {
 			return;
 		}
 
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Sólo marca qué filtro está activo.
-		$estado = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : '';
-		$todos  = isset( $_GET['all'] );
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- It only marks which filter is active.
+		$status    = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : '';
+		$all_sites = isset( $_GET['all'] );
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		?>
 		<div class="alignleft actions">
 			<label for="diluxone-mail-status" class="screen-reader-text"><?php esc_html_e( 'Filter by status', 'diluxone-mail' ); ?></label>
 			<select name="status" id="diluxone-mail-status">
 				<option value=""><?php esc_html_e( 'All statuses', 'diluxone-mail' ); ?></option>
-				<?php foreach ( diluxone_mail_log_statuses() as $clave => $nombre ) : ?>
-					<option value="<?php echo esc_attr( $clave ); ?>" <?php selected( $estado, $clave ); ?>><?php echo esc_html( $nombre ); ?></option>
+				<?php foreach ( diluxone_mail_log_statuses() as $key => $name ) : ?>
+					<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $status, $key ); ?>><?php echo esc_html( $name ); ?></option>
 				<?php endforeach; ?>
 			</select>
 			<?php if ( is_multisite() && is_super_admin() ) : ?>
-				<label><input type="checkbox" name="all" value="1" <?php checked( $todos ); ?>> <?php esc_html_e( 'All sites', 'diluxone-mail' ); ?></label>
+				<label><input type="checkbox" name="all" value="1" <?php checked( $all_sites ); ?>> <?php esc_html_e( 'All sites', 'diluxone-mail' ); ?></label>
 			<?php endif; ?>
 			<?php submit_button( __( 'Filter', 'diluxone-mail' ), '', 'filter_action', false ); ?>
 		</div>
 		<?php
 	}
 
-	/** Cuando no hay nada. */
+	/** When there is nothing. */
 	public function no_items(): void {
 		esc_html_e( 'No messages logged yet.', 'diluxone-mail' );
 	}

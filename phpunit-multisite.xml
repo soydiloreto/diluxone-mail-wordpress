@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd" bootstrap="tests/bootstrap-integration.php" colors="true" failOnRisky="true" beStrictAboutOutputDuringTests="false" beStrictAboutTestsThatDoNotTestAnything="true" executionOrder="default" cacheDirectory=".phpunit.cache">
   <!--
-        La suite multisitio corre contra el mismo wp-env de integración,
-        después de convertirlo a red con `wp core multisite-convert` y de
-        crear un segundo sitio. Ver tests/e2e/multisite.sh y `make
-        test-multisite`. Los tests se saltan solos si la red no existe.
+        The multisite suite runs against the same integration wp-env, after
+        converting it to a network with `wp core multisite-convert` and
+        creating a second site. See tests/e2e/multisite.sh and `make
+        test-multisite`. The tests skip themselves if the network is absent.
     -->
   <testsuites>
     <testsuite name="multisite">

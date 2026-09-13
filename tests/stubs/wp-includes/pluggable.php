@@ -1,11 +1,11 @@
 <?php
 /**
- * wp_mail() de mentira, en una ruta con /wp-includes/ a propósito: observer.php
- * decide que «alguien reemplazó wp_mail()» mirando el archivo donde está
- * definida, y ésta tiene que pasar por la de WordPress.
+ * A fake wp_mail(), deliberately under a path containing /wp-includes/:
+ * observer.php decides that "somebody replaced wp_mail()" by looking at the
+ * file it is defined in, and this one has to pass as WordPress's own.
  *
- * Reproduce la secuencia real: filtro wp_mail, pre_wp_mail, y después
- * wp_mail_succeeded o wp_mail_failed según lo que diga el test.
+ * It reproduces the real sequence: the wp_mail filter, pre_wp_mail, and then
+ * wp_mail_succeeded or wp_mail_failed depending on what the test says.
  */
 if (!function_exists('wp_mail')) {
 	function wp_mail($to, string $subject, string $message, $headers = '', $attachments = []) {

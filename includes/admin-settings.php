@@ -1,16 +1,16 @@
 <?php
 /**
- * La pantalla de ajustes, y la misma pantalla en la red.
+ * The settings screen, and the same screen on the network.
  *
- * Es un solo formulario que sabe para quién trabaja: para un sitio, o para
- * la red entera cuando lo abre el superadministrador desde el escritorio de
- * la red. La diferencia es dónde se guarda y qué controles quedan de sólo
- * lectura: un sitio no puede tocar lo que la red fijó, y nadie puede tocar
- * lo que manda el entorno.
+ * It is a single form that knows who it is working for: a site, or the whole
+ * network when the super administrator opens it from the network dashboard.
+ * The difference is where it saves and which controls end up read-only: a
+ * site cannot touch what the network fixed, and nobody can touch what the
+ * environment provides.
  *
- * La contraseña nunca vuelve al navegador. El campo se muestra vacío con un
- * placeholder que dice si hay una guardada; si llega vacío, se conserva la
- * que estaba.
+ * The password never goes back to the browser. The field renders empty with a
+ * placeholder saying whether one is stored; if it arrives empty, the stored
+ * one is kept.
  *
  * @package DiluxOneMail
  */
@@ -18,7 +18,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Los ajustes que edita este formulario, agrupados como en la pantalla.
+ * The settings this form edits, grouped the way the screen groups them.
  *
  * @return array<string, array<int, string>>
  */
@@ -34,23 +34,23 @@ function diluxone_mail_settings_fields(): array {
 }
 
 /**
- * Lo que necesita la vista del formulario.
+ * What the form's view needs.
  *
- * Para cada campo, su valor y de dónde salió; para los del transporte, con
- * la precedencia de config.php. Y si se puede editar acá o no.
+ * For each field, its value and where it came from; for the transport ones,
+ * with config.php's precedence. And whether it can be edited here or not.
  *
  * @return array<string, mixed>
  */
 function diluxone_mail_settings_data( string $scope ): array {
-	$campos   = array();
+	$fields   = array();
 	$editable = 'network' === $scope || diluxone_mail_site_override_allowed();
 
-	foreach ( diluxone_mail_settings_fields() as $grupo => $keys ) {
+	foreach ( diluxone_mail_settings_fields() as $group => $keys ) {
 		foreach ( $keys as $key ) {
-			$campo_config = array_search( $key, array_map( static fn( string $s ): string => 'diluxone_mail_' . strtolower( $s ), diluxone_mail_config_fields() ), true );
+			$config_field = array_search( $key, array_map( static fn( string $s ): string => 'diluxone_mail_' . strtolower( $s ), diluxone_mail_config_fields() ), true );
 
-			if ( false !== $campo_config ) {
-				$v = diluxone_mail_config_value( (string) $campo_config );
+			if ( false !== $config_field ) {
+				$v = diluxone_mail_config_value( (string) $config_field );
 			} else {
 				$stored = diluxone_mail_option_stored( $key );
 				$v      = array(
@@ -60,17 +60,17 @@ function diluxone_mail_settings_data( string $scope ): array {
 				);
 			}
 
-			$bloqueado = in_array( $v['source'], array( 'constant', 'env' ), true )
+			$locked = in_array( $v['source'], array( 'constant', 'env' ), true )
 				|| ( 'site' === $scope && ! $editable )
 				|| ( 'site' === $scope && 'network' === $v['source'] && ! diluxone_mail_site_override_allowed() );
 
-			$campos[ $key ] = array(
+			$fields[ $key ] = array(
 				'value'    => $v['value'],
 				'source'   => $v['source'],
 				'origin'   => $v['origin'],
 				'label'    => diluxone_mail_source_label( $v['source'], $v['origin'] ),
-				'readonly' => $bloqueado,
-				'group'    => $grupo,
+				'readonly' => $locked,
+				'group'    => $group,
 			);
 		}
 	}
@@ -80,7 +80,7 @@ function diluxone_mail_settings_data( string $scope ): array {
 	return array(
 		'scope'          => $scope,
 		'editable'       => $editable,
-		'fields'         => $campos,
+		'fields'         => $fields,
 		'provider'       => $provider,
 		'profile'        => diluxone_mail_provider( $provider['value'] ),
 		'providers'      => diluxone_mail_providers(),
@@ -92,7 +92,7 @@ function diluxone_mail_settings_data( string $scope ): array {
 	);
 }
 
-/** La pantalla de ajustes de un sitio. */
+/** A site's settings screen. */
 function diluxone_mail_screen_settings(): void {
 	diluxone_mail_screen_open( __( 'Settings', 'diluxone-mail' ) );
 	diluxone_mail_view( 'admin-settings', diluxone_mail_settings_data( 'site' ) );
@@ -100,12 +100,13 @@ function diluxone_mail_screen_settings(): void {
 }
 
 /**
- * Quién puede guardar en cada alcance.
+ * Who may save in each scope.
  *
- * Guardar en la red es del superadministrador; guardar en un sitio, de quien
- * administra ese sitio. El nonce lo verifica cada handler antes de llamar
- * acá, a la vista: así lo ve cualquiera que lea el handler, y lo ve también
- * el sniff de seguridad de wp.org, que no sigue llamadas a funciones.
+ * Saving on the network belongs to the super administrator; saving on a site,
+ * to whoever administers that site. The nonce is verified by each handler
+ * before calling here, in plain sight: that way anybody reading the handler
+ * sees it, and so does the wp.org security sniff, which does not follow calls
+ * into functions.
  */
 function diluxone_mail_settings_authorize( string $scope ): void {
 	$cap = 'network' === $scope ? 'manage_network_options' : 'manage_options';
@@ -115,15 +116,15 @@ function diluxone_mail_settings_authorize( string $scope ): void {
 	}
 }
 
-/** El alcance que vino en el POST, saneado a los dos que existen. */
+/** The scope the POST carried, narrowed to the two that exist. */
 function diluxone_mail_posted_scope(): string {
-	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- El nonce ya lo verificó el handler que llama; acá sólo se elige entre dos valores.
+	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- The calling handler already verified the nonce; this only picks between two values.
 	$scope = isset( $_POST['scope'] ) ? sanitize_key( wp_unslash( $_POST['scope'] ) ) : 'site';
 
 	return 'network' === $scope && is_multisite() ? 'network' : 'site';
 }
 
-/** Adónde volver después de guardar. */
+/** Where to go back to after saving. */
 function diluxone_mail_settings_redirect( string $scope, string $done ): void {
 	$url = 'network' === $scope
 		? add_query_arg( 'diluxone_mail_done', $done, network_admin_url( 'settings.php?page=diluxone-mail-network' ) )
@@ -134,11 +135,11 @@ function diluxone_mail_settings_redirect( string $scope, string $done ): void {
 }
 
 /**
- * El botón «usar este perfil»: rellena host, puerto, cifrado y usuario.
+ * The "use this profile" button: it fills in host, port, encryption and user.
  *
- * Es un paso aparte del guardado, a propósito: así el formulario muestra lo
- * que el perfil puso, editable, antes de que nadie pegue una clave. Y no
- * hace falta JavaScript para que el desplegable rellene nada.
+ * It is a step apart from saving, on purpose: that way the form shows what
+ * the profile put in, editable, before anybody pastes a key. And no
+ * JavaScript is needed for the dropdown to fill anything in.
  */
 function diluxone_mail_apply_provider(): void {
 	check_admin_referer( 'diluxone_mail_settings' );
@@ -158,7 +159,7 @@ function diluxone_mail_apply_provider(): void {
 }
 add_action( 'admin_post_diluxone_mail_apply_provider', 'diluxone_mail_apply_provider' );
 
-/** Guarda el formulario. */
+/** Saves the form. */
 function diluxone_mail_save_settings(): void {
 	check_admin_referer( 'diluxone_mail_settings' );
 
@@ -174,9 +175,10 @@ function diluxone_mail_save_settings(): void {
 
 	foreach ( diluxone_mail_settings_fields() as $keys ) {
 		foreach ( $keys as $key ) {
-			// La contraseña que llega vacía es «dejá la que está», no «borrala».
+			// A password arriving empty means "keep the one you have", not
+			// "delete it".
 			if ( 'diluxone_mail_pass' === $key ) {
-				$pass = isset( $_POST[ $key ] ) ? (string) wp_unslash( $_POST[ $key ] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Una contraseña no se sanea: cualquier carácter es válido y tocarla la rompe. Va directo a update_option().
+				$pass = isset( $_POST[ $key ] ) ? (string) wp_unslash( $_POST[ $key ] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- A password is not sanitised: every character is valid and touching it breaks it. It goes straight to update_option().
 
 				if ( '' !== $pass ) {
 					$input[ $key ] = $pass;
@@ -186,14 +188,14 @@ function diluxone_mail_save_settings(): void {
 			}
 
 			if ( 'diluxone_mail_dns_selectors' === $key ) {
-				$crudo         = isset( $_POST[ $key ] ) ? sanitize_textarea_field( wp_unslash( $_POST[ $key ] ) ) : '';
-				$partes        = preg_split( '/[\s,]+/', $crudo );
-				$input[ $key ] = array_filter( array_map( 'trim', false === $partes ? array() : $partes ) );
+				$raw           = isset( $_POST[ $key ] ) ? sanitize_textarea_field( wp_unslash( $_POST[ $key ] ) ) : '';
+				$parts         = preg_split( '/[\s,]+/', $raw );
+				$input[ $key ] = array_filter( array_map( 'trim', false === $parts ? array() : $parts ) );
 
 				continue;
 			}
 
-			// Las casillas no viajan cuando están apagadas.
+			// Checkboxes do not travel when they are off.
 			$default = diluxone_mail_option_defaults()[ $key ];
 
 			if ( is_int( $default ) && in_array( $default, array( 0, 1 ), true ) && ! in_array( $key, array( 'diluxone_mail_port', 'diluxone_mail_timeout' ), true ) ) {
@@ -211,8 +213,8 @@ function diluxone_mail_save_settings(): void {
 		$input['diluxone_mail_network_allow_override'] = isset( $_POST['diluxone_mail_network_allow_override'] ) ? 1 : 0;
 	}
 
-	// La contraseña se guarda tal cual: save_options() la pasaría por
-	// sanitize_textarea_field(), que le sacaría caracteres válidos.
+	// The password is stored as it is: save_options() would run it through
+	// sanitize_textarea_field(), which would strip valid characters.
 	if ( isset( $input['diluxone_mail_pass'] ) && ! diluxone_mail_option_from_environment( 'diluxone_mail_pass' ) ) {
 		if ( 'network' === $scope ) {
 			update_site_option( 'diluxone_mail_pass', $input['diluxone_mail_pass'] );

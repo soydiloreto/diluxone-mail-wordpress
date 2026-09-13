@@ -42,11 +42,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      # CodeQL aborta —no avisa, falla— cuando el lenguaje que le pediste no
-      # aparece en el repositorio. Pasa en dos momentos normales: mientras el
-      # plugin todavía no tiene JavaScript, y cada lunes, porque el cron corre
-      # aunque el filtro de `paths` no haya visto un cambio. Así que primero se
-      # mira si hay algo que analizar y si no lo hay el trabajo termina bien.
+      # CodeQL aborts — it does not warn, it fails — when the language it was
+      # asked for is nowhere in the repository. That happens at two perfectly
+      # normal moments: while the plugin still has no JavaScript, and every
+      # Monday, because the cron runs even though the `paths` filter has seen
+      # no change. So it first looks for something to analyse, and if there is
+      # nothing the job ends green.
       - name: Is there any JavaScript to analyse?
         id: js
         run: |
@@ -54,7 +55,7 @@ jobs:
             echo "found=true" >> "$GITHUB_OUTPUT"
           else
             echo "found=false" >> "$GITHUB_OUTPUT"
-            echo "Sin JavaScript en assets/js/ — no hay nada que analizar."
+            echo "No JavaScript in assets/js/ — nothing to analyse."
           fi
 
       - name: Initialize CodeQL

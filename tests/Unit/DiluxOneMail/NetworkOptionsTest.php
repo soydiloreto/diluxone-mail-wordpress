@@ -1,10 +1,10 @@
 <?php
 /**
- * La precedencia sitio/red en una red.
+ * The site/network precedence on a network.
  *
- * El servidor de correo es de la red; un sitio sólo tiene lo suyo si la red
- * se lo permite. Si esto se rompe, o un sitio queda pisando a la red sin
- * permiso, o la red queda sin poder fijar nada.
+ * The mail server belongs to the network; a site only has its own if the
+ * network allows it. If this breaks, either a site ends up overriding the
+ * network without permission, or the network cannot pin anything down.
  */
 
 namespace Tests\Unit\DiluxOneMail;
@@ -23,8 +23,8 @@ class NetworkOptionsTest extends TestCase {
 		$GLOBALS['_test_wp_site_options'] = array();
 		$GLOBALS['_test_multisite']       = true;
 
-		foreach ( \diluxone_mail_config_fields() as $sufijo ) {
-			putenv( 'DILUXONE_MAIL_' . $sufijo );
+		foreach ( \diluxone_mail_config_fields() as $suffix ) {
+			putenv( 'DILUXONE_MAIL_' . $suffix );
 		}
 	}
 
@@ -34,7 +34,7 @@ class NetworkOptionsTest extends TestCase {
 		parent::tearDown();
 	}
 
-	public function test_la_red_manda_cuando_el_sitio_no_tiene_permiso(): void {
+	public function test_the_network_wins_when_the_site_has_no_permission(): void {
 		\update_site_option( 'diluxone_mail_host', 'smtp.red.test' );
 		\update_option( 'diluxone_mail_host', 'smtp.sitio.test' );
 
@@ -44,7 +44,7 @@ class NetworkOptionsTest extends TestCase {
 		$this->assertSame( 'network', $v['source'] );
 	}
 
-	public function test_el_sitio_pisa_a_la_red_solo_con_permiso(): void {
+	public function test_the_site_overrides_the_network_only_with_permission(): void {
 		\update_site_option( 'diluxone_mail_network_allow_override', 1 );
 		\update_site_option( 'diluxone_mail_host', 'smtp.red.test' );
 		\update_option( 'diluxone_mail_host', 'smtp.sitio.test' );
@@ -55,27 +55,27 @@ class NetworkOptionsTest extends TestCase {
 		$this->assertSame( 'site', $v['source'] );
 	}
 
-	public function test_con_permiso_pero_sin_valor_propio_hereda_de_la_red(): void {
+	public function test_with_permission_but_no_value_of_its_own_it_inherits_from_the_network(): void {
 		\update_site_option( 'diluxone_mail_network_allow_override', 1 );
-		\update_site_option( 'diluxone_mail_from', 'red@ejemplo.test' );
+		\update_site_option( 'diluxone_mail_from', 'network@example.test' );
 
-		$this->assertSame( 'red@ejemplo.test', \diluxone_mail_config_value( 'from' )['value'] );
+		$this->assertSame( 'network@example.test', \diluxone_mail_config_value( 'from' )['value'] );
 	}
 
-	public function test_el_entorno_le_gana_a_la_red(): void {
+	public function test_the_environment_beats_the_network(): void {
 		\update_site_option( 'diluxone_mail_host', 'smtp.red.test' );
-		putenv( 'DILUXONE_MAIL_HOST=smtp.entorno.test' );
+		putenv( 'DILUXONE_MAIL_HOST=smtp.environment.test' );
 
 		$this->assertSame( 'env', \diluxone_mail_config_value( 'host' )['source'] );
 	}
 
-	public function test_guardar_en_un_sitio_sin_permiso_no_escribe_nada(): void {
+	public function test_saving_on_a_site_without_permission_writes_nothing(): void {
 		\diluxone_mail_save_options( array( 'diluxone_mail_host' => 'smtp.sitio.test' ), 'site' );
 
 		$this->assertArrayNotHasKey( 'diluxone_mail_host', $GLOBALS['_test_wp_options'] );
 	}
 
-	public function test_guardar_en_la_red_escribe_en_la_red(): void {
+	public function test_saving_on_the_network_writes_to_the_network(): void {
 		\diluxone_mail_save_options( array( 'diluxone_mail_host' => 'smtp.red.test' ), 'network' );
 
 		$this->assertSame( 'smtp.red.test', \get_site_option( 'diluxone_mail_host' ) );
@@ -83,9 +83,9 @@ class NetworkOptionsTest extends TestCase {
 	}
 
 	/**
-	 * Un sitio no puede decidir si los sitios pueden pisar a la red.
+	 * A site cannot decide whether sites may override the network.
 	 */
-	public function test_la_option_de_permiso_no_se_guarda_desde_un_sitio(): void {
+	public function test_the_permission_option_is_not_saved_from_a_site(): void {
 		\update_site_option( 'diluxone_mail_network_allow_override', 1 );
 		\diluxone_mail_save_options( array( 'diluxone_mail_network_allow_override' => 0 ), 'site' );
 
@@ -93,7 +93,7 @@ class NetworkOptionsTest extends TestCase {
 		$this->assertArrayNotHasKey( 'diluxone_mail_network_allow_override', $GLOBALS['_test_wp_options'] );
 	}
 
-	public function test_fuera_de_una_red_el_sitio_es_todo_lo_que_hay(): void {
+	public function test_off_a_network_the_site_is_all_there_is(): void {
 		$GLOBALS['_test_multisite'] = false;
 
 		\update_option( 'diluxone_mail_host', 'smtp.sitio.test' );

@@ -1,18 +1,18 @@
 <?php
 /**
- * ¿Hay otro plugin gestionando el correo de este sitio?
+ * Is another plugin handling this site's mail?
  *
- * Hay siete millones de sitios con un plugin SMTP ya instalado y andando.
- * Nadie va a desinstalar el suyo para probar éste. Así que, si al arrancar
- * encuentra a otro manejando el envío, no pelea: se pone a registrar y a
- * diagnosticar sin tocar nada, y lo dice. Un sitio al que le anda el correo
- * no tiene por qué romperse para probar esto.
+ * There are seven million sites with an SMTP plugin already installed and
+ * working. Nobody is going to uninstall theirs to try this one out. So if, on
+ * start-up, it finds somebody else handling delivery, it does not fight: it
+ * starts logging and diagnosing without touching anything, and says so. A
+ * site whose mail works should not have to break to try this out.
  *
- * Detectar al otro tiene dos partes. La lista de los conocidos —por nombre de
- * archivo— es la rápida y la que da un nombre legible. Pero la que vale es la
- * segunda: mirar quién está enganchado de verdad en los tres lugares por los
- * que se puede tomar el correo. Un plugin que no esté en la lista igual
- * aparece ahí, con el archivo del que sale.
+ * Detecting the other one has two parts. The list of known plugins — by file
+ * name — is the fast one and the one that yields a readable name. But the one
+ * that counts is the second: looking at who is actually hooked into the three
+ * places mail can be taken over from. A plugin that is not on the list still
+ * shows up there, with the file it comes from.
  *
  * @package DiluxOneMail
  */
@@ -20,11 +20,11 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Los plugins de correo conocidos, por archivo principal.
+ * The known mail plugins, by main file.
  *
- * Sólo los que se sabe cómo se llama su archivo. Uno que no esté acá no
- * queda invisible: lo agarra la detección por hooks de más abajo, sólo que
- * con el nombre de la carpeta en vez del nombre bonito.
+ * Only the ones whose file name is known. One that is not here does not stay
+ * invisible: the hook-based detection below catches it, only with the folder
+ * name instead of the pretty one.
  *
  * @return array<string, string>
  */
@@ -46,57 +46,57 @@ function diluxone_mail_known_mailers(): array {
 }
 
 /**
- * De dónde sale un callback: archivo, y si es de un plugin, cuál.
+ * Where a callback comes from: the file, and which plugin if any.
  *
- * Funciona también con funciones anónimas, que es el caso que importa: el
- * plugin de correo de Azure App Service engancha pre_wp_mail con una closure,
- * y sin esto no habría forma de decir quién fue.
+ * It works with anonymous functions too, which is the case that matters: the
+ * Azure App Service mail plugin hooks pre_wp_mail with a closure, and without
+ * this there would be no way of saying who it was.
  *
- * @param mixed $callback El callback tal como está en $wp_filter.
+ * @param mixed $callback The callback exactly as it sits in $wp_filter.
  * @return array{file: string, plugin: string, name: string}
- *         plugin: la carpeta dentro de wp-content/plugins, o '' si no es de un plugin.
+ *         plugin: the folder inside wp-content/plugins, or '' if not a plugin.
  */
 function diluxone_mail_callback_origin( $callback ): array {
-	$archivo = '';
+	$file = '';
 
 	try {
 		if ( $callback instanceof Closure || ( is_string( $callback ) && function_exists( $callback ) ) ) {
-			$archivo = (string) ( new ReflectionFunction( $callback ) )->getFileName();
+			$file = (string) ( new ReflectionFunction( $callback ) )->getFileName();
 		} elseif ( is_array( $callback ) && 2 === count( $callback ) ) {
-			$archivo = (string) ( new ReflectionMethod( $callback[0], (string) $callback[1] ) )->getFileName();
+			$file = (string) ( new ReflectionMethod( $callback[0], (string) $callback[1] ) )->getFileName();
 		} elseif ( is_object( $callback ) && method_exists( $callback, '__invoke' ) ) {
-			$archivo = (string) ( new ReflectionMethod( $callback, '__invoke' ) )->getFileName();
+			$file = (string) ( new ReflectionMethod( $callback, '__invoke' ) )->getFileName();
 		}
 	} catch ( ReflectionException $e ) {
-		$archivo = '';
+		$file = '';
 	}
 
-	$archivo = wp_normalize_path( $archivo );
+	$file    = wp_normalize_path( $file );
 	$plugins = trailingslashit( wp_normalize_path( WP_PLUGIN_DIR ) );
 	$plugin  = '';
 
-	if ( '' !== $archivo && 0 === strpos( $archivo, $plugins ) ) {
-		$plugin = (string) strtok( substr( $archivo, strlen( $plugins ) ), '/' );
+	if ( '' !== $file && 0 === strpos( $file, $plugins ) ) {
+		$plugin = (string) strtok( substr( $file, strlen( $plugins ) ), '/' );
 	}
 
 	$name = $plugin;
 
-	foreach ( diluxone_mail_known_mailers() as $basename => $bonito ) {
+	foreach ( diluxone_mail_known_mailers() as $basename => $pretty ) {
 		if ( '' !== $plugin && 0 === strpos( $basename, $plugin . '/' ) ) {
-			$name = $bonito;
+			$name = $pretty;
 			break;
 		}
 	}
 
 	return array(
-		'file'   => $archivo,
+		'file'   => $file,
 		'plugin' => $plugin,
 		'name'   => $name,
 	);
 }
 
 /**
- * Quiénes están enganchados en un hook, sin contar a este plugin.
+ * Who is hooked into a hook, this plugin aside.
  *
  * @return array<int, array{file: string, plugin: string, name: string, priority: int, callback: mixed}>
  */
@@ -107,46 +107,45 @@ function diluxone_mail_hook_origins( string $hook ): array {
 		return array();
 	}
 
-	$propio = wp_normalize_path( DILUXONE_MAIL_DIR );
-	$salida = array();
+	$own = wp_normalize_path( DILUXONE_MAIL_DIR );
+	$out = array();
 
-	foreach ( $wp_filter[ $hook ]->callbacks as $prioridad => $enganchados ) {
-		foreach ( $enganchados as $enganche ) {
-			$origen = diluxone_mail_callback_origin( $enganche['function'] );
+	foreach ( $wp_filter[ $hook ]->callbacks as $priority => $hooked ) {
+		foreach ( $hooked as $entry ) {
+			$origin = diluxone_mail_callback_origin( $entry['function'] );
 
-			if ( '' === $origen['file'] || 0 === strpos( $origen['file'], $propio ) ) {
+			if ( '' === $origin['file'] || 0 === strpos( $origin['file'], $own ) ) {
 				continue;
 			}
 
-			$salida[] = array_merge(
-				$origen,
+			$out[] = array_merge(
+				$origin,
 				array(
-					'priority' => (int) $prioridad,
-					'callback' => $enganche['function'],
+					'priority' => (int) $priority,
+					'callback' => $entry['function'],
 				)
 			);
 		}
 	}
 
-	return $salida;
+	return $out;
 }
 
 /**
- * Los plugins que están gestionando el correo, si hay alguno.
+ * The plugins currently handling the mail, if any.
  *
- * Se miran los tres caminos por los que un plugin puede tomar el envío:
+ * The three ways a plugin can take delivery over are all checked:
  *
- *   - Redefinir wp_mail() entera. Es pluggable, y WP Mail SMTP y Post SMTP
- *     hacen exactamente eso. Se detecta por el archivo en el que está
- *     definida: si no es wp-includes/pluggable.php, la reemplazó alguien.
- *   - Engancharse a phpmailer_init, que es lo que hace este plugin y casi
- *     todos los demás.
- *   - Cortar en pre_wp_mail, que es lo que hacen los que mandan por API HTTP
- *     en vez de por SMTP.
+ *   - Redefining wp_mail() entirely. It is pluggable, and WP Mail SMTP and
+ *     Post SMTP do exactly that. It is detected by the file it is defined in:
+ *     if that is not wp-includes/pluggable.php, somebody replaced it.
+ *   - Hooking phpmailer_init, which is what this plugin and most others do.
+ *   - Cutting the send short in pre_wp_mail, which is what the ones delivering
+ *     over an HTTP API rather than SMTP do.
  *
- * La lista se arma una vez por petición: lo que cuesta es la reflexión, y el
- * resultado no cambia mientras dura la carga. $fresh la vuelve a armar, para
- * después de desenganchar a alguien.
+ * The list is built once per request: the expensive part is the reflection,
+ * and the result does not change while the page loads. $fresh rebuilds it,
+ * for use right after detaching somebody.
  *
  * @return array<int, array{name: string, plugin: string, how: string}>
  */
@@ -157,67 +156,67 @@ function diluxone_mail_other_mailers( bool $fresh = false ): array {
 		return $cache;
 	}
 
-	$vistos = array();
+	$seen = array();
 
-	// wp_mail() reemplazada.
+	// wp_mail() replaced.
 	if ( function_exists( 'wp_mail' ) ) {
 		try {
-			$archivo = wp_normalize_path( (string) ( new ReflectionFunction( 'wp_mail' ) )->getFileName() );
+			$file = wp_normalize_path( (string) ( new ReflectionFunction( 'wp_mail' ) )->getFileName() );
 		} catch ( ReflectionException $e ) {
-			$archivo = '';
+			$file = '';
 		}
 
-		if ( '' !== $archivo && false === strpos( $archivo, '/wp-includes/' ) ) {
-			$origen = diluxone_mail_callback_origin( 'wp_mail' );
+		if ( '' !== $file && false === strpos( $file, '/wp-includes/' ) ) {
+			$origin = diluxone_mail_callback_origin( 'wp_mail' );
 
-			$vistos[ '' !== $origen['plugin'] ? $origen['plugin'] : $archivo ] = array(
-				'name'   => '' !== $origen['name'] ? $origen['name'] : basename( $archivo ),
-				'plugin' => $origen['plugin'],
+			$seen[ '' !== $origin['plugin'] ? $origin['plugin'] : $file ] = array(
+				'name'   => '' !== $origin['name'] ? $origin['name'] : basename( $file ),
+				'plugin' => $origin['plugin'],
 				'how'    => 'wp_mail',
 			);
 		}
 	}
 
 	foreach ( array( 'phpmailer_init', 'pre_wp_mail' ) as $hook ) {
-		foreach ( diluxone_mail_hook_origins( $hook ) as $origen ) {
-			$clave = '' !== $origen['plugin'] ? $origen['plugin'] : $origen['file'];
+		foreach ( diluxone_mail_hook_origins( $hook ) as $origin ) {
+			$key = '' !== $origin['plugin'] ? $origin['plugin'] : $origin['file'];
 
-			if ( isset( $vistos[ $clave ] ) ) {
+			if ( isset( $seen[ $key ] ) ) {
 				continue;
 			}
 
-			$vistos[ $clave ] = array(
-				'name'   => '' !== $origen['name'] ? $origen['name'] : basename( $origen['file'] ),
-				'plugin' => $origen['plugin'],
+			$seen[ $key ] = array(
+				'name'   => '' !== $origin['name'] ? $origin['name'] : basename( $origin['file'] ),
+				'plugin' => $origin['plugin'],
 				'how'    => $hook,
 			);
 		}
 	}
 
 	/**
-	 * Filtra la lista de plugins detectados gestionando el correo.
+	 * Filters the list of plugins detected as handling the mail.
 	 *
 	 * @param array<int, array{name: string, plugin: string, how: string}> $mailers
 	 */
-	$cache = (array) apply_filters( 'diluxone_mail_other_mailers', array_values( $vistos ) );
+	$cache = (array) apply_filters( 'diluxone_mail_other_mailers', array_values( $seen ) );
 
 	return $cache;
 }
 
 /**
- * ¿Este plugin manda el correo, o sólo mira?
+ * Does this plugin send the mail, or does it only watch?
  *
- * Es la pregunta que hace mailer.php antes de tocar PHPMailer, y la que
- * contesta la pantalla de estado.
+ * It is the question mailer.php asks before touching PHPMailer, and the one
+ * the status screen answers.
  */
 function diluxone_mail_transport_active(): bool {
-	$modo = (string) diluxone_mail_option( 'diluxone_mail_mode' );
+	$mode = (string) diluxone_mail_option( 'diluxone_mail_mode' );
 
-	if ( 'observe' === $modo ) {
+	if ( 'observe' === $mode ) {
 		return false;
 	}
 
-	if ( 'transport' === $modo ) {
+	if ( 'transport' === $mode ) {
 		return true;
 	}
 
@@ -225,32 +224,32 @@ function diluxone_mail_transport_active(): bool {
 }
 
 /**
- * El aviso de modo observador, en las pantallas del plugin.
+ * The observer-mode notice, on the plugin's screens.
  *
- * Dice quién está gestionando el envío y ofrece tomar el control. Si el
- * modo es 'observe' a mano, no hay nada que avisar: fue una decisión.
+ * It says who is handling delivery and offers to take over. If the mode is
+ * 'observe' by hand there is nothing to report: it was a decision.
  */
 function diluxone_mail_observer_notice(): void {
 	if ( 'auto' !== (string) diluxone_mail_option( 'diluxone_mail_mode' ) ) {
 		return;
 	}
 
-	$otros = diluxone_mail_other_mailers();
+	$others = diluxone_mail_other_mailers();
 
-	if ( array() === $otros ) {
+	if ( array() === $others ) {
 		return;
 	}
 
-	$nombres = implode( ', ', array_column( $otros, 'name' ) );
-	$url     = wp_nonce_url( admin_url( 'admin-post.php?action=diluxone_mail_take_over' ), 'diluxone_mail_take_over' );
+	$names = implode( ', ', array_column( $others, 'name' ) );
+	$url   = wp_nonce_url( admin_url( 'admin-post.php?action=diluxone_mail_take_over' ), 'diluxone_mail_take_over' );
 	?>
 	<div class="notice notice-info">
 		<p>
 			<?php
 			printf(
-				/* translators: %s: nombre de los plugins detectados */
+				/* translators: %s: names of the detected plugins */
 				esc_html__( '%s is handling this site\'s outgoing mail. DiluxOne Mail is logging and diagnosing without touching it.', 'diluxone-mail' ),
-				esc_html( $nombres )
+				esc_html( $names )
 			);
 			?>
 			<a class="button button-small" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'Take over', 'diluxone-mail' ); ?></a>
@@ -259,7 +258,7 @@ function diluxone_mail_observer_notice(): void {
 	<?php
 }
 
-/** El botón «Tomar el control»: pasa el modo a 'transport'. */
+/** The "Take over" button: switches the mode to 'transport'. */
 function diluxone_mail_take_over(): void {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		wp_die( esc_html__( 'You are not allowed to do this.', 'diluxone-mail' ) );

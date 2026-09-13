@@ -169,9 +169,10 @@ if (!function_exists('delete_option')) {
 
 // ── Sanitization (cont.) ────────────────────────────────────────
 //
-// Los hooks (add_action / add_filter) NO se stubean: los provee Brain Monkey
-// dentro de cada test, y un stub acá lo taparía — los tests que verifican en
-// qué hook y con qué prioridad se registra algo pasarían a fallar siempre.
+// Hooks (add_action / add_filter) are NOT stubbed: Brain Monkey provides them
+// inside each test, and a stub here would shadow that — the tests that check
+// which hook and which priority something registers on would start failing
+// every time.
 
 if (!function_exists('sanitize_key')) {
 	function sanitize_key(string $key): string {
@@ -179,9 +180,9 @@ if (!function_exists('sanitize_key')) {
 	}
 }
 
-// ── User meta en memoria ────────────────────────────────────────
+// ── In-memory user meta ─────────────────────────────────────────
 //
-// Suficiente para ejercitar la lógica de tokens de acceso sin base de datos.
+// Enough to exercise the access-token logic without a database.
 
 if (!isset($GLOBALS['cst_test_user_meta'])) {
 	$GLOBALS['cst_test_user_meta'] = [];
@@ -208,8 +209,8 @@ if (!function_exists('delete_user_meta')) {
 }
 
 if (!function_exists('wp_hash')) {
-	// El wp_hash real usa las sales del sitio. Para el test alcanza con que sea
-	// determinista y de una sola dirección.
+	// The real wp_hash uses the site's salts. For the test it is enough that it
+	// is deterministic and one-way.
 	function wp_hash(string $data): string {
 		return hash_hmac('md5', $data, 'clave-de-prueba');
 	}
@@ -218,17 +219,17 @@ if (!function_exists('wp_hash')) {
 if (!function_exists('wp_generate_password')) {
 	function wp_generate_password(int $length = 12, bool $special = true, bool $extra = false): string {
 		$alfabeto = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-		$salida = '';
+		$out = '';
 		for ($i = 0; $i < $length; $i++) {
-			$salida .= $alfabeto[random_int(0, strlen($alfabeto) - 1)];
+			$out .= $alfabeto[random_int(0, strlen($alfabeto) - 1)];
 		}
-		return $salida;
+		return $out;
 	}
 }
 
 if (!function_exists('add_query_arg')) {
 	function add_query_arg(...$a): string {
-		// Las dos firmas de WordPress: (array $args, $url) y ($key, $value, $url).
+		// WordPress's two signatures: (array $args, $url) and ($key, $value, $url).
 		$args = is_array($a[0]) ? $a[0] : [(string) $a[0] => $a[1] ?? ''];
 		$url  = (string) (is_array($a[0]) ? ($a[1] ?? '') : ($a[2] ?? ''));
 		return $url . (str_contains($url, '?') ? '&' : '?') . http_build_query($args);
@@ -243,11 +244,11 @@ if (!function_exists('is_user_logged_in')) {
 	function is_user_logged_in(): bool { return false; }
 }
 
-// ── Usuarios y contraseñas ────────────────────────────────────────────────
-// Los tests que miran la política del segundo factor necesitan una persona con
-// roles, y los códigos de respaldo necesitan hashear y comprobar. Se resuelven
-// con lo mínimo: un array de usuarios y un hash de verdad, no uno de mentira,
-// para que la prueba de «no se guarda en claro» signifique algo.
+// ── Users and passwords ───────────────────────────────────────────────────
+// The tests that look at the second-factor policy need a person with roles, and
+// the backup codes need hashing and checking. Both are solved with the bare
+// minimum: an array of users and a real hash, not a fake one, so that the "it
+// is not stored in the clear" test means something.
 
 if (!isset($GLOBALS['_test_wp_users'])) {
 	$GLOBALS['_test_wp_users'] = [];
@@ -277,9 +278,9 @@ if (!function_exists('wp_rand')) {
 	}
 }
 
-// Una WP_User mínima. El código de producción comprueba `instanceof WP_User`
-// antes de leer roles, que es lo correcto; sin esta clase los tests pasarían
-// por el camino de «no existe» y no probarían nada.
+// A minimal WP_User. Production code checks `instanceof WP_User` before
+// reading roles, which is the right thing to do; without this class the tests
+// would take the "does not exist" path and prove nothing.
 if (!class_exists('WP_User')) {
 	class WP_User {
 		public $ID = 0;
@@ -299,8 +300,8 @@ if (!class_exists('WP_User')) {
 }
 
 // ── Transients ────────────────────────────────────────────────────────────
-// Los desafíos de las passkeys viven acá: son de un solo uso y de vida corta,
-// que es exactamente lo que hace un transient.
+// The passkey challenges live here: they are single-use and short-lived, which
+// is exactly what a transient does.
 
 if (!isset($GLOBALS['_test_wp_transients'])) {
 	$GLOBALS['_test_wp_transients'] = [];
@@ -344,11 +345,11 @@ if (!function_exists('wp_unslash')) {
 	}
 }
 
-// ── Red (multisitio) en memoria ──────────────────────────────────
+// ── In-memory network (multisite) ────────────────────────────────
 //
-// is_multisite() contesta lo que diga el test, y las options de la red
-// viven en su propio arreglo. Alcanza para ejercitar la precedencia
-// sitio/red sin una red de verdad.
+// is_multisite() answers whatever the test says, and the network options live
+// in their own array. It is enough to exercise the site/network precedence
+// without a real network.
 
 if (!function_exists('is_multisite')) {
 	function is_multisite(): bool {
@@ -474,11 +475,11 @@ if (!defined('WP_CONTENT_DIR')) {
 	define('WP_CONTENT_DIR', dirname(WP_PLUGIN_DIR));
 }
 
-// ── Hooks: un sistema mínimo, con la forma de $wp_filter de WordPress ──
+// ── Hooks: a minimal system, shaped like WordPress's $wp_filter ──
 //
-// Los callbacks se guardan en $GLOBALS['wp_filter'][$hook]->callbacks igual
-// que en WordPress, así observer.php puede recorrerlos, y apply_filters()
-// los corre de verdad, así los filtros propios del plugin se pueden probar.
+// Callbacks are stored in $GLOBALS['wp_filter'][$hook]->callbacks just as in
+// WordPress, so observer.php can walk them, and apply_filters() really runs
+// them, so the plugin's own filters can be tested.
 
 if (!class_exists('WP_Hook')) {
 	class WP_Hook { public array $callbacks = []; }
@@ -548,7 +549,7 @@ if (!function_exists('sanitize_textarea_field')) {
 }
 
 
-// ── Lo que usan las pantallas y los comandos ──────────────────────
+// ── What the screens and the commands use ────────────────────────
 if (!function_exists('_x')) { function _x(string $t, string $c, string $d = 'default'): string { return $t; } }
 if (!function_exists('_n')) { function _n(string $s, string $p, int $n, string $d = 'default'): string { return 1 === $n ? $s : $p; } }
 if (!function_exists('esc_html__')) { function esc_html__(string $t, string $d = 'default'): string { return esc_html($t); } }

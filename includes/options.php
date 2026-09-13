@@ -1,25 +1,24 @@
 <?php
 /**
- * Los ajustes del plugin, con sus valores por defecto en un solo lugar.
+ * The plugin's settings, with their default values in a single place.
  *
- * Todo lo que en otros plugins es una constante o un número escrito en el
- * medio del código vive acá y se edita desde el admin.
+ * Everything that in other plugins is a constant or a number written in the
+ * middle of the code lives here and is edited from the dashboard.
  *
- * Ojo con una cosa: para los ocho valores del transporte —host, puerto,
- * usuario, contraseña, cifrado, remitente, nombre del remitente y proveedor—
- * esta lista es el último recurso, no la fuente. Antes mandan la constante de
- * PHP y la variable de entorno, y de eso se ocupa config.php. Acá están sus
- * valores por defecto porque hay que guardarlos en algún lado cuando quien
- * administra los escribe a mano, pero nunca se leen directamente: se leen con
- * diluxone_mail_config(), que respeta la precedencia.
+ * One thing to watch: for the eight transport values — host, port, user,
+ * password, encryption, sender, sender name and provider — this list is the
+ * last resort, not the source. A PHP constant and an environment variable
+ * come first, and config.php handles that. Their defaults are here because
+ * they have to be stored somewhere when an administrator types them by hand,
+ * but they are never read directly: they are read through
+ * diluxone_mail_config(), which honours the precedence.
  *
- * En una red —multisitio— hay además dos lugares donde guardar: la red, que
- * fija el superadministrador para todos, y cada sitio. El servidor de correo
- * es infraestructura de la red, no una preferencia de cada sitio, así que la
- * red manda: un sitio sólo puede tener lo suyo si la red se lo permite. Y
- * cuando no se lo permite, la pantalla del sitio lo muestra de sólo lectura
- * diciendo que lo fija la red, en vez de dejar cambiar algo que no cambia
- * nada.
+ * On a network there are also two places to store them: the network, which
+ * the super administrator fixes for everyone, and each site. The mail server
+ * is network infrastructure, not a per-site preference, so the network wins:
+ * a site can only have its own if the network allows it. And when it does
+ * not, the site's screen shows them read-only saying the network fixes them,
+ * instead of letting somebody change something that changes nothing.
  *
  * @package DiluxOneMail
  */
@@ -27,125 +26,125 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Valores por defecto. La clave es el nombre de la option, con prefijo.
+ * Default values. The key is the option name, prefixed.
  *
  * @return array<string, mixed>
  */
 function diluxone_mail_option_defaults(): array {
 	return array(
-		// ── El transporte ─────────────────────────────────────────────
-		// El perfil de proveedor elegido: 'mailjet', 'm365', 'mailpit'…
-		// Vacío significa que nadie configuró nada todavía, que es distinto
-		// de haber elegido «SMTP genérico» a mano. La lista vive en
+		// ── Transport ─────────────────────────────────────────────────
+		// The chosen provider profile: 'mailjet', 'm365', 'mailpit'…
+		// Empty means nobody has configured anything yet, which is different
+		// from having picked "generic SMTP" by hand. The list lives in
 		// providers.php.
 		'diluxone_mail_provider'                  => '',
 		'diluxone_mail_host'                      => '',
 		'diluxone_mail_port'                      => 587,
-		// 'none', 'ssl' —el puerto 465, cifrado desde el saludo— o 'tls'
-		// —STARTTLS, que arranca en claro y sube—. Los perfiles locales van
-		// en 'none' a propósito: ver providers.php.
+		// 'none', 'ssl' — port 465, encrypted from the greeting — or 'tls'
+		// — STARTTLS, which starts in the clear and upgrades. Local profiles
+		// use 'none' on purpose: see providers.php.
 		'diluxone_mail_encryption'                => 'tls',
-		// Casi todos los proveedores piden usuario y contraseña. Mailpit y
-		// MailHog no, y ahí esto se apaga solo desde el perfil.
+		// Almost every provider asks for a user and a password. Mailpit and
+		// MailHog do not, and there the profile turns this off by itself.
 		'diluxone_mail_auth'                      => 1,
 		'diluxone_mail_user'                      => '',
-		// Nunca vuelve al navegador y nunca se guarda acá si viene de una
-		// constante o del entorno. Ver config.php.
+		// Never goes back to the browser, and is never stored here when it
+		// comes from a constant or the environment. See config.php.
 		'diluxone_mail_pass'                      => '',
-		// Segundos que se espera al servidor antes de dar por perdido el
-		// envío. WordPress carga la página mientras tanto, así que un valor
-		// alto es una página colgada.
+		// Seconds to wait for the server before giving the send up as lost.
+		// WordPress is loading the page meanwhile, so a high value is a page
+		// that hangs.
 		'diluxone_mail_timeout'                   => 30,
 
-		// ── Quién firma el correo ─────────────────────────────────────
-		// Vacío = el que ponga WordPress. Conviene llenarlo: el remitente por
-		// defecto es wordpress@eldominio, que suele no existir y que muchos
-		// proveedores rechazan por no estar autorizado.
+		// ── Who signs the mail ────────────────────────────────────────
+		// Empty = whatever WordPress puts. Worth filling in: the default
+		// sender is wordpress@thedomain, which usually does not exist and
+		// which many providers reject as unauthorised.
 		'diluxone_mail_from'                      => '',
 		'diluxone_mail_from_name'                 => '',
-		// Pisar el remitente que traiga cada envío. Prendido arregla los
-		// plugins que mandan desde direcciones inventadas; apagado respeta a
-		// los que mandan desde una dirección real y distinta a propósito
-		// —una tienda que contesta desde ventas@, por ejemplo—.
+		// Override the sender each send brings. On, it fixes the plugins that
+		// send from made-up addresses; off, it respects the ones sending from
+		// a real, different address on purpose — a shop replying from sales@,
+		// for instance.
 		'diluxone_mail_force_from'                => 0,
 
-		// ── Cómo se mete el plugin en el envío ────────────────────────
-		// 'auto'      si hay otro plugin gestionando el correo, no toca el
-		// envío: registra y diagnostica. Si no hay ninguno, manda él.
-		// 'observe'   nunca toca el envío, aunque no haya nadie más.
-		// 'transport' manda él siempre, aunque haya otro. Es lo que hace el
-		// botón «Tomar el control».
+		// ── How this plugin takes part in sending ─────────────────────
+		// 'auto'      if another plugin is handling the mail, do not touch
+		// delivery: log and diagnose. If there is none, send.
+		// 'observe'   never touch delivery, even with nobody else around.
+		// 'transport' always send, even if another plugin is there. This is
+		// what the "Take over" button sets.
 		'diluxone_mail_mode'                      => 'auto',
-		// Desenganchar al plugin que corta el envío en pre_wp_mail antes de
-		// que llegue a configurarse nada. Apagado por defecto y con su
-		// advertencia: desenganchar al que manda el correo de verdad deja el
-		// sitio sin correo. Ver pre-wp-mail.php.
+		// Detach the plugin that cuts the send short in pre_wp_mail before
+		// anything can be configured. Off by default and with its warning:
+		// detaching the one actually delivering the mail leaves the site with
+		// no mail. See pre-wp-mail.php.
 		'diluxone_mail_unhook_pre_wp_mail'        => 0,
 
-		// ── El historial ──────────────────────────────────────────────
-		// El historial común: fecha, destinatario, remitente, asunto, estado,
-		// error si lo hubo, proveedor y quién originó el envío. Es la tabla
-		// que cuelga de la ficha de cada persona y viene prendido porque es
-		// la razón de ser del plugin.
+		// ── The log ───────────────────────────────────────────────────
+		// The basic log: date, recipient, sender, subject, outcome, error if
+		// there was one, provider and who originated the send. It is the
+		// table that hangs off each person's profile, and it ships on because
+		// it is the reason this plugin exists.
 		'diluxone_mail_log_enabled'               => 1,
-		// Días que se guarda cada envío. La purga corre por cron.
+		// Days each send is kept. The purge runs on cron.
 		'diluxone_mail_log_retention_days'        => 30,
-		// El historial extendido: además, las cabeceras, los nombres de los
-		// adjuntos y el diálogo SMTP completo con el proveedor —cada comando y
-		// cada respuesta—. Es lo que hace falta para discutir con el soporte
-		// del proveedor, y cuesta capturar el diálogo en cada envío, así que
-		// viene apagado.
+		// The extended log: also the headers, the attachment names and the
+		// full SMTP conversation with the provider — every command and every
+		// reply. It is what you need to argue with the provider's support,
+		// and capturing the dialogue on every send costs something, so it
+		// ships off.
 		'diluxone_mail_log_extended'              => 0,
-		// Guardar el cuerpo del mensaje. Apagado a propósito: el cuerpo es
-		// dato personal —lleva nombres, pedidos, a veces una contraseña
-		// temporal— y es lo que convierte un registro técnico en un problema
-		// legal. Quien lo prenda sabe lo que hace. Sin el cuerpo no se puede
-		// reenviar un mensaje, y la ficha de la persona lo dice.
+		// Store the message body. Off on purpose: the body is personal data
+		// — names, orders, sometimes a temporary password — and it is what
+		// turns a technical log into a legal problem. Whoever turns it on
+		// knows what they are doing. Without the body a message cannot be
+		// resent, and the person's profile says so.
 		'diluxone_mail_log_body'                  => 0,
-		// El cuerpo y el diálogo SMTP se borran antes que el resto de la
-		// fila: para diagnosticar «no me llegó el de ayer» alcanza con unos
-		// días, y son lo más pesado y lo más sensible que se guarda.
+		// The body and the SMTP dialogue are deleted before the rest of the
+		// row: a few days are enough to diagnose "I did not get yesterday's",
+		// and they are the heaviest and most sensitive thing stored.
 		'diluxone_mail_log_detail_retention_days' => 7,
 
-		// ── El diagnóstico de DNS ─────────────────────────────────────
-		// Vacío = el dominio del remitente configurado o, si no hay, el del
-		// sitio. Se puede fijar otro cuando el correo sale desde un dominio
-		// distinto al que sirve las páginas.
+		// ── DNS diagnostics ───────────────────────────────────────────
+		// Empty = the configured sender's domain or, failing that, the
+		// site's. Another one can be pinned when the mail leaves from a
+		// domain other than the one serving the pages.
 		'diluxone_mail_dns_domain'                => '',
-		// Selectores DKIM extra para sondear, además de los conocidos y de
-		// los que declare el perfil del proveedor activo. Por DNS no se
-		// pueden enumerar: o se adivinan o se preguntan.
+		// Extra DKIM selectors to probe, on top of the well-known ones and
+		// the ones the active provider profile declares. They cannot be
+		// listed over DNS: either you guess them or you ask.
 		'diluxone_mail_dns_selectors'             => array(),
-		// Cómo se consulta el DNS: 'auto' usa el del sistema y cae a
-		// DNS-over-HTTPS si el hosting tiene dns_get_record() deshabilitada
-		// —que son muchos—; 'system' y 'doh' fuerzan uno u otro.
+		// How DNS is queried: 'auto' uses the system resolver and falls back
+		// to DNS-over-HTTPS when the host has dns_get_record() disabled — and
+		// many do; 'system' and 'doh' force one or the other.
 		'diluxone_mail_dns_resolver'              => 'auto',
 		'diluxone_mail_dns_doh_endpoint'          => 'https://cloudflare-dns.com/dns-query',
-		// Horas que vale el resultado cacheado. El DNS no cambia cada vez que
-		// alguien abre el admin, y hay un botón de revalidar para cuando sí.
+		// Hours a cached result is good for. DNS does not change every time
+		// somebody opens the dashboard, and there is a revalidate button for
+		// when it does.
 		'diluxone_mail_dns_cache_hours'           => 12,
 
-		// ── Privacidad ────────────────────────────────────────────────
-		// El historial es dato personal: qué se le mandó a alguien y cuándo.
-		// Los dos vienen prendidos porque es lo que corresponde, y un sitio
-		// que prefiera atender esos pedidos a mano los apaga.
+		// ── Privacy ───────────────────────────────────────────────────
+		// The log is personal data: what was sent to somebody and when. Both
+		// ship on because that is what is right, and a site that would rather
+		// handle those requests by hand turns them off.
 		'diluxone_mail_privacy_export'            => 1,
 		'diluxone_mail_privacy_erase'             => 1,
 
-		// ── La red ────────────────────────────────────────────────────
-		// Sólo existe en una red. Prendido, cada sitio puede pisar los
-		// ajustes de la red con los suyos; apagado, lo que fija el
-		// superadministrador vale para todos y las pantallas de cada sitio
-		// lo muestran de sólo lectura.
+		// ── The network ───────────────────────────────────────────────
+		// Only exists on a network. On, each site can override the network's
+		// settings with its own; off, what the super administrator fixes
+		// applies to everyone and each site's screens show it read-only.
 		'diluxone_mail_network_allow_override'    => 0,
 	);
 }
 
 /**
- * Las options que sólo tienen sentido guardadas en la red.
+ * The options that only make sense stored on the network.
  *
- * Un sitio no puede decidir si los sitios pueden pisar a la red: eso lo
- * decide la red. Guardarlo a nivel de sitio sería una option que nadie lee.
+ * A site cannot decide whether sites may override the network: the network
+ * decides that. Storing it per site would be an option nobody reads.
  *
  * @return array<int, string>
  */
@@ -154,9 +153,9 @@ function diluxone_mail_network_only_options(): array {
 }
 
 /**
- * ¿Los ajustes de este sitio pueden pisar los de la red?
+ * May this site's settings override the network's?
  *
- * Fuera de una red la pregunta no existe: el sitio es todo lo que hay.
+ * Outside a network the question does not exist: the site is all there is.
  */
 function diluxone_mail_site_override_allowed(): bool {
 	if ( ! is_multisite() ) {
@@ -167,14 +166,14 @@ function diluxone_mail_site_override_allowed(): bool {
 }
 
 /**
- * Un ajuste tal como está guardado, y de qué capa salió.
+ * A setting as stored, and which layer it came from.
  *
- * Es la única función que sabe que existen dos lugares donde guardar. Todo
- * lo demás pregunta acá y recibe un valor con su procedencia, que es lo que
- * las pantallas necesitan para decir «esto lo fija la red».
+ * This is the only function that knows there are two places to store things.
+ * Everything else asks here and gets a value with its provenance, which is
+ * what the screens need in order to say "the network fixes this".
  *
  * @return array{value: mixed, scope: string}
- *         scope: 'site', 'network' o 'default'.
+ *         scope: 'site', 'network' or 'default'.
  */
 function diluxone_mail_option_stored( string $key ): array {
 	$defaults = diluxone_mail_option_defaults();
@@ -217,42 +216,42 @@ function diluxone_mail_option_stored( string $key ): array {
 }
 
 /**
- * Un ajuste, con su valor por defecto.
+ * A setting, with its default value.
  *
- * @param string $key      Nombre de la option, con prefijo.
- * @param mixed  $fallback Valor si no hay ni option ni default.
+ * @param string $key      Option name, prefixed.
+ * @param mixed  $fallback Value if there is neither an option nor a default.
  * @return mixed
  */
 function diluxone_mail_option( string $key, $fallback = null ) {
 	$value = diluxone_mail_option_stored( $key )['value'] ?? $fallback;
 
 	/**
-	 * Filtra un ajuste del plugin.
+	 * Filters one of the plugin's settings.
 	 *
-	 * @param mixed  $value Valor resuelto.
-	 * @param string $key   Nombre de la option.
+	 * @param mixed  $value Resolved value.
+	 * @param string $key   Option name.
 	 */
 	return apply_filters( 'diluxone_mail_option', $value, $key );
 }
 
 /**
- * Guarda los ajustes que llegan de una pantalla del admin.
+ * Saves the settings coming from a dashboard screen.
  *
- * Tres reglas que no son obvias y que valen por toda la seguridad del
- * formulario:
+ * Three rules that are not obvious and that carry the whole security of the
+ * form:
  *
- * 1. Sólo se guarda lo que está en los defaults. Una clave que no esté ahí se
- *    descarta sin avisar, así un POST armado a mano no puede escribir
- *    cualquier option del sitio.
- * 2. Lo que manda el entorno no se guarda nunca. Si el host sale de una
- *    constante de PHP, escribir la option sería guardar un valor que no se usa
- *    y que además contradice al que sí: la base terminaría teniendo una
- *    credencial vieja que nadie está usando pero que cualquiera puede leer.
- * 3. En una red, un sitio no guarda nada si la red no lo dejó, y las options
- *    que son de la red no se guardan en un sitio.
+ * 1. Only what is in the defaults gets saved. A key that is not there is
+ *    dropped silently, so a hand-crafted POST cannot write just any option of
+ *    the site.
+ * 2. What the environment provides is never stored. If the host comes from a
+ *    PHP constant, writing the option would store a value that is not used
+ *    and that contradicts the one that is: the database would end up holding
+ *    an old credential nobody uses but anybody can read.
+ * 3. On a network a site stores nothing if the network did not allow it, and
+ *    the options that belong to the network are not stored on a site.
  *
  * @param array<string, mixed> $input
- * @param string               $scope 'site' o 'network'.
+ * @param string               $scope 'site' or 'network'.
  */
 function diluxone_mail_save_options( array $input, string $scope = 'site' ): void {
 	$defaults = diluxone_mail_option_defaults();
@@ -279,8 +278,8 @@ function diluxone_mail_save_options( array $input, string $scope = 'site' ): voi
 		if ( is_int( $default ) ) {
 			$value = (int) $value;
 		} elseif ( is_array( $default ) ) {
-			// Listas de claves —los selectores DKIM que agrega el sitio—
-			// saneadas elemento por elemento y sin índices sueltos.
+			// Lists of keys — the DKIM selectors the site adds — sanitised
+			// element by element and with no stray indexes.
 			$value = array_values( array_unique( array_filter( array_map( 'sanitize_key', (array) $value ) ) ) );
 		} else {
 			$value = sanitize_textarea_field( (string) $value );

@@ -1,12 +1,12 @@
 <?php
 /**
- * Base de los tests que necesitan un WordPress de verdad cargado.
+ * Base for the tests that need a real WordPress loaded.
  *
- * Entre test y test se borran todas las options del plugin —las del sitio y
- * las de la red— para que cada uno arranque como un plugin recién instalado.
- * La lista sale de los valores por defecto y no de una lista escrita acá:
- * una option nueva queda cubierta sola, y no hay forma de que un test vea lo
- * que dejó el anterior y pase —o falle— por el motivo equivocado.
+ * Between tests every plugin option — the site's and the network's — is
+ * deleted, so each one starts out like a freshly installed plugin. The list
+ * comes from the defaults and not from a list written here: a new option is
+ * covered on its own, and there is no way for a test to see what the previous
+ * one left behind and pass — or fail — for the wrong reason.
  */
 
 namespace Tests\Integration;
@@ -26,12 +26,12 @@ class IntegrationTestCase extends TestCase {
 		delete_option( 'diluxone_mail_last_result' );
 	}
 
-	/** Una persona nueva, con el rol que se le pase. */
+	/** A new person, with whichever role is passed in. */
 	protected function alguien( string $rol = 'subscriber' ): int {
 		return (int) wp_insert_user(
 			array(
 				'user_login' => 'diluxone_mail_' . wp_generate_password( 8, false ),
-				'user_email' => wp_generate_password( 8, false ) . '@ejemplo.test',
+				'user_email' => wp_generate_password( 8, false ) . '@example.test',
 				'user_pass'  => wp_generate_password( 16 ),
 				'role'       => $rol,
 			)

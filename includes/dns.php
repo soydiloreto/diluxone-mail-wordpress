@@ -1,26 +1,26 @@
 <?php
 /**
- * Cómo se le pregunta al DNS.
+ * How DNS gets queried.
  *
- * Toda consulta del diagnóstico pasa por acá, y por una razón: muchos
- * hostings tienen dns_get_record() deshabilitada, y sin un camino
- * alternativo el diagnóstico no funciona en medio mercado. Así que se
- * intenta primero con la función de PHP y, si no está o falla, se cae a
- * DNS-over-HTTPS contra un resolver público con wp_remote_get(). El
- * formato JSON de DoH lo sirven igual Cloudflare y Google, así que el
- * endpoint es un ajuste.
+ * Every lookup the diagnosis makes goes through here, for one reason: a lot
+ * of hosts have dns_get_record() disabled, and without an alternative path
+ * the feature does not work on half the market. So PHP's function is tried
+ * first and, if it is missing or fails, it falls back to DNS-over-HTTPS
+ * against a public resolver through wp_remote_get(). Cloudflare and Google
+ * both serve the same DoH JSON format, so the endpoint is a setting.
  *
- * Los resultados se cachean. El DNS no cambia cada vez que alguien abre el
- * admin, y cada diagnóstico son veinte consultas o más; hay un botón de
- * revalidar para cuando sí cambió.
+ * Results are cached. DNS does not change every time somebody opens the
+ * dashboard, and each diagnosis is twenty lookups or more; there is a
+ * revalidate button for when it did change.
  *
  * @package DiluxOneMail
  */
 
 defined( 'ABSPATH' ) || exit;
 
-/** Los tipos de registro que se consultan, con su código numérico de DNS. */
 /**
+ * The record types that get queried, with their numeric DNS code.
+ *
  * @return array<string, int>
  */
 function diluxone_mail_dns_types(): array {
@@ -33,33 +33,33 @@ function diluxone_mail_dns_types(): array {
 }
 
 /**
- * ¿Se puede usar dns_get_record() en este hosting?
+ * Can dns_get_record() be used on this host?
  *
- * No alcanza con function_exists(): la función existe y está en la lista de
- * disable_functions, y llamarla es un aviso y un false.
+ * Checking function_exists() is not enough: the function exists and is on
+ * the disable_functions list, and calling it is a warning and a false.
  */
 function diluxone_mail_dns_system_available(): bool {
 	if ( ! function_exists( 'dns_get_record' ) ) {
 		return false;
 	}
 
-	$deshabilitadas = array_map( 'trim', explode( ',', (string) ini_get( 'disable_functions' ) ) );
+	$disabled = array_map( 'trim', explode( ',', (string) ini_get( 'disable_functions' ) ) );
 
-	return ! in_array( 'dns_get_record', $deshabilitadas, true );
+	return ! in_array( 'dns_get_record', $disabled, true );
 }
 
 /**
- * El dominio que se diagnostica.
+ * The domain being diagnosed.
  *
- * El configurado si hay; si no, el del remitente del transporte, que es el
- * que aparece en el From y por el que se juzga el correo; y si tampoco hay,
- * el del sitio.
+ * The configured one if there is one; failing that, the transport's sender
+ * domain, which is what shows up in the From header and what the mail is
+ * judged by; and failing that, the site's.
  */
 function diluxone_mail_dns_domain(): string {
-	$configurado = strtolower( trim( (string) diluxone_mail_option( 'diluxone_mail_dns_domain' ) ) );
+	$configured = strtolower( trim( (string) diluxone_mail_option( 'diluxone_mail_dns_domain' ) ) );
 
-	if ( '' !== $configurado ) {
-		return $configurado;
+	if ( '' !== $configured ) {
+		return $configured;
 	}
 
 	$from = diluxone_mail_config()['from'];
@@ -75,61 +75,63 @@ function diluxone_mail_dns_domain(): string {
 }
 
 /**
- * Consulta con dns_get_record().
+ * A lookup through dns_get_record().
  *
- * @return array<int, string>|null null si no se pudo consultar.
+ * @return array<int, string>|null null when the lookup could not be made.
  */
 function diluxone_mail_dns_system( string $name, string $type ): ?array {
 	if ( ! diluxone_mail_dns_system_available() ) {
 		return null;
 	}
 
-	$codigos = array(
+	$codes = array(
 		'A'     => DNS_A,
 		'CNAME' => DNS_CNAME,
 		'MX'    => DNS_MX,
 		'TXT'   => DNS_TXT,
 	);
 
-	if ( ! isset( $codigos[ $type ] ) ) {
+	if ( ! isset( $codes[ $type ] ) ) {
 		return null;
 	}
 
-	// El @ es a propósito: un dominio que no existe hace que dns_get_record()
-	// tire un aviso además de devolver false, y el aviso no le sirve a nadie.
-	$registros = @dns_get_record( $name, $codigos[ $type ] ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+	// The @ is deliberate: a domain that does not exist makes
+	// dns_get_record() raise a warning on top of returning false, and the
+	// warning is of no use to anybody.
+	$records = @dns_get_record( $name, $codes[ $type ] ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 
-	if ( false === $registros ) {
+	if ( false === $records ) {
 		return null;
 	}
 
-	$salida = array();
+	$out = array();
 
-	foreach ( $registros as $registro ) {
+	foreach ( $records as $record ) {
 		switch ( $type ) {
 			case 'TXT':
-				// 'txt' trae las partes ya unidas; un registro largo viene
-				// partido en cadenas de 255 y hay que verlo entero.
-				$salida[] = (string) ( $registro['txt'] ?? implode( '', (array) ( $registro['entries'] ?? array() ) ) );
+				// 'txt' comes with the chunks already joined; a long record
+				// arrives split into 255-character strings and has to be seen
+				// whole.
+				$out[] = (string) ( $record['txt'] ?? implode( '', (array) ( $record['entries'] ?? array() ) ) );
 				break;
 			case 'CNAME':
-				$salida[] = strtolower( rtrim( (string) ( $registro['target'] ?? '' ), '.' ) );
+				$out[] = strtolower( rtrim( (string) ( $record['target'] ?? '' ), '.' ) );
 				break;
 			case 'MX':
-				$salida[] = (int) ( $registro['pri'] ?? 0 ) . ' ' . strtolower( rtrim( (string) ( $registro['target'] ?? '' ), '.' ) );
+				$out[] = (int) ( $record['pri'] ?? 0 ) . ' ' . strtolower( rtrim( (string) ( $record['target'] ?? '' ), '.' ) );
 				break;
 			default:
-				$salida[] = (string) ( $registro['ip'] ?? '' );
+				$out[] = (string) ( $record['ip'] ?? '' );
 		}
 	}
 
-	return array_values( array_filter( $salida, static fn( string $v ): bool => '' !== $v ) );
+	return array_values( array_filter( $out, static fn( string $v ): bool => '' !== $v ) );
 }
 
 /**
- * Consulta por DNS-over-HTTPS.
+ * A lookup over DNS-over-HTTPS.
  *
- * @return array<int, string>|null null si no se pudo consultar.
+ * @return array<int, string>|null null when the lookup could not be made.
  */
 function diluxone_mail_dns_doh( string $name, string $type ): ?array {
 	$endpoint = (string) diluxone_mail_option( 'diluxone_mail_dns_doh_endpoint' );
@@ -138,7 +140,7 @@ function diluxone_mail_dns_doh( string $name, string $type ): ?array {
 		return null;
 	}
 
-	$respuesta = wp_remote_get(
+	$response = wp_remote_get(
 		add_query_arg(
 			array(
 				'name' => rawurlencode( $name ),
@@ -152,18 +154,18 @@ function diluxone_mail_dns_doh( string $name, string $type ): ?array {
 		)
 	);
 
-	if ( is_wp_error( $respuesta ) || 200 !== (int) wp_remote_retrieve_response_code( $respuesta ) ) {
+	if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
 		return null;
 	}
 
-	$json = json_decode( (string) wp_remote_retrieve_body( $respuesta ), true );
+	$json = json_decode( (string) wp_remote_retrieve_body( $response ), true );
 
 	if ( ! is_array( $json ) || ! isset( $json['Status'] ) ) {
 		return null;
 	}
 
-	// 3 es NXDOMAIN: el nombre no existe. Es una respuesta válida y vacía,
-	// no un fallo del resolver.
+	// 3 is NXDOMAIN: the name does not exist. That is a valid, empty answer,
+	// not a failure of the resolver.
 	if ( 3 === (int) $json['Status'] ) {
 		return array();
 	}
@@ -172,21 +174,22 @@ function diluxone_mail_dns_doh( string $name, string $type ): ?array {
 		return null;
 	}
 
-	$codigo = diluxone_mail_dns_types()[ $type ];
-	$salida = array();
+	$code = diluxone_mail_dns_types()[ $type ];
+	$out  = array();
 
-	foreach ( (array) ( $json['Answer'] ?? array() ) as $registro ) {
-		if ( ! is_array( $registro ) || (int) ( $registro['type'] ?? 0 ) !== $codigo ) {
+	foreach ( (array) ( $json['Answer'] ?? array() ) as $record ) {
+		if ( ! is_array( $record ) || (int) ( $record['type'] ?? 0 ) !== $code ) {
 			continue;
 		}
 
-		$data = (string) ( $registro['data'] ?? '' );
+		$data = (string) ( $record['data'] ?? '' );
 
 		if ( 'TXT' === $type ) {
-			// Viene con las comillas de la sintaxis de zona: "abc" "def".
-			// Se sacan y se unen, que es lo que hace un cliente de correo.
-			$trozos = preg_split( '/"\s+"/', trim( $data, '"' ) );
-			$data   = implode( '', array_map( 'stripcslashes', false === $trozos ? array() : $trozos ) );
+			// It arrives with the quotes of zone-file syntax: "abc" "def".
+			// They are stripped and the parts joined, which is what a mail
+			// client does.
+			$chunks = preg_split( '/"\s+"/', trim( $data, '"' ) );
+			$data   = implode( '', array_map( 'stripcslashes', false === $chunks ? array() : $chunks ) );
 		} elseif ( 'CNAME' === $type ) {
 			$data = strtolower( rtrim( $data, '.' ) );
 		} elseif ( 'MX' === $type ) {
@@ -194,99 +197,100 @@ function diluxone_mail_dns_doh( string $name, string $type ): ?array {
 		}
 
 		if ( '' !== $data ) {
-			$salida[] = $data;
+			$out[] = $data;
 		}
 	}
 
-	return $salida;
+	return $out;
 }
 
 /**
- * Una consulta, cacheada, por el camino que haya.
+ * One lookup, cached, through whichever path is available.
  *
  * @return array{records: array<int, string>, source: string, error: string}
- *         source: 'system', 'doh' o 'cache'; error: vacío o el motivo.
+ *         source: 'system', 'doh' or 'cache'; error: empty, or the reason.
  */
 function diluxone_mail_dns_lookup( string $name, string $type ): array {
-	$name  = strtolower( rtrim( trim( $name ), '.' ) );
-	$type  = strtoupper( $type );
-	$clave = 'diluxone_mail_dns_' . md5( $type . '|' . $name );
+	$name = strtolower( rtrim( trim( $name ), '.' ) );
+	$type = strtoupper( $type );
+	$key  = 'diluxone_mail_dns_' . md5( $type . '|' . $name );
 
-	$cacheado = get_site_transient( $clave );
+	$cached = get_site_transient( $key );
 
-	if ( is_array( $cacheado ) && isset( $cacheado['records'] ) ) {
+	if ( is_array( $cached ) && isset( $cached['records'] ) ) {
 		return array(
-			'records' => (array) $cacheado['records'],
+			'records' => (array) $cached['records'],
 			'source'  => 'cache',
 			'error'   => '',
 		);
 	}
 
-	$modo      = (string) diluxone_mail_option( 'diluxone_mail_dns_resolver' );
-	$registros = null;
-	$fuente    = '';
+	$mode    = (string) diluxone_mail_option( 'diluxone_mail_dns_resolver' );
+	$records = null;
+	$source  = '';
 
-	if ( 'doh' !== $modo ) {
-		$registros = diluxone_mail_dns_system( $name, $type );
-		$fuente    = 'system';
+	if ( 'doh' !== $mode ) {
+		$records = diluxone_mail_dns_system( $name, $type );
+		$source  = 'system';
 	}
 
-	if ( null === $registros && 'system' !== $modo ) {
-		$registros = diluxone_mail_dns_doh( $name, $type );
-		$fuente    = 'doh';
+	if ( null === $records && 'system' !== $mode ) {
+		$records = diluxone_mail_dns_doh( $name, $type );
+		$source  = 'doh';
 	}
 
-	if ( null === $registros ) {
+	if ( null === $records ) {
 		return array(
 			'records' => array(),
-			'source'  => $fuente,
+			'source'  => $source,
 			'error'   => __( 'The DNS could not be queried: dns_get_record() is unavailable and the DNS-over-HTTPS resolver did not answer.', 'diluxone-mail' ),
 		);
 	}
 
-	$horas = max( 1, (int) diluxone_mail_option( 'diluxone_mail_dns_cache_hours' ) );
+	$hours = max( 1, (int) diluxone_mail_option( 'diluxone_mail_dns_cache_hours' ) );
 
-	set_site_transient( $clave, array( 'records' => $registros ), $horas * HOUR_IN_SECONDS );
-	diluxone_mail_dns_remember_key( $clave );
+	set_site_transient( $key, array( 'records' => $records ), $hours * HOUR_IN_SECONDS );
+	diluxone_mail_dns_remember_key( $key );
 
 	return array(
-		'records' => $registros,
-		'source'  => $fuente,
+		'records' => $records,
+		'source'  => $source,
 		'error'   => '',
 	);
 }
 
 /**
- * Anota qué transients hay, para poder vaciarlos todos con el botón.
+ * Records which transients exist, so the button can empty all of them.
  *
- * WordPress no lista transients por prefijo sin ir a la base directo, y
- * con un caché de objetos ni eso sirve. Una lista es más barata y más
- * honesta.
+ * WordPress cannot list transients by prefix without going straight to the
+ * database, and with an object cache not even that works. A list is cheaper
+ * and more honest.
  */
-function diluxone_mail_dns_remember_key( string $clave ): void {
-	$claves = (array) get_site_option( 'diluxone_mail_dns_cache_keys', array() );
+function diluxone_mail_dns_remember_key( string $key ): void {
+	$keys = (array) get_site_option( 'diluxone_mail_dns_cache_keys', array() );
 
-	if ( in_array( $clave, $claves, true ) ) {
+	if ( in_array( $key, $keys, true ) ) {
 		return;
 	}
 
-	$claves[] = $clave;
+	$keys[] = $key;
 
-	update_site_option( 'diluxone_mail_dns_cache_keys', array_slice( $claves, -500 ) );
+	update_site_option( 'diluxone_mail_dns_cache_keys', array_slice( $keys, -500 ) );
 }
 
-/** Vacía el caché del DNS. Es lo que hace el botón «revalidar». */
+/** Empties the DNS cache. This is what the "revalidate" button does. */
 function diluxone_mail_dns_flush(): void {
-	foreach ( (array) get_site_option( 'diluxone_mail_dns_cache_keys', array() ) as $clave ) {
-		delete_site_transient( (string) $clave );
+	foreach ( (array) get_site_option( 'diluxone_mail_dns_cache_keys', array() ) as $key ) {
+		delete_site_transient( (string) $key );
 	}
 
 	delete_site_option( 'diluxone_mail_dns_cache_keys' );
 	delete_site_transient( 'diluxone_mail_diagnosis_' . md5( diluxone_mail_dns_domain() ) );
 }
 
-/** Los TXT de un nombre. Atajo del diagnóstico. */
 /**
+ * The TXT records of a name. A shortcut for the diagnosis.
+ *
  * @return array<int, string>
  */
 function diluxone_mail_dns_txt( string $name ): array {

@@ -1,6 +1,6 @@
 <?php
 /**
- * WP-CLI de mentira: anota lo que se imprime, y error() lanza en vez de salir.
+ * A fake WP-CLI: it records what gets printed, and error() throws instead of exiting.
  */
 namespace {
 	if (!defined('WP_CLI')) { define('WP_CLI', true); }

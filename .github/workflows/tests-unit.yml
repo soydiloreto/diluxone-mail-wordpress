@@ -54,10 +54,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    # La cobertura se mide una vez, en la versión de PHP más nueva, y el
-    # umbral es un trinquete: está apenas por debajo de lo que cubre la suite
-    # y sólo se sube. Un número inventado alto no mide nada; uno real que no
-    # puede bajar, sí.
+    # Coverage is measured once, on the newest PHP, and the threshold is a
+    # ratchet: it sits just under what the suite covers and only ever goes up.
+    # A high invented number measures nothing; a real one that cannot go down
+    # does.
     steps:
       - name: Checkout
         uses: actions/checkout@v6

@@ -1,9 +1,9 @@
 <?php
 /**
- * Un $wpdb que anota cada consulta y contesta lo que el test le prepare.
+ * A $wpdb that records every query and answers whatever the test sets up.
  *
- * Alcanza para probar lo que importa de log.php: qué SQL se arma, con qué
- * marcadores, y qué se le manda a insert/update/replace. No ejecuta nada.
+ * It is enough to test what matters in log.php: which SQL is built, with which
+ * placeholders, and what is handed to insert/update/replace. It runs nothing.
  */
 if (!defined('ARRAY_A')) { define('ARRAY_A', 'ARRAY_A'); }
 if (!defined('ARRAY_N')) { define('ARRAY_N', 'ARRAY_N'); }

@@ -1,30 +1,30 @@
 <?php
 /**
- * Los perfiles de proveedor.
+ * The provider profiles.
  *
- * Un desplegable elige el proveedor y rellena host, puerto, cifrado y —si el
- * proveedor lo impone— el usuario; sólo queda pegar la clave. Todo lo que
- * está acá se verificó contra la documentación oficial de cada uno y, en el
- * caso de Mailjet y Mailpit, contra el servidor de verdad. Un host escrito de
- * memoria es un plugin que no manda correo, así que cada perfil lleva el
- * enlace a la página de la que salió.
+ * A dropdown picks the provider and fills in host, port, encryption and — if
+ * the provider imposes one — the username; all that is left is pasting the
+ * key. Everything here was checked against each provider's official
+ * documentation and, for Mailjet and Mailpit, against the real server. A host
+ * written from memory is a plugin that does not send mail, so every profile
+ * carries the link to the page it came from.
  *
- * Sólo SMTP. Con un único camino de código se llega a todos los proveedores
- * del mercado; las APIs HTTP no suman nada hoy y multiplican el código por
- * proveedor.
+ * SMTP only. A single code path reaches every provider on the market; HTTP
+ * APIs add nothing today and multiply the code per provider.
  *
- * Los perfiles locales —Mailpit y MailHog— van sin autenticación y sin TLS a
- * propósito, y con el autoTLS de PHPMailer apagado. Sin apagarlo, PHPMailer
- * ve que el servidor anuncia STARTTLS, intenta subir a cifrado, el
- * certificado autofirmado no valida, y el envío falla aunque el resto esté
- * bien. Es el error más común de un entorno local y por eso está resuelto
- * acá y no en la documentación.
+ * The local profiles — Mailpit and MailHog — run without authentication and
+ * without TLS on purpose, and with PHPMailer's autoTLS turned off. Without
+ * turning it off PHPMailer sees the server advertise STARTTLS, tries to
+ * upgrade, the self-signed certificate fails to validate, and the send fails
+ * even though everything else is right. It is the most common mistake in a
+ * local environment, and that is why it is solved here and not in the
+ * documentation.
  *
- * Las dos listas de DNS de cada perfil alimentan el diagnóstico: los
- * selectores DKIM que se sondean, y los `include` de SPF con los que se
- * reconoce al proveedor en el registro del dominio, para poder señalar los
- * que quedaron declarados y ya no se usan. Van vacías cuando no se pudieron
- * verificar —vacío es «no sé», nunca «no tiene»—.
+ * The two DNS lists on each profile feed the diagnosis: the DKIM selectors to
+ * probe, and the SPF `include`s that identify the provider inside the
+ * domain's record, so the ones still declared but no longer used can be
+ * pointed out. They are empty where they could not be verified — empty means
+ * "unknown", never "has none".
  *
  * @package DiluxOneMail
  */
@@ -32,7 +32,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Todos los perfiles, en el orden del desplegable.
+ * Every profile, in the order of the dropdown.
  *
  * @return array<string, array<string, mixed>>
  */
@@ -167,7 +167,7 @@ function diluxone_mail_providers(): array {
 		'ses'              => array(
 			'name'           => 'Amazon SES',
 			'group'          => __( 'Providers', 'diluxone-mail' ),
-			'host'           => 'email-smtp.us-east-1.amazonaws.com', // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Es el servidor SMTP de SES, no un recurso servido desde afuera.
+			'host'           => 'email-smtp.us-east-1.amazonaws.com', // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- This is the SES SMTP server, not a resource served from elsewhere.
 			'port'           => 587,
 			'encryption'     => 'tls',
 			'auth'           => true,
@@ -294,40 +294,40 @@ function diluxone_mail_providers(): array {
 }
 
 /**
- * Un perfil por su clave.
+ * One profile, by its key.
  *
- * Una clave desconocida —o vacía, que es «nadie configuró nada»— devuelve el
- * perfil genérico: todo a mano y sin suposiciones. Es lo que hace que un
- * valor viejo guardado en la base no rompa el envío el día que se renombre un
- * perfil.
+ * An unknown key — or an empty one, which means "nobody configured anything"
+ * — returns the generic profile: everything by hand and no assumptions. That
+ * is what keeps an old value stored in the database from breaking delivery
+ * the day a profile gets renamed.
  *
  * @return array<string, mixed>
  */
 function diluxone_mail_provider( string $key ): array {
-	$perfiles = diluxone_mail_providers();
+	$profiles = diluxone_mail_providers();
 
-	return $perfiles[ $key ] ?? $perfiles['custom'];
+	return $profiles[ $key ] ?? $profiles['custom'];
 }
 
 /**
- * Los valores que un perfil pone en el formulario al elegirlo.
+ * The values a profile puts into the form when it is picked.
  *
- * No es una capa de precedencia: el perfil rellena las options una vez, y
- * desde ahí son options normales, editables. Lo único que el perfil impone
- * en tiempo de envío son sus propiedades fijas —auth y autoTLS—, que se leen
- * del perfil en mailer.php y no de acá.
+ * This is not a precedence layer: the profile fills the options once, and
+ * from then on they are ordinary, editable options. The only things the
+ * profile imposes at send time are its fixed properties — auth and autoTLS —
+ * which mailer.php reads from the profile and not from here.
  *
  * @return array<string, mixed>
  */
 function diluxone_mail_provider_defaults( string $key ): array {
-	$perfil = diluxone_mail_provider( $key );
+	$profile = diluxone_mail_provider( $key );
 
 	return array(
 		'diluxone_mail_provider'   => isset( diluxone_mail_providers()[ $key ] ) ? $key : 'custom',
-		'diluxone_mail_host'       => (string) $perfil['host'],
-		'diluxone_mail_port'       => (int) $perfil['port'],
-		'diluxone_mail_encryption' => (string) $perfil['encryption'],
-		'diluxone_mail_auth'       => $perfil['auth'] ? 1 : 0,
-		'diluxone_mail_user'       => (string) $perfil['user'],
+		'diluxone_mail_host'       => (string) $profile['host'],
+		'diluxone_mail_port'       => (int) $profile['port'],
+		'diluxone_mail_encryption' => (string) $profile['encryption'],
+		'diluxone_mail_auth'       => $profile['auth'] ? 1 : 0,
+		'diluxone_mail_user'       => (string) $profile['user'],
 	);
 }

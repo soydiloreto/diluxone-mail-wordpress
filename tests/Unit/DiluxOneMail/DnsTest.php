@@ -1,13 +1,13 @@
 <?php
 /**
- * La consulta al DNS: el caché, la caída a DoH, y el dominio a diagnosticar.
+ * The DNS lookup: the cache, the fallback to DoH, and the domain to diagnose.
  */
 
 namespace Tests\Unit\DiluxOneMail;
 
 class DnsTest extends DnsTestCase {
 
-	/** Una respuesta de DoH en el formato JSON de Cloudflare/Google. */
+	/** A DoH answer in Cloudflare/Google's JSON format. */
 	private function doh( int $status, array $answers ): void {
 		$GLOBALS['_test_wp_remote_get'] = array(
 			'response' => array( 'code' => 200 ),
@@ -20,7 +20,7 @@ class DnsTest extends DnsTestCase {
 		parent::tearDown();
 	}
 
-	public function test_lo_cacheado_se_devuelve_sin_consultar(): void {
+	public function test_a_cached_answer_is_returned_without_a_lookup(): void {
 		$this->dns( 'x.test', 'TXT', array( 'v=spf1 -all' ) );
 
 		$r = \diluxone_mail_dns_lookup( 'X.TEST.', 'txt' );
@@ -29,18 +29,18 @@ class DnsTest extends DnsTestCase {
 		$this->assertSame( array( 'v=spf1 -all' ), $r['records'] );
 	}
 
-	public function test_doh_devuelve_txt_uniendo_las_partes_entrecomilladas(): void {
+	public function test_doh_returns_txt_joining_the_quoted_chunks(): void {
 		$this->doh( 0, array( array( 'type' => 16, 'data' => '"v=spf1 ip4:1.1.1.1" " -all"' ) ) );
 
 		$r = \diluxone_mail_dns_lookup( 'doh.test', 'TXT' );
 
 		$this->assertSame( 'doh', $r['source'] );
 		$this->assertSame( array( 'v=spf1 ip4:1.1.1.1 -all' ), $r['records'] );
-		// Y quedó cacheado.
+		// And it was cached.
 		$this->assertSame( 'cache', \diluxone_mail_dns_lookup( 'doh.test', 'TXT' )['source'] );
 	}
 
-	public function test_doh_cname_y_mx(): void {
+	public function test_doh_cname_and_mx(): void {
 		$this->doh( 0, array( array( 'type' => 5, 'data' => 'Target.Example.' ) ) );
 		$this->assertSame( array( 'target.example' ), \diluxone_mail_dns_lookup( 'c.test', 'CNAME' )['records'] );
 
@@ -48,30 +48,30 @@ class DnsTest extends DnsTestCase {
 		$this->assertSame( array( '10 mx.example' ), \diluxone_mail_dns_lookup( 'm.test', 'MX' )['records'] );
 	}
 
-	public function test_nxdomain_es_una_respuesta_vacia_y_valida(): void {
+	public function test_nxdomain_is_an_empty_valid_answer(): void {
 		$this->doh( 3, array() );
 
-		$r = \diluxone_mail_dns_lookup( 'noexiste.test', 'TXT' );
+		$r = \diluxone_mail_dns_lookup( 'nonexistent.test', 'TXT' );
 
 		$this->assertSame( array(), $r['records'] );
 		$this->assertSame( '', $r['error'] );
 	}
 
-	public function test_cuando_nadie_contesta_se_dice(): void {
-		$r = \diluxone_mail_dns_lookup( 'nadie.test', 'TXT' );
+	public function test_when_nobody_answers_it_says_so(): void {
+		$r = \diluxone_mail_dns_lookup( 'nobody.test', 'TXT' );
 
 		$this->assertSame( array(), $r['records'] );
 		$this->assertNotSame( '', $r['error'] );
 	}
 
-	public function test_un_status_de_error_del_resolver_no_se_cachea(): void {
+	public function test_an_error_status_from_the_resolver_is_not_cached(): void {
 		$this->doh( 2, array() );
 
 		$this->assertNotSame( '', \diluxone_mail_dns_lookup( 'servfail.test', 'TXT' )['error'] );
 		$this->assertArrayNotHasKey( 'diluxone_mail_dns_' . md5( 'TXT|servfail.test' ), $GLOBALS['_test_wp_site_transients'] );
 	}
 
-	public function test_revalidar_vacia_todo_lo_cacheado(): void {
+	public function test_revalidating_empties_everything_cached(): void {
 		$this->doh( 0, array( array( 'type' => 16, 'data' => '"v=spf1 -all"' ) ) );
 		\diluxone_mail_dns_lookup( 'a.test', 'TXT' );
 		\diluxone_mail_dns_lookup( 'b.test', 'TXT' );
@@ -84,29 +84,29 @@ class DnsTest extends DnsTestCase {
 		$this->assertSame( array(), array_filter( $GLOBALS['_test_wp_site_transients'], static fn( $k ) => str_starts_with( $k, 'diluxone_mail_dns_' ), ARRAY_FILTER_USE_KEY ) );
 	}
 
-	public function test_el_dominio_sale_del_ajuste_del_remitente_o_del_sitio(): void {
+	public function test_the_domain_comes_from_the_setting_the_sender_or_the_site(): void {
 		$this->assertSame( (string) parse_url( \home_url(), PHP_URL_HOST ), \diluxone_mail_dns_domain() );
 
-		\update_option( 'diluxone_mail_from', 'hola@correo.test' );
-		$this->assertSame( 'correo.test', \diluxone_mail_dns_domain() );
+		\update_option( 'diluxone_mail_from', 'hello@mail.test' );
+		$this->assertSame( 'mail.test', \diluxone_mail_dns_domain() );
 
 		\update_option( 'diluxone_mail_dns_domain', 'Fijado.TEST' );
 		$this->assertSame( 'fijado.test', \diluxone_mail_dns_domain() );
 	}
 
-	public function test_con_resolver_system_no_se_cae_a_doh(): void {
+	public function test_with_the_system_resolver_it_does_not_fall_back_to_doh(): void {
 		\update_option( 'diluxone_mail_dns_resolver', 'system' );
 		$this->doh( 0, array( array( 'type' => 16, 'data' => '"v=spf1 -all"' ) ) );
 
-		// dns_get_record() de verdad no resuelve .test; lo que importa es que
-		// no se haya usado la respuesta de DoH que estaba lista.
-		$r = \diluxone_mail_dns_lookup( 'solo-system.test', 'TXT' );
+		// A real dns_get_record() does not resolve .test; what matters is that
+		// the DoH answer sitting ready was not used.
+		$r = \diluxone_mail_dns_lookup( 'system-only.test', 'TXT' );
 
 		$this->assertNotSame( 'doh', $r['source'] );
 		$this->assertSame( array(), $r['records'] );
 	}
 
-	public function test_los_tipos_conocidos(): void {
+	public function test_the_known_types(): void {
 		$this->assertSame( 16, \diluxone_mail_dns_types()['TXT'] );
 		$this->assertIsBool( \diluxone_mail_dns_system_available() );
 	}

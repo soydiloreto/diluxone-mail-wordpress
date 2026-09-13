@@ -1,11 +1,11 @@
 <?php
 /**
- * Lo que necesitan las pantallas, los handlers y el transporte para correr
- * sin WordPress: clases mínimas y las funciones que terminan en exit().
+ * What the screens, the handlers and the transport need in order to run
+ * without WordPress: minimal classes and the functions that end in exit().
  *
- * wp_safe_redirect() y wp_die() lanzan una excepción en vez de terminar el
- * proceso: un handler de admin_post hace su trabajo, redirige y sale, y la
- * excepción es la forma de ver adónde quiso ir sin matar a PHPUnit.
+ * wp_safe_redirect() and wp_die() throw an exception instead of ending the
+ * process: an admin_post handler does its job, redirects and exits, and the
+ * exception is how to see where it wanted to go without killing PHPUnit.
  */
 
 class DiluxOne_Test_Redirect extends \RuntimeException {}
@@ -58,7 +58,7 @@ if (!class_exists('WP_Screen')) {
 }
 
 /**
- * WP_List_Table, lo justo para que la tabla del historial pinte sin WordPress.
+ * WP_List_Table, just enough for the log table to paint without WordPress.
  */
 if (!class_exists('WP_List_Table')) {
 	class WP_List_Table {

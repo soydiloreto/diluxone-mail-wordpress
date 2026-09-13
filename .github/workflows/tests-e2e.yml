@@ -1,10 +1,10 @@
 name: End-to-end tests
 
-# Un wp_mail() de verdad, a través del plugin, hasta un buzón de Mailpit en
-# la misma red Docker que el wp-env. Es la única suite que recorre la cadena
-# entera —config → phpmailer_init → SMTP → buzón— y la que vale cuando las
-# demás dicen que sí. Después, el mismo sitio convertido a red para la suite
-# multisitio: va al final porque convertirlo es destructivo.
+# A real wp_mail(), through the plugin, into a Mailpit mailbox on the same
+# Docker network as the wp-env. It is the only suite that walks the whole chain
+# — config → phpmailer_init → SMTP → mailbox — and the one that counts when the
+# others say yes. Then the same site converted to a network for the multisite
+# suite: it goes last because converting it is destructive.
 
 on:
   push:

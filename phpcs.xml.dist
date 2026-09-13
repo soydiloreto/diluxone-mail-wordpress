@@ -43,20 +43,20 @@
         </properties>
     </rule>
 
-    <!-- Documentación de parámetros: la da el tipado nativo, no el docblock.
+    <!-- Parameter documentation: native typing provides it, not the docblock.
 
-         WPCS pide un @param por cada parámetro. La regla viene de cuando PHP
-         no tenía tipos: el docblock era el único lugar donde decir que algo
-         era un `int`. Este plugin declara PHP 8.1 como mínimo y tipa las
-         firmas de verdad —`function diluxone_mail_field_editable( array $field, int
-         $user_id ): bool`— así que el @param repetiría lo que el intérprete
-         ya verifica, y con la desventaja de que un docblock puede quedar
-         desactualizado y un tipo nativo no.
+         WPCS wants an @param per parameter. The rule dates from when PHP had
+         no types: the docblock was the only place to say something was an
+         `int`. This plugin declares PHP 8.1 as its minimum and types its
+         signatures for real — `function diluxone_mail_config_value( string
+         $field ): array` — so an @param would repeat what the interpreter
+         already checks, with the downside that a docblock can go stale and a
+         native type cannot.
 
-         Lo que sí se exige sigue exigiéndose: los docblocks están, explican
-         POR QUÉ existe cada función, y las que devuelven una forma que el
-         tipo nativo no alcanza a describir —un array con claves— llevan su
-         @return. Eso no lo reemplaza ningún tipo. -->
+         What is genuinely required is still required: the docblocks are there,
+         they explain WHY each function exists, and the ones returning a shape
+         a native type cannot describe — an array with keys — carry their
+         @return. No type replaces that. -->
     <rule ref="Squiz.Commenting.FunctionComment.MissingParamTag">
         <severity>0</severity>
     </rule>
@@ -67,16 +67,16 @@
         <severity>0</severity>
     </rule>
 
-    <!-- Un ítem por línea en un array de una sola dimensión.
+    <!-- One item per line in a single-dimension array.
 
-         La regla existe para que un array de configuración se lea de arriba
-         abajo, y para eso está bien. Pero también alcanza a las listas de
-         palabras —los nombres de usuario reservados, los prefijos de un user
-         agent— donde partir veintisiete palabras en veintisiete renglones no
-         hace más legible nada: hace una columna que no se lee.
+         The rule exists so a configuration array reads top to bottom, and for
+         that it is right. But it also catches word lists — the DKIM selectors
+         the big providers use, a provider's SPF includes — where splitting
+         eleven words across eleven lines makes nothing more readable: it makes
+         a column nobody reads.
 
-         Los arrays con claves siguen exigiendo un renglón por ítem, que es el
-         caso en el que la regla ayuda de verdad. -->
+         Keyed arrays still demand a line per item, which is the case where the
+         rule genuinely helps. -->
     <rule ref="WordPress.Arrays.ArrayDeclarationSpacing.ArrayItemNoNewLine">
         <severity>0</severity>
     </rule>
@@ -97,23 +97,6 @@
          APIs, naming where it matters) while turning off cosmetic
          preferences that produce noise without making the code better.
          ================================================================= -->
-
-    <!-- Modern PSR-12 conventions in the OOP layer.
-         DTOs and SyncStatus enum use PascalCase filenames + camelCase
-         methods/properties on purpose. The autoloader handles both
-         naming styles. Renaming would break every callsite. -->
-    <rule ref="WordPress.NamingConventions.ValidFunctionName">
-        <exclude-pattern>*/includes/DTOs/*</exclude-pattern>
-        <exclude-pattern>*/includes/Enums/SyncStatus.php</exclude-pattern>
-    </rule>
-    <rule ref="WordPress.NamingConventions.ValidVariableName">
-        <exclude-pattern>*/includes/DTOs/*</exclude-pattern>
-        <exclude-pattern>*/includes/Enums/SyncStatus.php</exclude-pattern>
-    </rule>
-    <rule ref="WordPress.Files.FileName">
-        <exclude-pattern>*/includes/DTOs/*</exclude-pattern>
-        <exclude-pattern>*/includes/Enums/SyncStatus.php</exclude-pattern>
-    </rule>
 
     <!-- Yoda conditions are explicitly NOT used in this project (see
          .github/copilot-instructions.md). Modern style is `$x === 5`,
@@ -145,11 +128,12 @@
         <severity>0</severity>
     </rule>
 
-    <!-- base64_encode and base64_decode are required for the AES-256-GCM
-         ciphertext encoding. The
-         "discouraged for obfuscation" rule applies to using them to hide
-         malicious payloads, not to legitimate cryptographic envelope
-         encoding. -->
+    <!-- base64_decode is how a DKIM public key is read: the standard
+         publishes it base64-encoded in the p= tag, and measuring the key size
+         means decoding it. base64_encode is how the SMTP dialogue carries an
+         AUTH LOGIN credential, which is why redaction has to cover it. The
+         "discouraged for obfuscation" rule is about hiding malicious payloads,
+         not about reading a format somebody else defined. -->
     <rule ref="WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode">
         <severity>0</severity>
     </rule>
@@ -165,36 +149,26 @@
         <severity>0</severity>
     </rule>
 
-    <!-- PSR-2 underscore-prefix on method names — flagged on internal
-         _wp_die_test_handler-style helpers that follow a legacy PHP
-         convention. Harmless. -->
-    <rule ref="PSR2.Methods.MethodDeclaration.Underscore">
-        <severity>0</severity>
-    </rule>
-
-    <!-- DTO property access ripples across the whole codebase: providers,
-         managers, admin templates all read $dto->camelProp. We already
-         excluded the property *declaration* rule for DTOs/Enums above;
-         excluding the *access* rule globally for symmetry. The naming
-         convention is documented in .github/copilot-instructions.md. -->
+    <!-- PHPMailer's own properties are PascalCase — $phpmailer->SMTPAuth,
+         ->Host, ->CharSet — and that is the API this plugin has to write to.
+         The rule is about the names we choose, not the ones a library
+         imposes. -->
     <rule ref="WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase">
         <severity>0</severity>
     </rule>
 
-    <!-- File naming: this codebase intentionally mixes legacy WP-style
-         (class-foo.php for older classes) with modern PSR-12
-         (PascalCase.php for newer DTOs/Enums). The custom autoloader in
-         includes/enhanced-autoloader.php maps both styles to the same
-         namespace tree. Renaming files would break that mapping. -->
+    <!-- File naming: the log's WP_List_Table subclass lives in
+         includes/log-list-table.php, named after what the file does rather
+         than after the class it happens to declare, like every other file in
+         includes/. It is the plugin's only class. -->
     <rule ref="WordPress.Files.FileName.InvalidClassFileName">
         <severity>0</severity>
     </rule>
-    <rule ref="WordPress.Files.FileName.NotHyphenatedLowercase">
-        <severity>0</severity>
-    </rule>
 
-    <!-- Plugin minimum WordPress version -->
-    <config name="minimum_supported_wp_version" value="5.0"/>
+    <!-- Plugin minimum WordPress version. 6.2 is where $wpdb->prepare()
+         gained the %i identifier placeholder, which is how the log's table
+         names reach the query. -->
+    <config name="minimum_supported_wp_version" value="6.2"/>
 
     <!-- PHP compatibility: must run cleanly on PHP 8.1 and up -->
     <config name="testVersion" value="8.1-"/>

@@ -1,6 +1,6 @@
 <?php
 /**
- * Los comandos de WP-CLI contra el WP-CLI de mentira.
+ * The WP-CLI commands against the fake WP-CLI.
  */
 
 namespace Tests\Unit\DiluxOneMail;
@@ -18,11 +18,11 @@ class CliTest extends AdminTestCase {
 		\update_option( 'diluxone_mail_host', 'in-v3.mailjet.com' );
 	}
 
-	public function test_el_comando_esta_registrado(): void {
+	public function test_the_command_is_registered(): void {
 		$this->assertSame( 'DiluxOne_Mail_CLI', \WP_CLI::$commands['diluxone-mail'] );
 	}
 
-	public function test_test_manda_y_cuenta(): void {
+	public function test_test_sends_and_reports(): void {
 		$this->cli->test( array( 'a@x.test' ) );
 
 		$this->assertStringContainsString( 'Success: Sent to a@x.test', implode( "\n", \WP_CLI::$out ) );
@@ -35,9 +35,9 @@ class CliTest extends AdminTestCase {
 		$this->cli->test( array( 'a@x.test' ) );
 	}
 
-	public function test_test_con_una_direccion_invalida(): void {
+	public function test_test_with_an_invalid_address(): void {
 		$this->expectException( \DiluxOne_Test_CLI_Error::class );
-		$this->cli->test( array( 'nada' ) );
+		$this->cli->test( array( 'nothing' ) );
 	}
 
 	public function test_status(): void {
@@ -45,31 +45,32 @@ class CliTest extends AdminTestCase {
 
 		$this->cli->status( array(), array( 'format' => 'json' ) );
 
-		$filas = array_column( $GLOBALS['_test_cli_items'][0]['items'], 'value', 'key' );
-		$this->assertStringStartsWith( 'transport', $filas['mode'] );
-		$this->assertStringContainsString( 'in-v3.mailjet.com', $filas['host'] );
-		$this->assertStringContainsString( 'failed: boom', $filas['last send'] );
+		$rows = array_column( $GLOBALS['_test_cli_items'][0]['items'], 'value', 'key' );
+		$this->assertStringStartsWith( 'transport', $rows['mode'] );
+		$this->assertStringContainsString( 'in-v3.mailjet.com', $rows['host'] );
+		$this->assertStringContainsString( 'failed: boom', $rows['last send'] );
 	}
 
-	public function test_dns_en_tabla_y_en_json(): void {
-		\update_option( 'diluxone_mail_from', 'hola@x.test' );
+	public function test_dns_as_a_table_and_as_json(): void {
+		\update_option( 'diluxone_mail_from', 'hello@x.test' );
 
 		$this->cli->dns( array(), array() );
 		$this->assertStringContainsString( 'x.test — SPF: 0/10 lookups', \WP_CLI::$out[0] );
 		$this->assertStringContainsString( '[ERROR]', implode( "\n", \WP_CLI::$out ) );
 
 		\WP_CLI::reset();
-		$this->cli->dns( array( 'otro.test' ), array( 'format' => 'json', 'fresh' => true ) );
-		$this->assertSame( 'otro.test', json_decode( \WP_CLI::$out[0], true )['domain'] );
+		$this->cli->dns( array( 'other.test' ), array( 'format' => 'json', 'fresh' => true ) );
+		$this->assertSame( 'other.test', json_decode( \WP_CLI::$out[0], true )['domain'] );
 	}
 
-	public function test_dns_sin_dominio(): void {
+	public function test_dns_with_no_domain(): void {
 		\add_filter( 'diluxone_mail_option', static fn( $v, $k ) => 'diluxone_mail_dns_domain' === $k ? '' : $v, 10, 2 );
 
 		\add_filter( 'diluxone_mail_config', static fn( array $c ) => array_merge( $c, array( 'from' => '' ) ) );
 
-		// Con el dominio vacío por filtro y sin remitente, queda el del sitio;
-		// para forzar «sin dominio» se pasa uno vacío que el comando descarta.
+		// With the domain emptied by the filter and no sender, the site's own is
+		// left; to force "no domain" an empty one is passed and the command
+		// discards it.
 		$this->expectException( \DiluxOne_Test_CLI_Error::class );
 		$this->cli->dns( array( ' ' ), array() );
 	}
@@ -81,11 +82,11 @@ class CliTest extends AdminTestCase {
 
 		$item = $GLOBALS['_test_cli_items'][0]['items'][0];
 		$this->assertSame( 'ana@x.test', $item['to'] );
-		$this->assertSame( 'plugin:tienda', $item['source'] );
+		$this->assertSame( 'plugin:shop', $item['source'] );
 		$this->assertStringContainsString( 'LIMIT 5', $this->db->of( 'get_results' )[0]['sql'] );
 	}
 
-	public function test_log_sin_list(): void {
+	public function test_log_without_list(): void {
 		$this->expectException( \DiluxOne_Test_CLI_Error::class );
 		$this->cli->log( array( 'purge' ), array() );
 	}

@@ -55,7 +55,9 @@ phpunit-integration.xml.dist
 phpunit-multisite.xml
 tests
 .phpunit.result.cache
+.phpunit.result.cache.*
 .phpunit.cache
+*.bak
 coverage
 coverage.xml
 clover.xml

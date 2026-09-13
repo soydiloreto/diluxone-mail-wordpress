@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 #
-# Prueba de punta a punta: WordPress manda un correo a través del plugin y
-# el correo aparece en un buzón de verdad.
+# End to end: WordPress sends a message through the plugin and the message
+# turns up in a real mailbox.
 #
-# Levanta Mailpit en la misma red Docker que el wp-env de pruebas, apunta el
-# plugin a él, hace un wp_mail() real desde WP-CLI, y verifica por la API de
-# Mailpit que llegó con el remitente, el asunto y los destinatarios que
-# correspondían. Después rompe el puerto a propósito y verifica que el
-# fallo quede en el historial con el error SMTP de verdad.
+# It brings Mailpit up on the same Docker network as the test wp-env, points
+# the plugin at it, makes a real wp_mail() from WP-CLI, and checks through
+# Mailpit's API that it arrived with the sender, subject and recipients it was
+# supposed to. Then it breaks the port on purpose and checks that the failure
+# lands in the log with the real SMTP error.
 #
-# Es el único test que recorre la cadena entera —config → phpmailer_init →
-# SMTP → buzón— y por eso es el que vale cuando los demás dicen que sí.
+# It is the only test that walks the whole chain — config → phpmailer_init →
+# SMTP → mailbox — and that is why it is the one that counts when the others
+# say yes.
 #
-# Uso:   make test-e2e      (con el wp-env de pruebas ya levantado)
+# Usage:   make test-e2e      (with the test wp-env already up)
 #
 set -euo pipefail
 
@@ -27,37 +28,37 @@ fail() { printf '\033[1;31m✖ %s\033[0m\n' "$*" >&2; exit 1; }
 
 wpc() { npx wp-env run tests-cli wp "$@" 2>/dev/null; }
 
-# ── Mailpit en la red del wp-env ─────────────────────────────────────
-log "Buscando la red Docker del wp-env de pruebas"
-# Se le pregunta al propio contenedor de WP-CLI —que es el que va a mandar—
-# en qué redes está, y no se adivina por el nombre: puede haber más de un
-# wp-env corriendo, y el hash del proyecto cambia entre versiones de wp-env.
+# ── Mailpit on the wp-env network ────────────────────────────────────
+log "Looking for the test wp-env's Docker network"
+# The WP-CLI container itself — the one that is going to send — is asked which
+# networks it is on, rather than guessing from the name: there can be more than
+# one wp-env running, and the project hash changes between wp-env versions.
 CLI_ID=$( (npx wp-env run tests-cli sh -c hostname 2>/dev/null || true) | grep -E '^[0-9a-f]{12}$' | head -1 || true)
 NETS=""
 [ -n "$CLI_ID" ] && NETS=$(docker inspect "$CLI_ID" --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}' 2>/dev/null || true)
 if [ -z "$NETS" ]; then
   CID=$(docker ps --format '{{.Names}}' | grep -E -- '-tests-wordpress-1$' | head -1)
-  [ -n "$CID" ] || fail "no hay un wp-env de pruebas corriendo (npx wp-env start)"
+  [ -n "$CID" ] || fail "no test wp-env is running (npx wp-env start)"
   NETS=$(docker inspect "$CID" --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}')
 fi
 NET=$(echo "$NETS" | awk '{print $1}')
-[ -n "$NET" ] || fail "no se pudo determinar la red del wp-env"
-ok "redes: $NETS"
+[ -n "$NET" ] || fail "could not work out the wp-env network"
+ok "networks: $NETS"
 
-log "Levantando Mailpit"
+log "Bringing Mailpit up"
 docker rm -f "$MAILPIT_NAME" >/dev/null 2>&1 || true
 docker run -d --name "$MAILPIT_NAME" --network "$NET" -p "${MAILPIT_PORT}:8025" "$MAILPIT_IMAGE" >/dev/null
 for n in $NETS; do [ "$n" = "$NET" ] || docker network connect "$n" "$MAILPIT_NAME" >/dev/null 2>&1 || true; done
 MU='/var/www/html/wp-content/mu-plugins'
 cleanup() {
   docker rm -f "$MAILPIT_NAME" >/dev/null 2>&1 || true
-  npx wp-env run tests-cli sh -c "rm -f ${MU}/otro-mailer.php ${MU}/interceptor.php" >/dev/null 2>&1 || true
+  npx wp-env run tests-cli sh -c "rm -f ${MU}/other-mailer.php ${MU}/interceptor.php" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
-# Deja un mu-plugin de mentira adentro del contenedor. El contenido viaja en
-# base64: entre el shell local, wp-env y docker hay tres capas de comillas y
-# un $ no sobrevive ninguna.
+# Drops a fake mu-plugin inside the container. The content travels base64
+# encoded: between the local shell, wp-env and docker there are three layers of
+# quoting and a $ survives none of them.
 mu_plugin() {
   local name="$1" body="$2"
   npx wp-env run tests-cli sh -c "mkdir -p ${MU} && echo '$(printf '%s' "$body" | base64 -w0)' | base64 -d > ${MU}/${name}" >/dev/null 2>&1
@@ -67,12 +68,12 @@ for _ in $(seq 1 30); do
   curl -sf "$API/info" >/dev/null && break
   sleep 1
 done
-curl -sf "$API/info" >/dev/null || fail "Mailpit no contesta en $API"
+curl -sf "$API/info" >/dev/null || fail "Mailpit is not answering at $API"
 curl -s -X DELETE "$API/messages" >/dev/null
-ok "Mailpit listo"
+ok "Mailpit ready"
 
-# ── El plugin apunta a Mailpit por el perfil local ───────────────────
-log "Configurando el plugin: perfil Mailpit, modo transporte"
+# ── The plugin points at Mailpit through the local profile ──────────
+log "Configuring the plugin: Mailpit profile, transport mode"
 wpc plugin activate diluxone-mail >/dev/null || true
 wpc option update diluxone_mail_provider mailpit >/dev/null
 wpc option update diluxone_mail_host "$MAILPIT_NAME" >/dev/null
@@ -86,97 +87,97 @@ wpc option update diluxone_mail_log_enabled 1 >/dev/null
 wpc option update diluxone_mail_log_body 1 >/dev/null
 wpc option update diluxone_mail_log_extended 1 >/dev/null
 wpc option delete diluxone_mail_last_result >/dev/null 2>&1 || true
-ok "configurado"
+ok "configured"
 
-# ── 1. Un envío con destinatario y copia llega a Mailpit ─────────────
+# ── 1. A send with a recipient and a copy reaches Mailpit ────────────
 STAMP=$(date +%s)
 SUBJECT="E2E ${STAMP}"
 
-log "Enviando un wp_mail() real con Cc"
-RESULT=$(wpc eval "echo wp_mail( 'destino@example.test', '${SUBJECT}', 'cuerpo e2e ${STAMP}', array( 'Cc: copia@example.test' ) ) ? 'true' : 'false';")
-[ "$RESULT" = "true" ] || fail "wp_mail() devolvió $RESULT"
-ok "wp_mail() devolvió true"
+log "Sending a real wp_mail() with a Cc"
+RESULT=$(wpc eval "echo wp_mail( 'to@example.test', '${SUBJECT}', 'e2e body ${STAMP}', array( 'Cc: cc@example.test' ) ) ? 'true' : 'false';")
+[ "$RESULT" = "true" ] || fail "wp_mail() returned $RESULT"
+ok "wp_mail() returned true"
 
-log "Verificando en Mailpit"
+log "Checking in Mailpit"
 sleep 1
 python3 - "$API" "$SUBJECT" <<'PY'
 import json, sys, urllib.request
 api, subject = sys.argv[1], sys.argv[2]
 msgs = json.load(urllib.request.urlopen(f"{api}/messages"))["messages"]
 match = [m for m in msgs if m["Subject"] == subject]
-assert len(match) == 1, f"esperaba 1 mensaje con asunto {subject!r}, hay {len(match)}: {[m['Subject'] for m in msgs]}"
+assert len(match) == 1, f"expected 1 message with subject {subject!r}, found {len(match)}: {[m['Subject'] for m in msgs]}"
 m = match[0]
 assert m["From"]["Address"] == "e2e@example.test", m["From"]
 assert m["From"]["Name"] == "E2E", m["From"]
-assert {t["Address"] for t in m["To"]} == {"destino@example.test"}, m["To"]
-assert {t["Address"] for t in m["Cc"]} == {"copia@example.test"}, m["Cc"]
+assert {t["Address"] for t in m["To"]} == {"to@example.test"}, m["To"]
+assert {t["Address"] for t in m["Cc"]} == {"cc@example.test"}, m["Cc"]
 full = json.load(urllib.request.urlopen(f"{api}/message/{m['ID']}"))
-assert "cuerpo e2e" in full["Text"], full["Text"]
+assert "e2e body" in full["Text"], full["Text"]
 assert full["MessageID"].startswith(""), full["MessageID"]
-print("   From/To/Cc/cuerpo correctos; Message-ID:", full["MessageID"])
+print("   From/To/Cc/body correct; Message-ID:", full["MessageID"])
 PY
-ok "el correo llegó al buzón con From, To, Cc y cuerpo correctos"
+ok "the message reached the mailbox with the right From, To, Cc and body"
 
-# ── 2. El historial lo registró: dos filas, mismo id, estado sent ────
-log "Verificando el historial por WP-CLI"
+# ── 2. The log recorded it: two rows, same id, status sent ───────────
+log "Checking the log through WP-CLI"
 wpc diluxone-mail log list --format=json --limit=10 > /tmp/diluxone-e2e-log.json
 python3 - "$SUBJECT" <<'PY'
 import json, sys
 subject = sys.argv[1]
 rows = [r for r in json.load(open("/tmp/diluxone-e2e-log.json")) if r["subject"] == subject]
-assert len(rows) == 2, f"esperaba 2 filas (to + cc), hay {len(rows)}"
-assert {r["to"] for r in rows} == {"destino@example.test", "copia@example.test"}, rows
+assert len(rows) == 2, f"expected 2 rows (to + cc), found {len(rows)}"
+assert {r["to"] for r in rows} == {"to@example.test", "cc@example.test"}, rows
 assert all(r["status"] == "sent" for r in rows), rows
-print("   filas:", [(r["to"], r["status"]) for r in rows])
+print("   rows:", [(r["to"], r["status"]) for r in rows])
 PY
-ok "dos filas, estado sent"
+ok "two rows, status sent"
 
-# ── 3. El Message-ID del correo es el del historial ──────────────────
-log "Verificando que el Message-ID del correo sea el id del historial"
+# ── 3. The message's Message-ID is the log's own ─────────────────────
+log "Checking that the message's Message-ID is the log id"
 MID=$(python3 -c "
 import json,urllib.request
 m=[m for m in json.load(urllib.request.urlopen('$API/messages'))['messages'] if m['Subject']=='$SUBJECT'][0]
 print(json.load(urllib.request.urlopen('$API/message/'+m['ID']))['MessageID'])")
 UUID="${MID%%@*}"
 HAS=$(wpc eval "echo count( diluxone_mail_log_recipients_of( '${UUID}' ) );")
-[ "$HAS" = "2" ] || fail "el Message-ID ${MID} no casa con el historial (filas: ${HAS})"
-ok "Message-ID ${MID} → 2 filas del historial"
+[ "$HAS" = "2" ] || fail "Message-ID ${MID} does not match the log (rows: ${HAS})"
+ok "Message-ID ${MID} → 2 log rows"
 
-# ── 4. El detalle guardó cuerpo y diálogo SMTP ───────────────────────
-log "Verificando cuerpo y diálogo SMTP guardados"
-DET=$(wpc eval "\$d = diluxone_mail_detail_get( '${UUID}' ); echo ( false !== strpos( \$d['body'], 'cuerpo e2e' ) ? 'body-ok ' : 'body-NO ' ) . ( false !== strpos( \$d['transcript'], '250' ) ? 'transcript-ok' : 'transcript-NO' );")
-[ "$DET" = "body-ok transcript-ok" ] || fail "detalle: $DET"
-ok "cuerpo y diálogo SMTP en la tabla de detalle"
+# ── 4. The detail stored the body and the SMTP dialogue ──────────────
+log "Checking the stored body and SMTP dialogue"
+DET=$(wpc eval "\$d = diluxone_mail_detail_get( '${UUID}' ); echo ( false !== strpos( \$d['body'], 'e2e body' ) ? 'body-ok ' : 'body-NO ' ) . ( false !== strpos( \$d['transcript'], '250' ) ? 'transcript-ok' : 'transcript-NO' );")
+[ "$DET" = "body-ok transcript-ok" ] || fail "detail: $DET"
+ok "body and SMTP dialogue in the detail table"
 
-# ── 5. La ficha de la persona lo ve ──────────────────────────────────
-log "Verificando la búsqueda por dirección de una persona"
-wpc user create e2e_${STAMP} destino@example.test --role=subscriber >/dev/null 2>&1 || true
-CNT=$(wpc eval "\$u = get_user_by( 'email', 'destino@example.test' ); echo diluxone_mail_log_count( diluxone_mail_user_emails( \$u ) );")
-[ "$CNT" -ge 1 ] || fail "la ficha no ve el correo (count=$CNT)"
-ok "la ficha de destino@example.test ve $CNT mensaje(s)"
+# ── 5. The person's profile sees it ──────────────────────────────────
+log "Checking the lookup by a person's address"
+wpc user create e2e_${STAMP} to@example.test --role=subscriber >/dev/null 2>&1 || true
+CNT=$(wpc eval "\$u = get_user_by( 'email', 'to@example.test' ); echo diluxone_mail_log_count( diluxone_mail_user_emails( \$u ) );")
+[ "$CNT" -ge 1 ] || fail "the profile does not see the message (count=$CNT)"
+ok "to@example.test's profile sees $CNT message(s)"
 
-# ── 6. El comando de prueba ──────────────────────────────────────────
+# ── 6. The test command ──────────────────────────────────────────────
 log "wp diluxone-mail test"
-wpc diluxone-mail test prueba@example.test | tail -3
-ok "comando test"
+wpc diluxone-mail test probe@example.test | tail -3
+ok "test command"
 
-# ── 7. Un fallo real queda con su error SMTP ─────────────────────────
-log "Rompiendo el puerto a propósito"
+# ── 7. A real failure keeps its SMTP error ───────────────────────────
+log "Breaking the port on purpose"
 wpc option update diluxone_mail_port 1026 >/dev/null
-RESULT=$(wpc eval "echo wp_mail( 'falla@example.test', 'Falla ${STAMP}', 'x' ) ? 'true' : 'false';")
-[ "$RESULT" = "false" ] || fail "wp_mail() tendría que haber fallado"
-wpc diluxone-mail log list --format=json --email=falla@example.test --limit=1 > /tmp/diluxone-e2e-fail.json
+RESULT=$(wpc eval "echo wp_mail( 'fails@example.test', 'Fails ${STAMP}', 'x' ) ? 'true' : 'false';")
+[ "$RESULT" = "false" ] || fail "wp_mail() should have failed"
+wpc diluxone-mail log list --format=json --email=fails@example.test --limit=1 > /tmp/diluxone-e2e-fail.json
 python3 - <<'PY'
 import json
 r = json.load(open("/tmp/diluxone-e2e-fail.json"))[0]
 assert r["status"] == "failed", r
 assert r["error"] != "", r
-print("   error registrado:", r["error"][:80])
+print("   recorded error:", r["error"][:80])
 PY
 wpc option update diluxone_mail_port 1025 >/dev/null
-ok "el fallo quedó en el historial con el error SMTP"
+ok "the failure landed in the log with the SMTP error"
 
-# ── 8. El estado dice la verdad ──────────────────────────────────────
+# ── 8. The status tells the truth ────────────────────────────────────
 log "wp diluxone-mail status"
 wpc diluxone-mail status --format=json | python3 -c "
 import json,sys
@@ -186,98 +187,98 @@ assert rows['host'].startswith('diluxone-mailpit'), rows['host']
 assert 'set on this site' in rows['host'], rows['host']
 print('   mode:', rows['mode'], '| host:', rows['host'])
 "
-ok "estado coherente"
+ok "status is consistent"
 
-# ── 9. Reenviar desde el historial deja un segundo correo en el buzón ─
-log "Reenviando el mensaje original desde el historial"
-RID=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'destino@example.test' ), 'per_page' => 1 ) )['rows'][0]['id'];")
+# ── 9. Resending from the log leaves a second message in the mailbox ─
+log "Resending the original message from the log"
+RID=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'to@example.test' ), 'per_page' => 1 ) )['rows'][0]['id'];")
 RES=$(wpc eval "\$r = diluxone_mail_resend( ${RID} ); echo \$r['ok'] ? 'ok' : 'fail:' . \$r['reason'];")
-[ "$RES" = "ok" ] || fail "reenvío: $RES"
+[ "$RES" = "ok" ] || fail "resend: $RES"
 sleep 1
 python3 - "$API" "$SUBJECT" <<'PYEOF'
 import json, sys, urllib.request
 api, subject = sys.argv[1], sys.argv[2]
 msgs = [m for m in json.load(urllib.request.urlopen(f"{api}/messages"))["messages"] if m["Subject"] == subject]
-assert len(msgs) == 2, f"esperaba el original y el reenvío, hay {len(msgs)}"
+assert len(msgs) == 2, f"expected the original and the resend, found {len(msgs)}"
 headers = json.load(urllib.request.urlopen(f"{api}/message/{msgs[0]['ID']}/headers"))
 assert any(k.lower() == "x-diluxone-mail-resend-of" for k in headers), list(headers)
-print("   reenvío en el buzón, con la cabecera X-DiluxOne-Mail-Resend-Of")
+print("   resend in the mailbox, with the X-DiluxOne-Mail-Resend-Of header")
 PYEOF
-ok "el reenvío llegó y apunta al original"
+ok "the resend arrived and points back at the original"
 
-# ── 10. Bcc también deja su fila ─────────────────────────────────────
-log "Enviando con Bcc"
-wpc eval "wp_mail( 'to@example.test', 'Bcc ${STAMP}', 'x', array( 'Bcc: oculto@example.test' ) );" >/dev/null
-N=$(wpc diluxone-mail log list --format=json --email=oculto@example.test --limit=1 | python3 -c "import json,sys; r=json.load(sys.stdin); print(len(r), r[0]['status'] if r else '')")
-[ "$N" = "1 sent" ] || fail "la fila del Bcc: $N"
-ok "el destinatario oculto tiene su fila"
+# ── 10. A Bcc leaves its row too ─────────────────────────────────────
+log "Sending with a Bcc"
+wpc eval "wp_mail( 'to@example.test', 'Bcc ${STAMP}', 'x', array( 'Bcc: hidden@example.test' ) );" >/dev/null
+N=$(wpc diluxone-mail log list --format=json --email=hidden@example.test --limit=1 | python3 -c "import json,sys; r=json.load(sys.stdin); print(len(r), r[0]['status'] if r else '')")
+[ "$N" = "1 sent" ] || fail "the Bcc row: $N"
+ok "the hidden recipient has its row"
 
-# ── 11. Modo observador de verdad: otro plugin toma phpmailer_init ───
-log "Instalando un mu-plugin que gestiona el correo (como haría WP Mail SMTP)"
-mu_plugin otro-mailer.php '<?php
-/* Plugin Name: Otro Mailer */
+# ── 11. Real observer mode: another plugin takes phpmailer_init ──────
+log "Installing a mu-plugin that handles the mail (the way WP Mail SMTP would)"
+mu_plugin other-mailer.php '<?php
+/* Plugin Name: Another Mailer */
 add_action( "phpmailer_init", function ( $m ) { $m->isSMTP(); $m->Host = "diluxone-mailpit"; $m->Port = 1025; $m->SMTPAuth = false; $m->SMTPAutoTLS = false; } );
-/* En observador no se toca el remitente: eso es del otro plugin, como en la vida real. */
-add_filter( "wp_mail_from", function () { return "otro@example.test"; } );
+/* In observer mode the sender is left alone: it belongs to the other plugin, as in real life. */
+add_filter( "wp_mail_from", function () { return "other@example.test"; } );
 '
 wpc option update diluxone_mail_mode auto >/dev/null
 MODE=$(wpc diluxone-mail status --format=json | python3 -c "import json,sys; r={x['key']:x['value'] for x in json.load(sys.stdin)}; print(r['mode'], '|', r['other mailers'])")
-[ "$MODE" = "auto (observing) | otro-mailer.php" ] || fail "observador: $MODE"
-wpc eval "wp_mail( 'obs@example.test', 'Observado ${STAMP}', 'x' );" >/dev/null
+[ "$MODE" = "auto (observing) | other-mailer.php" ] || fail "observer: $MODE"
+wpc eval "wp_mail( 'obs@example.test', 'Observed ${STAMP}', 'x' );" >/dev/null
 ROW=$(wpc eval "\$r = diluxone_mail_log_query( array( 'emails' => array( 'obs@example.test' ), 'per_page' => 1 ) )['rows'][0]; echo \$r['status'], '|', \$r['provider'];")
-[ "$ROW" = "sent|observer" ] || fail "fila en observador: $ROW"
-ok "detectado, sin tocar el envío, y el correo igual llegó por el otro plugin: $MODE"
+[ "$ROW" = "sent|observer" ] || fail "row in observer mode: $ROW"
+ok "detected, the send untouched, and the message still arrived through the other plugin: $MODE"
 
-# ── 12. La trampa de pre_wp_mail: un interceptor que corta el envío ──
-log "Instalando un mu-plugin que corta en pre_wp_mail con una closure (como el de Azure App Service)"
-npx wp-env run tests-cli sh -c "rm -f ${MU}/otro-mailer.php" >/dev/null 2>&1
+# ── 12. The pre_wp_mail trap: an interceptor that cuts the send off ──
+log "Installing a mu-plugin that short-circuits pre_wp_mail with a closure (like Azure App Service's)"
+npx wp-env run tests-cli sh -c "rm -f ${MU}/other-mailer.php" >/dev/null 2>&1
 mu_plugin interceptor.php '<?php
 /* Plugin Name: Interceptor */
 add_filter( "pre_wp_mail", function ( $pre ) { return false; }, 10, 1 );
 '
 wpc option update diluxone_mail_mode transport >/dev/null
-wpc eval "wp_mail( 'cortado@example.test', 'Cortado ${STAMP}', 'x' );" >/dev/null
-ROW=$(wpc eval "\$r = diluxone_mail_log_query( array( 'emails' => array( 'cortado@example.test' ), 'per_page' => 1 ) )['rows'][0]; echo \$r['status'], '|', \$r['response'];")
-case "$ROW" in "intercepted|interceptor.php"*) ;; *) fail "interceptado: $ROW" ;; esac
-ok "el corte quedó registrado con el culpable: $ROW"
+wpc eval "wp_mail( 'cut@example.test', 'Cut ${STAMP}', 'x' );" >/dev/null
+ROW=$(wpc eval "\$r = diluxone_mail_log_query( array( 'emails' => array( 'cut@example.test' ), 'per_page' => 1 ) )['rows'][0]; echo \$r['status'], '|', \$r['response'];")
+case "$ROW" in "intercepted|interceptor.php"*) ;; *) fail "intercepted: $ROW" ;; esac
+ok "the short circuit was recorded with the culprit: $ROW"
 
-log "Desenganchando al interceptor (la casilla apagada por defecto)"
+log "Detaching the interceptor (the checkbox is off by default)"
 wpc option update diluxone_mail_unhook_pre_wp_mail 1 >/dev/null
-wpc eval "wp_mail( 'liberado@example.test', 'Liberado ${STAMP}', 'x' );" >/dev/null
-ROW=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'liberado@example.test' ), 'per_page' => 1 ) )['rows'][0]['status'];")
-[ "$ROW" = "sent" ] || fail "tras desenganchar: $ROW"
+wpc eval "wp_mail( 'freed@example.test', 'Freed ${STAMP}', 'x' );" >/dev/null
+ROW=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'freed@example.test' ), 'per_page' => 1 ) )['rows'][0]['status'];")
+[ "$ROW" = "sent" ] || fail "after detaching: $ROW"
 npx wp-env run tests-cli sh -c "rm -f ${MU}/interceptor.php" >/dev/null 2>&1
 wpc option update diluxone_mail_unhook_pre_wp_mail 0 >/dev/null
-ok "con el interceptor desenganchado el correo sale"
+ok "with the interceptor detached the mail goes out"
 
-# ── 13. Privacidad: exportar y borrar a una persona ──────────────────
-log "Exportador y borrador de datos personales"
-EXP=$(wpc eval "\$e = diluxone_mail_export_personal_data( 'destino@example.test' ); echo count( \$e['data'] );")
-[ "$EXP" -ge 2 ] || fail "exportación: $EXP filas"
-wpc eval "diluxone_mail_erase_personal_data( 'destino@example.test' );" >/dev/null
-LEFT=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'destino@example.test' ) ) )['total'];")
-[ "$LEFT" = "0" ] || fail "quedaron $LEFT filas tras borrar"
-ok "exportó $EXP filas y las borró"
+# ── 13. Privacy: exporting and erasing a person ──────────────────────
+log "Personal data exporter and eraser"
+EXP=$(wpc eval "\$e = diluxone_mail_export_personal_data( 'to@example.test' ); echo count( \$e['data'] );")
+[ "$EXP" -ge 2 ] || fail "export: $EXP rows"
+wpc eval "diluxone_mail_erase_personal_data( 'to@example.test' );" >/dev/null
+LEFT=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'to@example.test' ) ) )['total'];")
+[ "$LEFT" = "0" ] || fail "$LEFT rows left after erasing"
+ok "exported $EXP rows and erased them"
 
-# ── 14. La purga por cron ────────────────────────────────────────────
-log "Purga por cron"
-wpc eval "global \$wpdb; \$wpdb->query( \$wpdb->prepare( 'UPDATE %i SET sent_at = %s WHERE email = %s', diluxone_mail_log_table(), '2000-01-01 00:00:00', 'copia@example.test' ) );" >/dev/null
+# ── 14. The cron purge ───────────────────────────────────────────────
+log "Cron purge"
+wpc eval "global \$wpdb; \$wpdb->query( \$wpdb->prepare( 'UPDATE %i SET sent_at = %s WHERE email = %s', diluxone_mail_log_table(), '2000-01-01 00:00:00', 'cc@example.test' ) );" >/dev/null
 wpc eval "diluxone_mail_run_purge();" >/dev/null
-LEFT=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'copia@example.test' ) ) )['total'];")
-[ "$LEFT" = "0" ] || fail "la purga no borró lo vencido ($LEFT)"
-ok "lo vencido se fue, lo demás se queda"
+LEFT=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'cc@example.test' ) ) )['total'];")
+[ "$LEFT" = "0" ] || fail "the purge did not delete what had expired ($LEFT)"
+ok "what expired is gone, the rest stays"
 
-# ── 15. El diagnóstico corre contra un dominio real (sólo lectura) ───
+# ── 15. The diagnosis runs against a real domain (read only) ─────────
 log "wp diluxone-mail dns pablodiloreto.com"
 wpc diluxone-mail dns pablodiloreto.com --fresh --format=json | python3 -c "
 import json,sys
 r=json.load(sys.stdin)
 assert r['spf']['record'] and r['spf']['record'].startswith('v=spf1'), r['spf']
 assert 0 < r['spf']['lookups'] <= 10, r['spf']['lookups']
-assert any(d['selector']=='mailjet' and d['found'] for d in r['dkim']), 'mailjet DKIM no encontrado'
+assert any(d['selector']=='mailjet' and d['found'] for d in r['dkim']), 'mailjet DKIM not found'
 assert r['dmarc']['record'], r['dmarc']
 print('   SPF lookups:', r['spf']['lookups'], '| DKIM mailjet: ok | DMARC p=', r['dmarc']['policy'], '| resolver:', r['resolver'])
 "
-ok "diagnóstico DNS contra un dominio real"
+ok "DNS diagnosis against a real domain"
 
-printf '\n\033[1;32m✔ E2E completo.\033[0m\n'
+printf '\n\033[1;32m✔ E2E complete.\033[0m\n'

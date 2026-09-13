@@ -1,24 +1,25 @@
 <?php
 /**
- * El transporte: le dice a PHPMailer qué servidor usar.
+ * The transport: it tells PHPMailer which server to use.
  *
- * Se engancha en phpmailer_init, después de que WordPress armó el mensaje y
- * antes de que lo mande. Ahí se decide una sola cosa —por qué servidor sale—
- * y se hace sólo si este plugin tiene el control: en modo observador no se
- * toca nada, ni siquiera cuando el sitio tiene host configurado.
+ * It hooks phpmailer_init, after WordPress has built the message and before
+ * it sends it. Exactly one thing is decided there — which server it leaves
+ * through — and only if this plugin is in charge: in observer mode nothing is
+ * touched, not even when the site has a host configured.
  *
- * El remitente va por otro lado, y por una razón que enseñó el E2E: WordPress
- * valida el From ANTES de phpmailer_init, y si el sitio está en localhost su
- * remitente por defecto —wordpress@localhost— no pasa la validación y el
- * envío muere antes de que nadie pueda arreglarlo. Los filtros wp_mail_from
- * y wp_mail_from_name corren antes de esa validación, y son además el lugar
- * que WordPress prevé para esto.
+ * The sender goes somewhere else, for a reason the E2E suite taught us:
+ * WordPress validates the From address BEFORE phpmailer_init, and on a site
+ * running on localhost its default sender — wordpress@localhost — fails that
+ * validation and the send dies before anybody can fix it. The wp_mail_from
+ * and wp_mail_from_name filters run before that validation, and they are also
+ * the place WordPress provides for this.
  *
- * Lo que también vive acá es el buffer del SMTPDebug. PHPMailer puede contar
- * el diálogo entero con el servidor —cada comando y cada respuesta— y eso es
- * lo que hace falta cuando un envío falla: «535 Authentication failed» dice
- * exactamente qué está mal, «algo salió mal» no dice nada. Se captura a un
- * buffer, se tapa la contraseña, y se muestra plegado en el botón de probar.
+ * The SMTPDebug buffer lives here too. PHPMailer can narrate the whole
+ * dialogue with the server — every command and every reply — and that is what
+ * is needed when a send fails: "535 Authentication failed" says exactly what
+ * is wrong, "something went wrong" says nothing. It is captured into a
+ * buffer, the password is redacted, and it is shown collapsed under the test
+ * button.
  *
  * @package DiluxOneMail
  */
@@ -26,31 +27,31 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * El buffer del diálogo SMTP de esta petición.
+ * The SMTP dialogue buffer for this request.
  *
- * @param string|null $linea  Una línea para agregar, o null para sólo leer.
- * @param bool        $reset  Vaciar antes.
+ * @param string|null $line  A line to append, or null to only read.
+ * @param bool        $reset Empty it first.
  */
-function diluxone_mail_debug_buffer( ?string $linea = null, bool $reset = false ): string {
+function diluxone_mail_debug_buffer( ?string $line = null, bool $reset = false ): string {
 	static $buffer = '';
 
 	if ( $reset ) {
 		$buffer = '';
 	}
 
-	if ( null !== $linea ) {
-		$buffer .= rtrim( $linea ) . "\n";
+	if ( null !== $line ) {
+		$buffer .= rtrim( $line ) . "\n";
 	}
 
 	return $buffer;
 }
 
 /**
- * ¿Capturar el diálogo SMTP en esta petición?
+ * Should the SMTP dialogue be captured on this request?
  *
- * Apagado salvo que alguien lo prenda —el botón de probar, el comando de
- * WP-CLI, el historial extendido—. Capturarlo siempre sería guardar en
- * memoria el diálogo de cada envío del sitio para no mostrárselo a nadie.
+ * Off unless somebody turns it on — the test button, the WP-CLI command, the
+ * extended log. Capturing it always would mean keeping the dialogue of every
+ * send on the site in memory only to show it to nobody.
  */
 function diluxone_mail_debug_enabled( ?bool $set = null ): bool {
 	static $on = false;
@@ -63,17 +64,17 @@ function diluxone_mail_debug_enabled( ?bool $set = null ): bool {
 }
 
 /**
- * Configura PHPMailer.
+ * Configures PHPMailer.
  *
- * @param mixed $phpmailer Lo que traiga el hook; se comprueba el tipo adentro.
+ * @param mixed $phpmailer Whatever the hook passes; the type is checked inside.
  */
 function diluxone_mail_phpmailer_init( $phpmailer ): void {
 	if ( ! $phpmailer instanceof PHPMailer\PHPMailer\PHPMailer ) {
 		return;
 	}
 
-	// El buffer se engancha aunque el transporte sea de otro: probar un
-	// envío en modo observador también tiene que poder mostrar qué pasó.
+	// The buffer is attached even when the transport belongs to somebody
+	// else: testing a send in observer mode also has to show what happened.
 	if ( diluxone_mail_debug_enabled() ) {
 		$phpmailer->SMTPDebug   = 2;
 		$phpmailer->Debugoutput = static function ( $str ): void {
@@ -91,20 +92,20 @@ function diluxone_mail_phpmailer_init( $phpmailer ): void {
 		return;
 	}
 
-	$perfil = diluxone_mail_provider( $config['provider'] );
+	$profile = diluxone_mail_provider( $config['provider'] );
 
 	$phpmailer->isSMTP();
 	$phpmailer->Host = $config['host'];
 	$phpmailer->Port = (int) $config['port'] > 0 ? (int) $config['port'] : 587;
 
-	// 'none' es cadena vacía para PHPMailer. Y el autoTLS va aparte del
-	// cifrado a propósito: un perfil local dice «sin cifrado» y además «no
-	// intentes subir a cifrado aunque el servidor lo ofrezca».
-	$cifrado                = $config['encryption'];
-	$phpmailer->SMTPSecure  = in_array( $cifrado, array( 'tls', 'ssl' ), true ) ? $cifrado : '';
-	$phpmailer->SMTPAutoTLS = (bool) $perfil['autotls'];
+	// 'none' is an empty string for PHPMailer. And autoTLS is separate from
+	// the encryption setting on purpose: a local profile says "no encryption"
+	// and also "do not try to upgrade even if the server offers it".
+	$encryption             = $config['encryption'];
+	$phpmailer->SMTPSecure  = in_array( $encryption, array( 'tls', 'ssl' ), true ) ? $encryption : '';
+	$phpmailer->SMTPAutoTLS = (bool) $profile['autotls'];
 
-	$auth = (bool) $perfil['auth'] && (bool) diluxone_mail_option( 'diluxone_mail_auth' ) && '' !== $config['user'];
+	$auth = (bool) $profile['auth'] && (bool) diluxone_mail_option( 'diluxone_mail_auth' ) && '' !== $config['user'];
 
 	$phpmailer->SMTPAuth = $auth;
 
@@ -118,37 +119,37 @@ function diluxone_mail_phpmailer_init( $phpmailer ): void {
 add_action( 'phpmailer_init', 'diluxone_mail_phpmailer_init', 999 );
 
 /**
- * ¿El remitente que trae el envío es el que WordPress pone por defecto?
+ * Is the sender this send carries the one WordPress puts in by default?
  *
- * WordPress firma como wordpress@eldominio si nadie dijo otra cosa. Esa
- * dirección suele no existir, muchos proveedores la rechazan por no estar
- * verificada, y en un sitio en localhost ni siquiera es una dirección válida.
+ * WordPress signs as wordpress@thedomain unless told otherwise. That address
+ * usually does not exist, many providers reject it as unverified, and on a
+ * site running on localhost it is not even a valid address.
  */
 function diluxone_mail_is_default_from( string $from ): bool {
 	return '' === $from || 0 === strpos( $from, 'wordpress@' );
 }
 
 /**
- * El remitente.
+ * The sender address.
  *
- * Si el sitio configuró uno, se usa cuando el envío trae el de WordPress por
- * defecto y —si «forzar» está prendido— también cuando trae otro. Sólo con
- * el transporte a cargo de este plugin: en modo observador el correo es del
- * otro plugin y no se le cambia nada.
+ * If the site configured one, it is used when the send carries the WordPress
+ * default and — if "force" is on — also when it carries another. Only while
+ * this plugin is in charge of the transport: in observer mode the mail
+ * belongs to the other plugin and nothing about it is changed.
  */
 function diluxone_mail_from( string $from ): string {
 	if ( ! diluxone_mail_transport_active() ) {
 		return $from;
 	}
 
-	$configurado = diluxone_mail_config()['from'];
+	$configured = diluxone_mail_config()['from'];
 
-	if ( '' === $configurado || ! is_email( $configurado ) ) {
+	if ( '' === $configured || ! is_email( $configured ) ) {
 		return $from;
 	}
 
 	if ( diluxone_mail_is_default_from( $from ) || (bool) diluxone_mail_option( 'diluxone_mail_force_from' ) ) {
-		return $configurado;
+		return $configured;
 	}
 
 	return $from;
@@ -156,11 +157,11 @@ function diluxone_mail_from( string $from ): string {
 add_filter( 'wp_mail_from', 'diluxone_mail_from', 999 );
 
 /**
- * El nombre del remitente, con la misma regla.
+ * The sender name, by the same rule.
  *
- * El nombre por defecto de WordPress es «WordPress», literal. Se cambia junto
- * con la dirección: un nombre configurado sin dirección configurada no dice
- * nada.
+ * WordPress's default name is "WordPress", literally. It changes together
+ * with the address: a configured name without a configured address says
+ * nothing.
  */
 function diluxone_mail_from_name( string $name ): string {
 	if ( ! diluxone_mail_transport_active() ) {

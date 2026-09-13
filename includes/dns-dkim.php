@@ -1,14 +1,14 @@
 <?php
 /**
- * DKIM: qué selectores están publicados.
+ * DKIM: which selectors are published.
  *
- * No se pueden enumerar por DNS: un selector es un nombre que sólo conoce
- * quien lo publicó. Así que se prueba una lista —los que usan los proveedores
- * grandes, los que declara el perfil del proveedor activo, y los que agregue
- * quien administra— y se informa cuáles existen.
+ * They cannot be enumerated over DNS: a selector is a name only whoever
+ * published it knows. So a list is probed — the ones the big providers use,
+ * the ones the active provider profile declares, and the ones the
+ * administrator adds — and the existing ones are reported.
  *
- * Que un selector no aparezca no prueba que no haya DKIM: prueba que no está
- * en la lista. La pantalla lo dice con esas palabras.
+ * A selector not showing up does not prove there is no DKIM: it proves it is
+ * not on the list. The screen says so in those words.
  *
  * @package DiluxOneMail
  */
@@ -16,7 +16,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Los selectores que usan los proveedores más comunes.
+ * The selectors the most common providers use.
  *
  * @return array<int, string>
  */
@@ -25,50 +25,50 @@ function diluxone_mail_dkim_known_selectors(): array {
 }
 
 /**
- * Todos los selectores a sondear para el proveedor activo.
+ * Every selector to probe for the active provider.
  *
  * @return array<int, string>
  */
 function diluxone_mail_dkim_selectors( string $provider ): array {
-	$perfil = diluxone_mail_provider( $provider );
-	$lista  = array_merge(
+	$profile = diluxone_mail_provider( $provider );
+	$list    = array_merge(
 		diluxone_mail_dkim_known_selectors(),
-		array_map( 'strval', (array) $perfil['dkim_selectors'] ),
+		array_map( 'strval', (array) $profile['dkim_selectors'] ),
 		array_map( 'strval', (array) diluxone_mail_option( 'diluxone_mail_dns_selectors' ) )
 	);
 
-	$lista = array_filter( array_map( 'sanitize_key', $lista ) );
+	$list = array_filter( array_map( 'sanitize_key', $list ) );
 
-	return array_values( array_unique( $lista ) );
+	return array_values( array_unique( $list ) );
 }
 
 /**
- * Cuántos bits tiene la clave de un registro DKIM.
+ * How many bits the key of a DKIM record has.
  *
- * Se estima por el largo de la clave pública en DER: una RSA de 1024 bits
- * ocupa unos 162 bytes, una de 2048 unos 294. No hace falta parsear el ASN.1
- * para distinguirlas, y distinguirlas es lo que importa: 1024 ya se considera
- * débil y Gmail lo penaliza.
+ * Estimated from the length of the public key in DER: a 1024-bit RSA key
+ * takes about 162 bytes, a 2048-bit one about 294. There is no need to parse
+ * the ASN.1 to tell them apart, and telling them apart is what matters: 1024
+ * is already considered weak and Gmail scores it down.
  */
 function diluxone_mail_dkim_key_bits( string $p ): int {
-	// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- Es el formato en el que el estándar publica la clave; no hay otra forma de medirla.
+	// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- This is the format the standard publishes the key in; there is no other way to measure it.
 	$der = base64_decode( $p, true );
 
 	if ( false === $der ) {
 		return 0;
 	}
 
-	$largo = strlen( $der );
+	$length = strlen( $der );
 
-	if ( $largo >= 500 ) {
+	if ( $length >= 500 ) {
 		return 4096;
 	}
 
-	if ( $largo >= 250 ) {
+	if ( $length >= 250 ) {
 		return 2048;
 	}
 
-	if ( $largo >= 120 ) {
+	if ( $length >= 120 ) {
 		return 1024;
 	}
 
@@ -76,23 +76,23 @@ function diluxone_mail_dkim_key_bits( string $p ): int {
 }
 
 /**
- * Sondea los selectores de un dominio.
+ * Probes a domain's selectors.
  *
  * @param array<int, string> $selectors
  * @return array<int, array{selector: string, found: bool, via: string, cname: string, record: string, bits: int, revoked: bool}>
  */
 function diluxone_mail_dkim_probe( string $domain, array $selectors ): array {
-	$salida = array();
+	$out = array();
 
 	foreach ( $selectors as $selector ) {
-		$nombre = $selector . '._domainkey.' . $domain;
-		$cname  = diluxone_mail_dns_lookup( $nombre, 'CNAME' )['records'];
-		$txt    = diluxone_mail_dns_txt( $nombre );
+		$name   = $selector . '._domainkey.' . $domain;
+		$cname  = diluxone_mail_dns_lookup( $name, 'CNAME' )['records'];
+		$txt    = diluxone_mail_dns_txt( $name );
 		$record = '';
 
 		foreach ( $txt as $t ) {
-			// Un DKIM válido tiene p=; el v=DKIM1 es opcional en el estándar
-			// y muchos proveedores no lo ponen.
+			// A valid DKIM record has p=; v=DKIM1 is optional in the standard
+			// and many providers leave it out.
 			if ( false !== stripos( $t, 'p=' ) ) {
 				$record = trim( $t );
 				break;
@@ -105,18 +105,18 @@ function diluxone_mail_dkim_probe( string $domain, array $selectors ): array {
 			$p = preg_replace( '/\s+/', '', (string) $m[1] ) ?? '';
 		}
 
-		$salida[] = array(
+		$out[] = array(
 			'selector' => $selector,
 			'found'    => '' !== $record,
 			'via'      => array() !== $cname ? 'cname' : 'txt',
 			'cname'    => (string) ( $cname[0] ?? '' ),
 			'record'   => $record,
 			'bits'     => '' !== $p ? diluxone_mail_dkim_key_bits( $p ) : 0,
-			// Un p= vacío es la forma que da el estándar de decir «esta clave
-			// fue revocada»: el selector existe pero ya no firma nada.
+			// An empty p= is the standard's way of saying "this key has been
+			// revoked": the selector exists but no longer signs anything.
 			'revoked'  => '' !== $record && '' === $p,
 		);
 	}
 
-	return $salida;
+	return $out;
 }

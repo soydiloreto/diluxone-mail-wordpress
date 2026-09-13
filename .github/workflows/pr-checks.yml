@@ -43,16 +43,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      # Plugin Check toma el slug del nombre de la carpeta, y la carpeta del
-      # checkout es diluxone-mail-wordpress: el plugin es diluxone-mail. Así
-      # que se arma en build/diluxone-mail exactamente lo que viaja a wp.org
-      # —lo que .distignore deja pasar— y se analiza eso. De paso, es lo que
-      # el equipo de wp.org va a revisar de verdad, y no el árbol del repo.
+      # Plugin Check takes the slug from the folder name, and the checkout's
+      # folder is diluxone-mail-wordpress while the plugin is diluxone-mail. So
+      # exactly what travels to wp.org — whatever .distignore lets through — is
+      # assembled in build/diluxone-mail and that is what gets analysed.
+      # Incidentally, it is also what the wp.org team will actually review,
+      # rather than the repository tree.
       #
-      # El .wp-env.json del repo monta el árbol entero para los tests de
-      # integración; para este trabajo se reemplaza por uno que monte la
-      # carpeta armada, que es lo que la acción espera cuando le damos
-      # build-dir.
+      # The repository's .wp-env.json mounts the whole tree for the integration
+      # tests; for this job it is replaced by one that mounts the assembled
+      # folder, which is what the action expects when it is given build-dir.
       - name: Build the plugin as it ships
         run: |
           mkdir -p build/diluxone-mail

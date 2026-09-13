@@ -1,19 +1,19 @@
 <?php
 /**
- * La trampa de pre_wp_mail.
+ * The pre_wp_mail trap.
  *
- * WordPress ofrece dos enganches para el correo: pre_wp_mail, que intercepta
- * ANTES de armar PHPMailer, y phpmailer_init, que lo configura. Este plugin
- * usa el segundo. El problema es que otros enganchan el primero y cortan el
- * envío ahí, devolviendo false sin llegar nunca a PHPMailer: la configuración
- * SMTP no se aplica y el correo muere en silencio. Pasa en producción con el
- * plugin de correo de Azure App Service cuando le falta su connection string,
- * y encima registra el filtro con una función anónima, así que no se lo puede
- * sacar por nombre.
+ * WordPress offers two hooks for mail: pre_wp_mail, which intercepts BEFORE
+ * PHPMailer is built, and phpmailer_init, which configures it. This plugin
+ * uses the second. The problem is that others hook the first and cut the send
+ * short there, returning false without ever reaching PHPMailer: the SMTP
+ * configuration never applies and the mail dies silently. It happens in
+ * production with the Azure App Service mail plugin when its connection
+ * string is missing, and on top of that it registers the filter with an
+ * anonymous function, so it cannot be removed by name.
  *
- * Acá se lo detecta, se lo nombra, y —sólo si quien administra lo pidió— se
- * lo desengancha. Nunca un remove_all_filters(): eso deja sin correo a un
- * sitio donde el que intercepta es, justamente, el que lo manda.
+ * Here it is detected, named, and — only if the administrator asked for it —
+ * detached. Never a remove_all_filters(): that leaves a site with no mail at
+ * all when the one intercepting is precisely the one delivering.
  *
  * @package DiluxOneMail
  */
@@ -21,7 +21,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Quiénes están enganchados en pre_wp_mail, aparte de este plugin.
+ * Who is hooked into pre_wp_mail, this plugin aside.
  *
  * @return array<int, array{file: string, plugin: string, name: string, priority: int, callback: mixed}>
  */
@@ -30,17 +30,16 @@ function diluxone_mail_pre_wp_mail_interceptors(): array {
 }
 
 /**
- * Desengancha a los interceptores, si el sitio lo pidió.
+ * Detaches the interceptors, if the site asked for it.
  *
- * Corre dentro del filtro wp_mail, que wp_mail() aplica justo antes de
- * pre_wp_mail, en cada envío. Hacerlo en init no alcanza: un plugin puede
- * engancharse más tarde, y lo que importa es el estado en el momento en que
- * se manda.
+ * It runs inside the wp_mail filter, which wp_mail() applies right before
+ * pre_wp_mail, on every send. Doing it on init is not enough: a plugin can
+ * hook later, and what matters is the state at the moment of sending.
  *
- * Se saca cada callback por su identidad —remove_filter() acepta la misma
- * closure que se registró— y no todos los del hook, porque este plugin
- * también tiene los suyos ahí y porque «todos» incluiría a cualquiera que se
- * sume después.
+ * Each callback is removed by its identity — remove_filter() accepts the very
+ * closure that was registered — and not all of the hook's, because this
+ * plugin has its own there too and because "all" would include anybody
+ * joining afterwards.
  *
  * @param array<string, mixed> $atts
  * @return array<string, mixed>
@@ -59,46 +58,46 @@ function diluxone_mail_pre_wp_mail_unhook( array $atts ): array {
 add_filter( 'wp_mail', 'diluxone_mail_pre_wp_mail_unhook', PHP_INT_MIN );
 
 /**
- * El nombre del que cortó el envío, para el historial y el aviso.
+ * The name of whoever cut the send short, for the log and for the notice.
  *
- * Cuando hay más de uno no se puede saber cuál devolvió el valor —el filtro
- * no lo dice—, así que se nombran todos.
+ * When there is more than one there is no way to tell which returned the
+ * value — the filter does not say — so all of them are named.
  */
 function diluxone_mail_pre_wp_mail_culprit(): string {
-	$nombres = array();
+	$names = array();
 
 	foreach ( diluxone_mail_pre_wp_mail_interceptors() as $interceptor ) {
-		$nombres[] = '' !== $interceptor['name'] ? $interceptor['name'] : basename( $interceptor['file'] );
+		$names[] = '' !== $interceptor['name'] ? $interceptor['name'] : basename( $interceptor['file'] );
 	}
 
-	return implode( ', ', array_unique( $nombres ) );
+	return implode( ', ', array_unique( $names ) );
 }
 
 /**
- * El aviso en las pantallas del plugin cuando hay alguien en pre_wp_mail.
+ * The notice on the plugin's screens when somebody is on pre_wp_mail.
  *
- * No dice «hay un problema»: dice quién está ahí y qué implica, que es lo
- * que hace falta para decidir si desengancharlo o no.
+ * It does not say "there is a problem": it says who is there and what that
+ * implies, which is what you need in order to decide whether to detach them.
  */
 function diluxone_mail_pre_wp_mail_notice(): void {
-	$interceptores = diluxone_mail_pre_wp_mail_interceptors();
+	$interceptors = diluxone_mail_pre_wp_mail_interceptors();
 
-	if ( array() === $interceptores ) {
+	if ( array() === $interceptors ) {
 		return;
 	}
 
-	$desenganchado = (bool) diluxone_mail_option( 'diluxone_mail_unhook_pre_wp_mail' );
+	$detaching = (bool) diluxone_mail_option( 'diluxone_mail_unhook_pre_wp_mail' );
 	?>
-	<div class="notice <?php echo $desenganchado ? 'notice-warning' : 'notice-info'; ?>">
+	<div class="notice <?php echo $detaching ? 'notice-warning' : 'notice-info'; ?>">
 		<p>
 			<?php
 			printf(
-				/* translators: %s: nombre de los plugins */
+				/* translators: %s: names of the plugins */
 				esc_html__( '%s intercepts mail before it reaches PHPMailer (pre_wp_mail). If it returns without sending, the message dies silently and no SMTP configuration applies.', 'diluxone-mail' ),
 				esc_html( diluxone_mail_pre_wp_mail_culprit() )
 			);
 			?>
-			<?php if ( $desenganchado ) : ?>
+			<?php if ( $detaching ) : ?>
 				<strong><?php esc_html_e( 'It is being detached on every send, as configured.', 'diluxone-mail' ); ?></strong>
 			<?php else : ?>
 				<?php esc_html_e( 'Intercepted messages show up in the log as such. You can detach it from the settings screen.', 'diluxone-mail' ); ?>

@@ -1,18 +1,18 @@
 <?php
 /**
- * La pantalla de la red.
+ * The network screen.
  *
- * En una red el servidor de correo es de la red, así que los ajustes viven
- * en Ajustes de la red y los edita el superadministrador. Es el mismo
- * formulario que el de un sitio, guardando en otro lado, más una casilla
- * que decide si cada sitio puede pisar lo que la red fijó.
+ * On a network the mail server belongs to the network, so the settings live
+ * under Network Settings and the super administrator edits them. It is the
+ * same form as a site's, saving somewhere else, plus one checkbox deciding
+ * whether each site may override what the network fixed.
  *
  * @package DiluxOneMail
  */
 
 defined( 'ABSPATH' ) || exit;
 
-/** La entrada en el menú de la red. */
+/** The entry in the network menu. */
 function diluxone_mail_network_menu(): void {
 	add_submenu_page(
 		'settings.php',
@@ -25,7 +25,7 @@ function diluxone_mail_network_menu(): void {
 }
 add_action( 'network_admin_menu', 'diluxone_mail_network_menu' );
 
-/** La pantalla. */
+/** The screen. */
 function diluxone_mail_screen_network(): void {
 	diluxone_mail_screen_open( __( 'Network settings', 'diluxone-mail' ) );
 	diluxone_mail_view( 'admin-settings', diluxone_mail_settings_data( 'network' ) );

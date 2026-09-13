@@ -1,11 +1,11 @@
 <?php
 /**
- * La pantalla de estado.
+ * The status screen.
  *
- * Una sola pantalla que contesta la pregunta de siempre: ¿este sitio manda
- * correo, por dónde, y por qué? Perfil activo, de dónde sale cada valor,
- * entorno detectado, si está en modo observador y quién más está en el
- * medio, y qué pasó la última vez que se intentó mandar algo.
+ * One screen answering the question that always comes up: does this site send
+ * mail, through what, and why? Active profile, where each value comes from,
+ * detected environment, whether it is in observer mode and who else is in the
+ * way, and what happened the last time something was sent.
  *
  * @package DiluxOneMail
  */
@@ -13,23 +13,23 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Todo lo que muestra la pantalla, ya resuelto.
+ * Everything the screen shows, already resolved.
  *
  * @return array<string, mixed>
  */
 function diluxone_mail_status(): array {
 	$config = array();
 
-	foreach ( array_keys( diluxone_mail_config_fields() ) as $campo ) {
-		$v = diluxone_mail_config_value( $campo );
+	foreach ( array_keys( diluxone_mail_config_fields() ) as $field ) {
+		$v = diluxone_mail_config_value( $field );
 
-		$config[ $campo ] = array(
-			'value' => 'pass' === $campo ? ( '' !== $v['value'] ? '***' : '' ) : $v['value'],
+		$config[ $field ] = array(
+			'value' => 'pass' === $field ? ( '' !== $v['value'] ? '***' : '' ) : $v['value'],
 			'label' => diluxone_mail_source_label( $v['source'], $v['origin'] ),
 		);
 	}
 
-	$ultimo = get_option( 'diluxone_mail_last_result', false );
+	$last = get_option( 'diluxone_mail_last_result', false );
 
 	return array(
 		'version'       => DILUXONE_MAIL_VERSION,
@@ -42,7 +42,7 @@ function diluxone_mail_status(): array {
 		'unhooking'     => (bool) diluxone_mail_option( 'diluxone_mail_unhook_pre_wp_mail' ),
 		'profile'       => diluxone_mail_provider( diluxone_mail_config()['provider'] ),
 		'config'        => $config,
-		'last'          => is_array( $ultimo ) ? $ultimo : null,
+		'last'          => is_array( $last ) ? $last : null,
 		'totals'        => diluxone_mail_log_totals( is_network_admin() ? null : get_current_blog_id() ),
 		'log_enabled'   => (bool) diluxone_mail_option( 'diluxone_mail_log_enabled' ),
 		'log_extended'  => (bool) diluxone_mail_option( 'diluxone_mail_log_extended' ),
@@ -55,7 +55,7 @@ function diluxone_mail_status(): array {
 	);
 }
 
-/** La pantalla. */
+/** The screen. */
 function diluxone_mail_screen_status(): void {
 	diluxone_mail_screen_open( __( 'Status', 'diluxone-mail' ) );
 	diluxone_mail_view( 'admin-status', diluxone_mail_status() );

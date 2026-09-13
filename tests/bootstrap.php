@@ -10,17 +10,17 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Define WordPress constants that plugins expect
-// ABSPATH apunta a un directorio temporal: lo único que el plugin carga desde
-// ahí es wp-admin/includes/upgrade.php, y no tiene por qué aparecer un
-// wp-admin/ adentro del repositorio cada vez que corren los tests.
+// ABSPATH points at a temporary directory: the only thing the plugin loads
+// from there is wp-admin/includes/upgrade.php, and there is no reason for a
+// wp-admin/ to show up inside the repository every time the tests run.
 if (!defined('ABSPATH')) {
 	define('ABSPATH', sys_get_temp_dir() . '/diluxone-mail-tests/wp/');
 	@mkdir(ABSPATH . 'wp-admin/includes', 0777, true);
 	@file_put_contents(ABSPATH . 'wp-admin/includes/upgrade.php', "<?php\n");
 }
 
-// Constantes de tiempo de WordPress. Las usa cualquier código que calcule un
-// vencimiento, y no dependen de que WordPress esté cargado.
+// WordPress time constants. Any code that works out an expiry uses them, and
+// they do not depend on WordPress being loaded.
 foreach ([
 	'MINUTE_IN_SECONDS' => 60,
 	'HOUR_IN_SECONDS'   => 3600,
@@ -54,7 +54,7 @@ require_once __DIR__ . '/stubs/phpmailer.php';
 
 $GLOBALS['wpdb'] = new DiluxOne_Test_WPDB();
 
-// dbDelta() vive en wp-admin; acá alcanza con que exista.
+// dbDelta() lives in wp-admin; here it is enough that it exists.
 if (!function_exists('dbDelta')) {
 	function dbDelta($sql) { $GLOBALS['_test_dbdelta'][] = $sql; return []; }
 }

@@ -1,32 +1,33 @@
 <?php
 /**
- * SPF: qué dice el registro, y cuántos lookups gasta.
+ * SPF: what the record says, and how many lookups it burns.
  *
- * El detalle que casi nadie sabe y que rompe el correo de muchísimos sitios:
- * el estándar (RFC 7208, §4.6.4) permite como máximo 10 consultas de DNS para
- * evaluar un SPF, contando las de los `include` recursivamente. Pasarse no
- * degrada nada: el receptor devuelve «permerror» y el SPF entero deja de
- * valer, como si no existiera. Y nadie avisa. Un sitio suma un proveedor, y
- * otro, y otro, y un día Gmail empieza a mandar todo a spam.
+ * The detail almost nobody knows and that breaks the mail of a great many
+ * sites: the standard (RFC 7208, §4.6.4) allows at most 10 DNS queries to
+ * evaluate an SPF record, counting those inside `include`s recursively. Going
+ * over does not degrade anything: the receiver returns "permerror" and the
+ * whole SPF record stops counting, as if it did not exist. And nobody warns
+ * you. A site adds one provider, then another, then another, and one day
+ * Gmail starts sending everything to spam.
  *
- * Cuentan `include`, `a`, `mx`, `ptr`, `exists` y el modificador `redirect`.
- * No cuentan `ip4`, `ip6` ni `all`. Acá se expande el árbol completo y se
- * cuenta igual que lo cuenta un receptor.
+ * `include`, `a`, `mx`, `ptr`, `exists` and the `redirect` modifier count.
+ * `ip4`, `ip6` and `all` do not. Here the whole tree is expanded and counted
+ * the way a receiver counts it.
  *
  * @package DiluxOneMail
  */
 
 defined( 'ABSPATH' ) || exit;
 
-/** El límite del estándar. */
+/** The limit set by the standard. */
 const DILUXONE_MAIL_SPF_MAX_LOOKUPS = 10;
 
 /**
- * El registro SPF de un dominio.
+ * A domain's SPF record.
  *
  * @return array{record: string|null, error: string}
- *         Dos registros SPF es un error por sí mismo —el estándar lo
- *         invalida— y se informa como tal.
+ *         Two SPF records is an error in itself — the standard invalidates
+ *         them — and it is reported as such.
  */
 function diluxone_mail_spf_record( string $domain ): array {
 	$spf = array();
@@ -58,17 +59,17 @@ function diluxone_mail_spf_record( string $domain ): array {
 }
 
 /**
- * Los términos de un registro, uno por uno.
+ * A record's terms, one by one.
  *
  * @return array<int, array{qualifier: string, mechanism: string, value: string, counts: bool, follow: string}>
- *         follow: el dominio al que hay que ir a mirar (include/redirect), o vacío.
+ *         follow: the domain to go and look at (include/redirect), or empty.
  */
 function diluxone_mail_spf_terms( string $record ): array {
 	$terms = array();
 
-	$partes = preg_split( '/\s+/', trim( $record ) );
+	$parts = preg_split( '/\s+/', trim( $record ) );
 
-	foreach ( false === $partes ? array() : $partes as $i => $term ) {
+	foreach ( false === $parts ? array() : $parts as $i => $term ) {
 		if ( 0 === $i || '' === $term ) {
 			continue;
 		}
@@ -110,7 +111,8 @@ function diluxone_mail_spf_terms( string $record ): array {
 			continue;
 		}
 
-		// exp= y cualquier modificador desconocido: no cuentan y no se siguen.
+		// exp= and any unknown modifier: they do not count and are not
+		// followed.
 		$terms[] = array(
 			'qualifier' => '',
 			'mechanism' => strtolower( (string) strtok( $term, '=' ) ),
@@ -124,13 +126,13 @@ function diluxone_mail_spf_terms( string $record ): array {
 }
 
 /**
- * Expande el árbol de un dominio y cuenta los lookups.
+ * Expands a domain's tree and counts the lookups.
  *
  * @param string                           $domain
  * @param int                              $depth
- * @param array<string, true>              $seen   Dominios ya visitados, contra los bucles.
- * @param array<int, array<string, mixed>> $tree  Se llena de arriba a abajo.
- * @return int Lookups de este dominio y de todo lo que cuelga de él.
+ * @param array<string, true>              $seen   Domains already visited, against loops.
+ * @param array<int, array<string, mixed>> $tree   Filled in from the top down.
+ * @return int Lookups of this domain and of everything hanging off it.
  */
 function diluxone_mail_spf_walk( string $domain, int $depth, array &$seen, array &$tree ): int {
 	$domain = strtolower( rtrim( $domain, '.' ) );
@@ -149,8 +151,8 @@ function diluxone_mail_spf_walk( string $domain, int $depth, array &$seen, array
 
 	$seen[ $domain ] = true;
 
-	// Veinte niveles es más de lo que ningún SPF sano tiene; sirve para no
-	// seguir un árbol roto para siempre.
+	// Twenty levels is more than any sane SPF record has; it is there so a
+	// broken tree is not followed forever.
 	if ( $depth > 20 ) {
 		return 0;
 	}
@@ -169,19 +171,19 @@ function diluxone_mail_spf_walk( string $domain, int $depth, array &$seen, array
 		return 0;
 	}
 
-	$terms   = diluxone_mail_spf_terms( $spf['record'] );
-	$propios = count( array_filter( $terms, static fn( array $t ): bool => $t['counts'] ) );
-	$indice  = count( $tree );
+	$terms = diluxone_mail_spf_terms( $spf['record'] );
+	$own   = count( array_filter( $terms, static fn( array $t ): bool => $t['counts'] ) );
+	$index = count( $tree );
 
 	$tree[] = array(
 		'depth'   => $depth,
 		'domain'  => $domain,
 		'record'  => $spf['record'],
-		'lookups' => $propios,
+		'lookups' => $own,
 		'error'   => $spf['error'],
 	);
 
-	$total = $propios;
+	$total = $own;
 
 	foreach ( $terms as $term ) {
 		if ( '' !== $term['follow'] ) {
@@ -189,13 +191,13 @@ function diluxone_mail_spf_walk( string $domain, int $depth, array &$seen, array
 		}
 	}
 
-	$tree[ $indice ]['subtotal'] = $total;
+	$tree[ $index ]['subtotal'] = $total;
 
 	return $total;
 }
 
 /**
- * El análisis completo del SPF de un dominio.
+ * The full SPF analysis of a domain.
  *
  * @return array{
  *     domain: string,
@@ -213,8 +215,8 @@ function diluxone_mail_spf_analyse( string $domain ): array {
 	$tree = array();
 
 	$lookups = diluxone_mail_spf_walk( $domain, 0, $seen, $tree );
-	$raiz    = $tree[0] ?? null;
-	$record  = null !== $raiz && '' !== $raiz['record'] ? (string) $raiz['record'] : null;
+	$root    = $tree[0] ?? null;
+	$record  = null !== $root && '' !== $root['record'] ? (string) $root['record'] : null;
 	$all     = '';
 	$incl    = array();
 
@@ -233,7 +235,7 @@ function diluxone_mail_spf_analyse( string $domain ): array {
 	return array(
 		'domain'     => $domain,
 		'record'     => $record,
-		'error'      => null !== $raiz ? (string) $raiz['error'] : '',
+		'error'      => null !== $root ? (string) $root['error'] : '',
 		'lookups'    => $lookups,
 		'over_limit' => $lookups > DILUXONE_MAIL_SPF_MAX_LOOKUPS,
 		'all'        => $all,

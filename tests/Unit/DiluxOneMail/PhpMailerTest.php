@@ -1,6 +1,6 @@
 <?php
 /**
- * Qué le configura el transporte a PHPMailer, con un PHPMailer de mentira.
+ * What the transport configures on PHPMailer, using a fake PHPMailer.
  */
 
 namespace Tests\Unit\DiluxOneMail;
@@ -9,7 +9,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 class PhpMailerTest extends AdminTestCase {
 
-	public function test_un_proveedor_remoto_con_auth_y_starttls(): void {
+	public function test_a_remote_provider_with_auth_and_starttls(): void {
 		\update_option( 'diluxone_mail_mode', 'transport' );
 		\update_option( 'diluxone_mail_provider', 'mailjet' );
 		\update_option( 'diluxone_mail_host', 'in-v3.mailjet.com' );
@@ -34,7 +34,7 @@ class PhpMailerTest extends AdminTestCase {
 		$this->assertSame( 0, $m->SMTPDebug );
 	}
 
-	public function test_un_perfil_local_apaga_auth_y_autotls(): void {
+	public function test_a_local_profile_turns_off_auth_and_autotls(): void {
 		\update_option( 'diluxone_mail_mode', 'transport' );
 		\update_option( 'diluxone_mail_provider', 'mailpit' );
 		\update_option( 'diluxone_mail_host', 'mailpit' );
@@ -51,7 +51,7 @@ class PhpMailerTest extends AdminTestCase {
 		$this->assertSame( 587, $m->Port );
 	}
 
-	public function test_en_observador_o_sin_host_no_se_toca_pero_el_debug_si(): void {
+	public function test_in_observer_mode_or_without_a_host_nothing_is_touched_but_debug_is(): void {
 		\update_option( 'diluxone_mail_mode', 'observe' );
 		\diluxone_mail_debug_enabled( true );
 
@@ -70,7 +70,7 @@ class PhpMailerTest extends AdminTestCase {
 		$this->assertSame( 'mail', $m->Mailer );
 	}
 
-	public function test_el_message_id_y_la_ultima_respuesta(): void {
+	public function test_the_message_id_and_the_last_reply(): void {
 		\diluxone_mail_current( array( 'uuid' => 'abc-123' ) );
 
 		$m = new PHPMailer();
@@ -83,7 +83,7 @@ class PhpMailerTest extends AdminTestCase {
 		\diluxone_mail_current( null, true );
 	}
 
-	public function test_un_envio_completo_guarda_la_respuesta_del_servidor(): void {
+	public function test_a_complete_send_stores_the_servers_reply(): void {
 		\update_option( 'diluxone_mail_mode', 'transport' );
 		\update_option( 'diluxone_mail_provider', 'mailjet' );
 		\update_option( 'diluxone_mail_host', 'in-v3.mailjet.com' );
@@ -91,7 +91,7 @@ class PhpMailerTest extends AdminTestCase {
 		\add_action( 'wp_mail_succeeded', 'diluxone_mail_on_succeeded' );
 		$GLOBALS['phpmailer'] = new PHPMailer();
 
-		\wp_mail( 'a@x.test', 'Hola', 'Cuerpo' );
+		\wp_mail( 'a@x.test', 'Hello', 'Body' );
 
 		$this->assertSame( '250 OK queued as test-id', $this->db->of( 'update' )[0]['args']['data']['response'] );
 		unset( $GLOBALS['phpmailer'] );

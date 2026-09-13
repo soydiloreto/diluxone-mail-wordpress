@@ -1,17 +1,17 @@
 <?php
 /**
- * Comandos de WP-CLI.
+ * WP-CLI commands.
  *
- * Los cuatro:
+ * There are four of them:
  *
- *   wp diluxone-mail test <correo>     manda una prueba y muestra el diálogo SMTP
- *   wp diluxone-mail status            el estado, como en la pantalla
- *   wp diluxone-mail dns [<dominio>]   el diagnóstico de entregabilidad
- *   wp diluxone-mail log list          el historial
+ *   wp diluxone-mail test <email>     sends a test and shows the SMTP dialogue
+ *   wp diluxone-mail status           the status, as on the screen
+ *   wp diluxone-mail dns [<domain>]   the deliverability diagnosis
+ *   wp diluxone-mail log list         the log
  *
- * Existen porque el correo se rompe en producción, donde a veces lo único
- * que hay es una terminal. Y porque el diagnóstico de DNS sirve para
- * cualquier dominio, no sólo el del sitio.
+ * They exist because mail breaks in production, where sometimes a terminal is
+ * all there is. And because the DNS diagnosis works for any domain, not only
+ * the site's.
  *
  * @package DiluxOneMail
  */
@@ -23,47 +23,47 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 }
 
 /**
- * Correo saliente: transporte, historial y diagnóstico de entregabilidad.
+ * Outgoing mail: transport, log and deliverability diagnosis.
  */
 class DiluxOne_Mail_CLI {
 
 	/**
-	 * Manda un correo de prueba y muestra qué pasó, con el diálogo SMTP.
+	 * Sends a test message and shows what happened, with the SMTP dialogue.
 	 *
 	 * ## OPTIONS
 	 *
-	 * <correo>
-	 * : Adónde mandarlo.
+	 * <email>
+	 * : Where to send it.
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp diluxone-mail test alguien@ejemplo.com
+	 *     wp diluxone-mail test somebody@example.com
 	 *
 	 * @param array<int, string> $args
 	 */
 	public function test( array $args ): void {
-		$resultado = diluxone_mail_send_test( (string) ( $args[0] ?? '' ) );
+		$result = diluxone_mail_send_test( (string) ( $args[0] ?? '' ) );
 
-		if ( '' !== $resultado['transcript'] ) {
-			WP_CLI::log( $resultado['transcript'] );
+		if ( '' !== $result['transcript'] ) {
+			WP_CLI::log( $result['transcript'] );
 		}
 
-		if ( $resultado['ok'] ) {
-			/* translators: 1: destinatario, 2: segundos */
-			WP_CLI::success( sprintf( 'Sent to %1$s in %2$ss.', $resultado['to'], $resultado['seconds'] ) );
+		if ( $result['ok'] ) {
+			/* translators: 1: recipient, 2: seconds */
+			WP_CLI::success( sprintf( 'Sent to %1$s in %2$ss.', $result['to'], $result['seconds'] ) );
 			return;
 		}
 
-		WP_CLI::error( '' !== $resultado['error'] ? $resultado['error'] : 'The message was not sent.' );
+		WP_CLI::error( '' !== $result['error'] ? $result['error'] : 'The message was not sent.' );
 	}
 
 	/**
-	 * Muestra el estado: perfil, de dónde sale cada valor, modo, último envío.
+	 * Shows the status: profile, where each value comes from, mode, last send.
 	 *
 	 * ## OPTIONS
 	 *
 	 * [--format=<format>]
-	 * : table, json o yaml.
+	 * : table, json or yaml.
 	 * ---
 	 * default: table
 	 * ---
@@ -72,56 +72,56 @@ class DiluxOne_Mail_CLI {
 	 * @param array<string, string> $assoc_args
 	 */
 	public function status( array $args, array $assoc_args ): void {
-		$estado = diluxone_mail_status();
-		$filas  = array(
+		$status = diluxone_mail_status();
+		$rows   = array(
 			array(
 				'key'   => 'environment',
-				'value' => $estado['environment'],
+				'value' => $status['environment'],
 			),
 			array(
 				'key'   => 'mode',
-				'value' => $estado['mode'] . ( $estado['transport'] ? ' (sending)' : ' (observing)' ),
+				'value' => $status['mode'] . ( $status['transport'] ? ' (sending)' : ' (observing)' ),
 			),
 			array(
 				'key'   => 'other mailers',
-				'value' => implode( ', ', array_column( $estado['others'], 'name' ) ),
+				'value' => implode( ', ', array_column( $status['others'], 'name' ) ),
 			),
 			array(
 				'key'   => 'profile',
-				'value' => (string) $estado['profile']['name'],
+				'value' => (string) $status['profile']['name'],
 			),
 		);
 
-		foreach ( $estado['config'] as $campo => $v ) {
-			$filas[] = array(
-				'key'   => $campo,
+		foreach ( $status['config'] as $field => $v ) {
+			$rows[] = array(
+				'key'   => $field,
 				'value' => $v['value'] . ' — ' . $v['label'],
 			);
 		}
 
-		if ( is_array( $estado['last'] ) ) {
-			$filas[] = array(
+		if ( is_array( $status['last'] ) ) {
+			$rows[] = array(
 				'key'   => 'last send',
-				'value' => ( ! empty( $estado['last']['ok'] ) ? 'ok' : 'failed: ' . (string) $estado['last']['error'] ) . ' at ' . gmdate( 'c', (int) $estado['last']['time'] ),
+				'value' => ( ! empty( $status['last']['ok'] ) ? 'ok' : 'failed: ' . (string) $status['last']['error'] ) . ' at ' . gmdate( 'c', (int) $status['last']['time'] ),
 			);
 		}
 
-		WP_CLI\Utils\format_items( (string) ( $assoc_args['format'] ?? 'table' ), $filas, array( 'key', 'value' ) );
+		WP_CLI\Utils\format_items( (string) ( $assoc_args['format'] ?? 'table' ), $rows, array( 'key', 'value' ) );
 	}
 
 	/**
-	 * El diagnóstico de DNS: SPF, DKIM, DMARC, explicado.
+	 * The DNS diagnosis: SPF, DKIM, DMARC, explained.
 	 *
 	 * ## OPTIONS
 	 *
-	 * [<dominio>]
-	 * : El dominio. Por defecto, el que diagnostica el sitio.
+	 * [<domain>]
+	 * : The domain. Defaults to the one the site diagnoses.
 	 *
 	 * [--fresh]
-	 * : Ignorar el caché.
+	 * : Ignore the cache.
 	 *
 	 * [--format=<format>]
-	 * : table o json. json trae el informe completo, con el árbol del SPF.
+	 * : table or json. json carries the full report, including the SPF tree.
 	 * ---
 	 * default: table
 	 * ---
@@ -130,44 +130,44 @@ class DiluxOne_Mail_CLI {
 	 * @param array<string, string> $assoc_args
 	 */
 	public function dns( array $args, array $assoc_args ): void {
-		$dominio = strtolower( trim( (string) ( $args[0] ?? diluxone_mail_dns_domain() ) ) );
+		$domain = strtolower( trim( (string) ( $args[0] ?? diluxone_mail_dns_domain() ) ) );
 
-		if ( '' === $dominio ) {
+		if ( '' === $domain ) {
 			WP_CLI::error( 'No domain to diagnose.' );
 		}
 
-		$informe = diluxone_mail_diagnose( $dominio, isset( $assoc_args['fresh'] ) );
+		$report = diluxone_mail_diagnose( $domain, isset( $assoc_args['fresh'] ) );
 
 		if ( 'json' === ( $assoc_args['format'] ?? 'table' ) ) {
-			WP_CLI::log( (string) wp_json_encode( $informe, JSON_PRETTY_PRINT ) );
+			WP_CLI::log( (string) wp_json_encode( $report, JSON_PRETTY_PRINT ) );
 			return;
 		}
 
-		/* translators: 1: dominio, 2: lookups, 3: origen */
-		WP_CLI::log( sprintf( '%1$s — SPF: %2$d/10 lookups — resolver: %3$s', $dominio, (int) $informe['spf']['lookups'], (string) $informe['resolver'] ) );
+		/* translators: 1: domain, 2: lookups, 3: resolver */
+		WP_CLI::log( sprintf( '%1$s — SPF: %2$d/10 lookups — resolver: %3$s', $domain, (int) $report['spf']['lookups'], (string) $report['resolver'] ) );
 
-		foreach ( $informe['findings'] as $hallazgo ) {
-			WP_CLI::log( sprintf( '[%s] %s', strtoupper( (string) $hallazgo['level'] ), (string) $hallazgo['title'] ) );
-			WP_CLI::log( '    ' . (string) $hallazgo['text'] );
+		foreach ( $report['findings'] as $finding ) {
+			WP_CLI::log( sprintf( '[%s] %s', strtoupper( (string) $finding['level'] ), (string) $finding['title'] ) );
+			WP_CLI::log( '    ' . (string) $finding['text'] );
 		}
 	}
 
 	/**
-	 * El historial.
+	 * The log.
 	 *
 	 * ## OPTIONS
 	 *
 	 * <list>
-	 * : La única acción por ahora.
+	 * : The only action for now.
 	 *
 	 * [--email=<email>]
-	 * : Sólo esta dirección.
+	 * : Only this address.
 	 *
 	 * [--status=<status>]
-	 * : Sólo este estado: sent, failed, pending, intercepted, suppressed.
+	 * : Only this status: sent, failed, pending, intercepted, suppressed.
 	 *
 	 * [--limit=<n>]
-	 * : Cuántas filas.
+	 * : How many rows.
 	 * ---
 	 * default: 20
 	 * ---
@@ -180,7 +180,7 @@ class DiluxOne_Mail_CLI {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp diluxone-mail log list --email=alguien@ejemplo.com
+	 *     wp diluxone-mail log list --email=somebody@example.com
 	 *     wp diluxone-mail log list --status=failed --format=json
 	 *
 	 * @param array<int, string>    $args
@@ -193,7 +193,7 @@ class DiluxOne_Mail_CLI {
 
 		$email = (string) ( $assoc_args['email'] ?? '' );
 
-		$consulta = diluxone_mail_log_query(
+		$query = diluxone_mail_log_query(
 			array(
 				'emails'   => '' !== $email ? array( $email ) : array(),
 				'status'   => (string) ( $assoc_args['status'] ?? '' ),
@@ -202,21 +202,21 @@ class DiluxOne_Mail_CLI {
 			)
 		);
 
-		$filas = array();
+		$rows = array();
 
-		foreach ( $consulta['rows'] as $fila ) {
-			$filas[] = array(
-				'id'      => (int) $fila['id'],
-				'date'    => (string) $fila['sent_at'],
-				'to'      => (string) $fila['email'],
-				'subject' => (string) $fila['subject'],
-				'status'  => (string) $fila['status'],
-				'error'   => (string) $fila['error'],
-				'source'  => (string) $fila['source'],
+		foreach ( $query['rows'] as $row ) {
+			$rows[] = array(
+				'id'      => (int) $row['id'],
+				'date'    => (string) $row['sent_at'],
+				'to'      => (string) $row['email'],
+				'subject' => (string) $row['subject'],
+				'status'  => (string) $row['status'],
+				'error'   => (string) $row['error'],
+				'source'  => (string) $row['source'],
 			);
 		}
 
-		WP_CLI\Utils\format_items( (string) ( $assoc_args['format'] ?? 'table' ), $filas, array( 'id', 'date', 'to', 'subject', 'status', 'error', 'source' ) );
+		WP_CLI\Utils\format_items( (string) ( $assoc_args['format'] ?? 'table' ), $rows, array( 'id', 'date', 'to', 'subject', 'status', 'error', 'source' ) );
 	}
 }
 

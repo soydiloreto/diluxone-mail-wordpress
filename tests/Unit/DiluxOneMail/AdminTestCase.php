@@ -1,15 +1,15 @@
 <?php
 /**
- * Base de los tests de pantallas y handlers: carga todo el plugin como lo
- * carga el archivo principal, y deja el estado limpio entre tests.
+ * Base for the screen and handler tests: loads the whole plugin the way the
+ * main file loads it, and leaves clean state between tests.
  */
 
 namespace Tests\Unit\DiluxOneMail;
 
 use PHPUnit\Framework\TestCase;
 
-foreach ( (array) glob( dirname( __DIR__, 3 ) . '/includes/*.php' ) as $diluxone_mail_test_archivo ) {
-	require_once (string) $diluxone_mail_test_archivo;
+foreach ( (array) glob( dirname( __DIR__, 3 ) . '/includes/*.php' ) as $diluxone_mail_test_file ) {
+	require_once (string) $diluxone_mail_test_file;
 }
 
 abstract class AdminTestCase extends TestCase {
@@ -47,8 +47,8 @@ abstract class AdminTestCase extends TestCase {
 		\diluxone_mail_debug_enabled( false );
 		\update_option( 'diluxone_mail_dns_resolver', 'doh' );
 
-		foreach ( \diluxone_mail_config_fields() as $sufijo ) {
-			putenv( 'DILUXONE_MAIL_' . $sufijo );
+		foreach ( \diluxone_mail_config_fields() as $suffix ) {
+			putenv( 'DILUXONE_MAIL_' . $suffix );
 		}
 	}
 
@@ -60,7 +60,7 @@ abstract class AdminTestCase extends TestCase {
 		parent::tearDown();
 	}
 
-	/** Una persona, con el WP_User de los stubs. */
+	/** A person, using the stubs' WP_User. */
 	protected function user( int $id, string $email ): \WP_User {
 		$u             = ( new \ReflectionClass( \WP_User::class ) )->newInstanceWithoutConstructor();
 		$u->ID         = $id;
@@ -70,7 +70,7 @@ abstract class AdminTestCase extends TestCase {
 		return $u;
 	}
 
-	/** Corre un handler que termina redirigiendo y devuelve adónde. */
+	/** Runs a handler that ends in a redirect and returns where to. */
 	protected function redirect_of( callable $handler ): string {
 		try {
 			$handler();
@@ -78,10 +78,10 @@ abstract class AdminTestCase extends TestCase {
 			return $e->getMessage();
 		}
 
-		$this->fail( 'el handler no redirigió' );
+		$this->fail( 'the handler did not redirect' );
 	}
 
-	/** Captura lo que imprime una pantalla. */
+	/** Captures what a screen prints. */
 	protected function render( callable $screen ): string {
 		ob_start();
 		$screen();
@@ -89,7 +89,7 @@ abstract class AdminTestCase extends TestCase {
 		return (string) ob_get_clean();
 	}
 
-	/** Una fila del historial como la devolvería la base. */
+	/** A log row as the database would return it. */
 	protected function row( array $extra = array() ): array {
 		return array_merge(
 			array(
@@ -98,17 +98,17 @@ abstract class AdminTestCase extends TestCase {
 				'sent_at'     => '2026-09-13 10:00:00',
 				'email'       => 'ana@x.test',
 				'kind'        => 'to',
-				'from_email'  => 'hola@x.test',
-				'subject'     => 'Hola',
+				'from_email'  => 'hello@x.test',
+				'subject'     => 'Hello',
 				'status'      => 'sent',
 				'error'       => '',
 				'response'    => '250 OK',
 				'provider'    => 'mailjet',
-				'source'      => 'plugin:tienda',
-				'headers'     => '["X-Prueba: 1"]',
+				'source'      => 'plugin:shop',
+				'headers'     => '["X-Test: 1"]',
 				'attachments' => '["a.pdf"]',
 				'message_id'  => 'uuid-7',
-				// El $wpdb de mentira devuelve la misma fila para el detalle.
+				// The fake $wpdb returns the same row for the detail.
 				'body'        => '',
 				'body_type'   => 'text/plain',
 				'transcript'  => '',

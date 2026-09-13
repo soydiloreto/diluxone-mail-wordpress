@@ -1,23 +1,23 @@
 <?php
 /**
- * De dónde sale cada valor del transporte.
+ * Where each transport value comes from.
  *
- * La idea entera del plugin en una frase: las credenciales de producción
- * viven en las variables del hosting y nunca tocan la base ni el repo. El
- * mismo código sirve para la máquina local y para producción sin que nadie
- * entre al admin a cambiar nada en cada despliegue.
+ * The whole idea of the plugin in one sentence: production credentials live
+ * in the hosting's variables and never touch the database or the repository.
+ * The same code serves the local machine and production without anybody
+ * going into the dashboard to change something on every deploy.
  *
- * Por eso hay estas capas, de mayor a menor:
+ * Hence these layers, highest to lowest:
  *
- *   1. Una constante de PHP definida en wp-config.php     DILUXONE_MAIL_HOST
- *   2. Una variable de entorno con el mismo nombre        DILUXONE_MAIL_HOST
- *   3. La option del sitio, editable desde el admin       diluxone_mail_host
- *   4. En una red, la option de la red                    diluxone_mail_host
+ *   1. A PHP constant defined in wp-config.php          DILUXONE_MAIL_HOST
+ *   2. An environment variable with the same name       DILUXONE_MAIL_HOST
+ *   3. The site option, editable from the dashboard     diluxone_mail_host
+ *   4. On a network, the network option                 diluxone_mail_host
  *
- * Y por eso cada lectura devuelve además de dónde salió el valor: el
- * formulario necesita saberlo para mostrar el control de sólo lectura con la
- * leyenda «definido por el entorno», y el guardado necesita saberlo para no
- * escribir en la base una credencial que igual no se va a usar.
+ * And hence every read also returns where the value came from: the form needs
+ * it to show the read-only control with the "defined by the environment"
+ * note, and saving needs it so as not to write a credential into the database
+ * that is not going to be used anyway.
  *
  * @package DiluxOneMail
  */
@@ -25,12 +25,12 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Los campos del transporte, y cómo se llama cada uno en cada capa.
+ * The transport fields, and what each one is called in each layer.
  *
- * La clave es el nombre corto que usa el resto del plugin; el valor es el
- * sufijo, que sirve para las dos cosas: `DILUXONE_MAIL_` + sufijo da la
- * constante y la variable de entorno, y `diluxone_mail_` + sufijo en
- * minúsculas da la option.
+ * The key is the short name the rest of the plugin uses; the value is the
+ * suffix, which serves both purposes: `DILUXONE_MAIL_` + suffix gives the
+ * constant and the environment variable, and `diluxone_mail_` + the suffix in
+ * lower case gives the option.
  *
  * @return array<string, string>
  */
@@ -48,17 +48,17 @@ function diluxone_mail_config_fields(): array {
 }
 
 /**
- * Un valor del transporte, con su procedencia.
+ * One transport value, with its provenance.
  *
- * @param string $campo Una clave de diluxone_mail_config_fields().
+ * @param string $field One of the keys of diluxone_mail_config_fields().
  * @return array{value: string, source: string, origin: string}
- *         source: 'constant', 'env', 'site', 'network' o 'default'.
- *         origin: el nombre concreto de la constante, la variable o la option.
+ *         source: 'constant', 'env', 'site', 'network' or 'default'.
+ *         origin: the concrete name of the constant, variable or option.
  */
-function diluxone_mail_config_value( string $campo ): array {
-	$campos = diluxone_mail_config_fields();
+function diluxone_mail_config_value( string $field ): array {
+	$fields = diluxone_mail_config_fields();
 
-	if ( ! isset( $campos[ $campo ] ) ) {
+	if ( ! isset( $fields[ $field ] ) ) {
 		return array(
 			'value'  => '',
 			'source' => 'default',
@@ -66,38 +66,38 @@ function diluxone_mail_config_value( string $campo ): array {
 		);
 	}
 
-	$sufijo    = $campos[ $campo ];
-	$constante = 'DILUXONE_MAIL_' . $sufijo;
-	$option    = 'diluxone_mail_' . strtolower( $sufijo );
+	$suffix   = $fields[ $field ];
+	$constant = 'DILUXONE_MAIL_' . $suffix;
+	$option   = 'diluxone_mail_' . strtolower( $suffix );
 
-	if ( defined( $constante ) ) {
+	if ( defined( $constant ) ) {
 		return array(
-			'value'  => (string) constant( $constante ),
+			'value'  => (string) constant( $constant ),
 			'source' => 'constant',
-			'origin' => $constante,
+			'origin' => $constant,
 		);
 	}
 
-	// getenv() devuelve false cuando no está definida, y cadena vacía cuando
-	// está definida y vacía. Una variable vacía es lo mismo que no tenerla:
-	// quien exporta DILUXONE_MAIL_HOST= no está configurando un host vacío,
-	// está dejando el renglón a medio escribir.
-	$entorno = getenv( $constante );
+	// getenv() returns false when the variable is not defined, and an empty
+	// string when it is defined and empty. An empty variable is the same as
+	// not having one: whoever exports DILUXONE_MAIL_HOST= is not configuring
+	// an empty host, they left the line half written.
+	$from_env = getenv( $constant );
 
-	if ( is_string( $entorno ) && '' !== $entorno ) {
+	if ( is_string( $from_env ) && '' !== $from_env ) {
 		return array(
-			'value'  => $entorno,
+			'value'  => $from_env,
 			'source' => 'env',
-			'origin' => $constante,
+			'origin' => $constant,
 		);
 	}
 
-	$guardado = diluxone_mail_option_stored( $option );
+	$stored = diluxone_mail_option_stored( $option );
 
-	if ( 'default' !== $guardado['scope'] && '' !== (string) $guardado['value'] ) {
+	if ( 'default' !== $stored['scope'] && '' !== (string) $stored['value'] ) {
 		return array(
-			'value'  => (string) $guardado['value'],
-			'source' => $guardado['scope'],
+			'value'  => (string) $stored['value'],
+			'source' => $stored['scope'],
 			'origin' => $option,
 		);
 	}
@@ -112,19 +112,19 @@ function diluxone_mail_config_value( string $campo ): array {
 }
 
 /**
- * Todos los valores del transporte ya resueltos.
+ * Every transport value, already resolved.
  *
  * @return array<string, string>
  */
 function diluxone_mail_config(): array {
 	$config = array();
 
-	foreach ( array_keys( diluxone_mail_config_fields() ) as $campo ) {
-		$config[ $campo ] = diluxone_mail_config_value( $campo )['value'];
+	foreach ( array_keys( diluxone_mail_config_fields() ) as $field ) {
+		$config[ $field ] = diluxone_mail_config_value( $field )['value'];
 	}
 
 	/**
-	 * Filtra la configuración del transporte ya resuelta.
+	 * Filters the resolved transport configuration.
 	 *
 	 * @param array<string, string> $config
 	 */
@@ -132,54 +132,55 @@ function diluxone_mail_config(): array {
 }
 
 /**
- * ¿Esta option la manda el entorno, y por lo tanto no hay que guardarla?
+ * Does the environment provide this option, and therefore it must not be
+ * stored?
  *
- * La usa el guardado del formulario. Recibe el nombre de la option y no el
- * del campo porque es lo que tiene a mano cuando recorre el POST.
+ * Used by the form's save routine. It takes the option name rather than the
+ * field name because that is what it has at hand while walking the POST.
  */
 function diluxone_mail_option_from_environment( string $option_key ): bool {
-	foreach ( diluxone_mail_config_fields() as $campo => $sufijo ) {
-		if ( 'diluxone_mail_' . strtolower( $sufijo ) !== $option_key ) {
+	foreach ( diluxone_mail_config_fields() as $field => $suffix ) {
+		if ( 'diluxone_mail_' . strtolower( $suffix ) !== $option_key ) {
 			continue;
 		}
 
-		return in_array( diluxone_mail_config_value( $campo )['source'], array( 'constant', 'env' ), true );
+		return in_array( diluxone_mail_config_value( $field )['source'], array( 'constant', 'env' ), true );
 	}
 
 	return false;
 }
 
 /**
- * Tapa la contraseña en cualquier texto que vaya a salir del servidor.
+ * Redacts the password from any text about to leave the server.
  *
- * Se usa en el historial, en la pantalla de estado, en el volcado del
- * SMTPDebug y en toda exportación. Busca el valor literal y lo reemplaza;
- * no alcanza con no imprimirla a propósito, porque el que la imprime sin
- * querer es siempre otro —una traza de error, el diálogo del servidor—.
+ * Used in the log, on the status screen, in the SMTPDebug dump and in every
+ * export. It looks for the literal value and replaces it; deliberately not
+ * printing it is not enough, because whoever prints it by accident is always
+ * somebody else — an error trace, the server's dialogue.
  *
- * Lo segundo que reemplaza es la contraseña en base64, y ése es el caso que
- * importa de verdad: el diálogo SMTP no manda la contraseña en claro, manda
- * `AUTH LOGIN` y después el usuario y la contraseña codificados. Tapar sólo
- * el literal deja la credencial entera a la vista en el volcado, en una línea
- * que cualquiera decodifica en un segundo. Lo mismo con AUTH PLAIN, que
- * codifica usuario y contraseña juntos en una sola línea.
+ * The second thing it replaces is the password in base64, and that is the
+ * case that really matters: the SMTP dialogue does not send the password in
+ * the clear, it sends `AUTH LOGIN` and then the user and the password
+ * encoded. Redacting only the literal leaves the whole credential in plain
+ * sight in the dump, on a line anybody decodes in a second. Same with AUTH
+ * PLAIN, which encodes user and password together on a single line.
  */
-function diluxone_mail_redact( string $texto ): string {
+function diluxone_mail_redact( string $text ): string {
 	$pass = diluxone_mail_config_value( 'pass' )['value'];
 
 	if ( '' === $pass ) {
-		return $texto;
+		return $text;
 	}
 
 	$user = diluxone_mail_config_value( 'user' )['value'];
 
-	// phpcs:disable WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- No se está ofuscando nada: es el formato en el que la contraseña aparece en el diálogo SMTP, y hay que reproducirlo para encontrarla y taparla.
-	$formas = array(
+	// phpcs:disable WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Nothing is being obfuscated: this is the format the password appears in inside the SMTP dialogue, and it has to be reproduced to find it and cover it.
+	$forms = array(
 		$pass,
 		base64_encode( $pass ),
 		base64_encode( "\0" . $user . "\0" . $pass ),
 	);
 	// phpcs:enable
 
-	return str_replace( $formas, '***', $texto );
+	return str_replace( $forms, '***', $text );
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * La vista del detalle de un mensaje.
+ * The view of one message's detail.
  *
  * @package DiluxOneMail
  * @var array<string, mixed> $data
@@ -8,8 +8,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
-$diluxone_mail_row     = $data['row'];
-$diluxone_mail_detalle = $data['detail'];
+$diluxone_mail_row    = $data['row'];
+$diluxone_mail_detail = $data['detail'];
 ?>
 <p><a href="<?php echo esc_url( $data['back_url'] ); ?>">&larr; <?php esc_html_e( 'Back to the log', 'diluxone-mail' ); ?></a></p>
 
@@ -47,18 +47,18 @@ $diluxone_mail_detalle = $data['detail'];
 </table>
 
 <h2><?php esc_html_e( 'Body', 'diluxone-mail' ); ?></h2>
-<?php if ( is_array( $diluxone_mail_detalle ) && '' !== $diluxone_mail_detalle['body'] ) : ?>
-	<?php if ( 'text/html' === $diluxone_mail_detalle['body_type'] ) : ?>
-		<iframe class="diluxone-mail-body" sandbox="" srcdoc="<?php echo esc_attr( $diluxone_mail_detalle['body'] ); ?>" title="<?php esc_attr_e( 'Message body', 'diluxone-mail' ); ?>"></iframe>
+<?php if ( is_array( $diluxone_mail_detail ) && '' !== $diluxone_mail_detail['body'] ) : ?>
+	<?php if ( 'text/html' === $diluxone_mail_detail['body_type'] ) : ?>
+		<iframe class="diluxone-mail-body" sandbox="" srcdoc="<?php echo esc_attr( $diluxone_mail_detail['body'] ); ?>" title="<?php esc_attr_e( 'Message body', 'diluxone-mail' ); ?>"></iframe>
 	<?php else : ?>
-		<pre class="diluxone-mail-body"><?php echo esc_html( $diluxone_mail_detalle['body'] ); ?></pre>
+		<pre class="diluxone-mail-body"><?php echo esc_html( $diluxone_mail_detail['body'] ); ?></pre>
 	<?php endif; ?>
 	<p><a class="button" href="<?php echo esc_url( $data['resend_url'] ); ?>"><?php esc_html_e( 'Resend to this recipient', 'diluxone-mail' ); ?></a></p>
 <?php else : ?>
 	<p class="description"><?php esc_html_e( 'The body was not stored — body storage is off in the settings — so this message cannot be resent.', 'diluxone-mail' ); ?></p>
 <?php endif; ?>
 
-<?php if ( is_array( $diluxone_mail_detalle ) && '' !== $diluxone_mail_detalle['transcript'] ) : ?>
+<?php if ( is_array( $diluxone_mail_detail ) && '' !== $diluxone_mail_detail['transcript'] ) : ?>
 	<h2><?php esc_html_e( 'SMTP conversation', 'diluxone-mail' ); ?></h2>
-	<pre class="diluxone-mail-transcript"><?php echo esc_html( $diluxone_mail_detalle['transcript'] ); ?></pre>
+	<pre class="diluxone-mail-transcript"><?php echo esc_html( $diluxone_mail_detail['transcript'] ); ?></pre>
 <?php endif; ?>

@@ -1,20 +1,19 @@
 <?php
 /**
- * El historial en la ficha de cada persona.
+ * The history on each person's profile.
  *
- * Es la razón de ser del plugin. Todos los competidores muestran una lista
- * global de envíos; acá, abrir un usuario en el escritorio muestra qué se le
- * mandó a él: fecha, asunto, estado y un botón de reenviar. Es lo primero
- * que tiene que ver alguien de soporte cuando le dicen «no me llegó el
- * mail».
+ * This is the plugin's reason for existing. Every competitor shows one global
+ * list of sends; here, opening a user in the dashboard shows what was sent to
+ * them: date, subject, status and a resend button. It is the first thing
+ * somebody on support should see when they are told "I never got the email".
  *
- * Se busca por dirección, no por id: por la de ahora y por las anteriores si
- * el sitio las conserva —un plugin que guarde el historial de cambios de
- * correo las suma por el filtro `diluxone_mail_user_emails`—. Y en una red se
- * muestra lo de todos los sitios, porque la persona es de la red.
+ * The lookup is by address, not by id: by their current one and by their
+ * previous ones if the site keeps them — a plugin that records email changes
+ * adds them through the `diluxone_mail_user_emails` filter. And on a network
+ * it shows every site's, because the person belongs to the network.
  *
- * Lo ve quien puede editar a esa persona. No es un permiso aparte: si podés
- * cambiarle la contraseña, podés ver qué correo se le mandó.
+ * Whoever can edit that person can see it. It is not a separate capability:
+ * if you can change their password, you can see what mail was sent to them.
  *
  * @package DiluxOneMail
  */
@@ -22,7 +21,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Las direcciones por las que se busca el historial de una persona.
+ * The addresses a person's history is looked up by.
  *
  * @return array<int, string>
  */
@@ -30,9 +29,9 @@ function diluxone_mail_user_emails( WP_User $user ): array {
 	$emails = array( strtolower( (string) $user->user_email ) );
 
 	/**
-	 * Filtra las direcciones por las que se busca el historial de una persona.
+	 * Filters the addresses a person's history is looked up by.
 	 *
-	 * Un plugin que conserve las direcciones anteriores las agrega acá.
+	 * A plugin that keeps previous addresses adds them here.
 	 *
 	 * @param array<int, string> $emails
 	 * @param WP_User            $user
@@ -42,14 +41,14 @@ function diluxone_mail_user_emails( WP_User $user ): array {
 	return array_values( array_unique( array_filter( array_map( 'strtolower', array_map( 'strval', $emails ) ) ) ) );
 }
 
-/** La sección en la ficha. */
+/** The section on the profile. */
 function diluxone_mail_user_profile_section( WP_User $user ): void {
 	if ( ! current_user_can( 'edit_user', $user->ID ) ) {
 		return;
 	}
 
-	$emails   = diluxone_mail_user_emails( $user );
-	$consulta = diluxone_mail_log_query(
+	$emails = diluxone_mail_user_emails( $user );
+	$query  = diluxone_mail_log_query(
 		array(
 			'emails'   => $emails,
 			'site_id'  => null,
@@ -62,8 +61,8 @@ function diluxone_mail_user_profile_section( WP_User $user ): void {
 		array(
 			'user'        => $user,
 			'emails'      => $emails,
-			'rows'        => $consulta['rows'],
-			'total'       => $consulta['total'],
+			'rows'        => $query['rows'],
+			'total'       => $query['total'],
 			'statuses'    => diluxone_mail_log_statuses(),
 			'log_enabled' => (bool) diluxone_mail_option( 'diluxone_mail_log_enabled' ),
 			'log_body'    => (bool) diluxone_mail_option( 'diluxone_mail_log_body' ),
@@ -76,45 +75,45 @@ add_action( 'show_user_profile', 'diluxone_mail_user_profile_section', 100 );
 add_action( 'edit_user_profile', 'diluxone_mail_user_profile_section', 100 );
 
 /**
- * Reenvía un mensaje del historial a uno de sus destinatarios.
+ * Resends a message from the log to one of its recipients.
  *
- * Hace falta el cuerpo, y el cuerpo sólo está si el sitio prendió guardarlo.
- * Sin cuerpo no hay nada que mandar, y se dice con esas palabras en vez de
- * mandar un correo vacío.
+ * The body is needed, and the body is only there if the site turned storing
+ * it on. Without a body there is nothing to send, and that is said in those
+ * words rather than sending an empty message.
  *
- * Los adjuntos no se reenvían: son rutas de archivos temporales que ya no
- * existen. Se anota en el mensaje que faltan.
+ * Attachments are not resent: they are paths to temporary files that no
+ * longer exist. The message notes that they are missing.
  *
  * @return array{ok: bool, reason: string}
  */
 function diluxone_mail_resend( int $log_id ): array {
-	$fila = diluxone_mail_log_get( $log_id );
+	$row = diluxone_mail_log_get( $log_id );
 
-	if ( null === $fila ) {
+	if ( null === $row ) {
 		return array(
 			'ok'     => false,
 			'reason' => 'missing',
 		);
 	}
 
-	$detalle = diluxone_mail_detail_get( (string) $fila['message_id'] );
+	$detail = diluxone_mail_detail_get( (string) $row['message_id'] );
 
-	if ( null === $detalle || '' === $detalle['body'] ) {
+	if ( null === $detail || '' === $detail['body'] ) {
 		return array(
 			'ok'     => false,
 			'reason' => 'no-body',
 		);
 	}
 
-	$headers = array( 'Content-Type: ' . $detalle['body_type'] . '; charset=UTF-8' );
+	$headers = array( 'Content-Type: ' . $detail['body_type'] . '; charset=UTF-8' );
 
-	if ( '' !== (string) $fila['from_email'] && is_email( (string) $fila['from_email'] ) ) {
-		$headers[] = 'From: ' . (string) $fila['from_email'];
+	if ( '' !== (string) $row['from_email'] && is_email( (string) $row['from_email'] ) ) {
+		$headers[] = 'From: ' . (string) $row['from_email'];
 	}
 
-	$headers[] = 'X-DiluxOne-Mail-Resend-Of: ' . (string) $fila['message_id'];
+	$headers[] = 'X-DiluxOne-Mail-Resend-Of: ' . (string) $row['message_id'];
 
-	$ok = wp_mail( (string) $fila['email'], (string) $fila['subject'], $detalle['body'], $headers );
+	$ok = wp_mail( (string) $row['email'], (string) $row['subject'], $detail['body'], $headers );
 
 	return array(
 		'ok'     => (bool) $ok,
@@ -122,36 +121,36 @@ function diluxone_mail_resend( int $log_id ): array {
 	);
 }
 
-/** El botón de reenviar. */
+/** The resend button. */
 function diluxone_mail_resend_action(): void {
-	$id   = absint( $_GET['id'] ?? 0 );
-	$fila = diluxone_mail_log_get( $id );
+	$id  = absint( $_GET['id'] ?? 0 );
+	$row = diluxone_mail_log_get( $id );
 
 	check_admin_referer( 'diluxone_mail_resend_' . $id );
 
-	// Quien administra puede reenviar cualquiera. Quien puede editar a una
-	// persona puede reenviarle lo suyo: lo mismo que ve en la ficha.
-	$permitido = current_user_can( 'manage_options' );
+	// An administrator can resend anything. Whoever can edit a person can
+	// resend what is theirs: the same thing they see on the profile.
+	$allowed = current_user_can( 'manage_options' );
 
-	if ( ! $permitido && null !== $fila ) {
-		$user      = get_user_by( 'email', (string) $fila['email'] );
-		$permitido = $user instanceof WP_User && current_user_can( 'edit_user', $user->ID );
+	if ( ! $allowed && null !== $row ) {
+		$user    = get_user_by( 'email', (string) $row['email'] );
+		$allowed = $user instanceof WP_User && current_user_can( 'edit_user', $user->ID );
 	}
 
-	if ( ! $permitido ) {
+	if ( ! $allowed ) {
 		wp_die( esc_html__( 'You are not allowed to do this.', 'diluxone-mail' ) );
 	}
 
-	$resultado = diluxone_mail_resend( $id );
-	$done      = $resultado['ok'] ? 'resent' : ( 'no-body' === $resultado['reason'] ? 'no-body' : 'resend-failed' );
-	$back      = wp_get_referer();
+	$result = diluxone_mail_resend( $id );
+	$done   = $result['ok'] ? 'resent' : ( 'no-body' === $result['reason'] ? 'no-body' : 'resend-failed' );
+	$back   = wp_get_referer();
 
 	wp_safe_redirect( add_query_arg( 'diluxone_mail_done', $done, $back ? $back : diluxone_mail_admin_url( 'diluxone-mail-log' ) ) );
 	exit;
 }
 add_action( 'admin_post_diluxone_mail_resend', 'diluxone_mail_resend_action' );
 
-/** La URL del botón de reenviar de una fila. */
+/** The URL of a row's resend button. */
 function diluxone_mail_resend_url( int $log_id ): string {
 	return wp_nonce_url(
 		add_query_arg(
@@ -166,10 +165,10 @@ function diluxone_mail_resend_url( int $log_id ): string {
 }
 
 /**
- * El aviso de reenvío en la ficha de la persona.
+ * The resend notice on a person's profile.
  *
- * Las pantallas del plugin lo muestran con diluxone_mail_screen_open(); la
- * ficha de usuario es de WordPress y hay que engancharse a sus avisos.
+ * The plugin's own screens show it through diluxone_mail_screen_open(); the
+ * user profile belongs to WordPress and its notices have to be hooked.
  */
 function diluxone_mail_profile_notices(): void {
 	$screen = get_current_screen();

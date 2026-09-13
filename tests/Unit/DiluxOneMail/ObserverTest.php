@@ -1,10 +1,10 @@
 <?php
 /**
- * ¿Hay otro plugin gestionando el correo? Y la trampa de pre_wp_mail.
+ * Is another plugin handling the mail? And the pre_wp_mail trap.
  *
- * Los «otros plugins» son archivos de verdad en un WP_PLUGIN_DIR temporal:
- * la detección se basa en el archivo de cada callback, y con un archivo real
- * se prueba también el mapeo de la carpeta al nombre bonito.
+ * The "other plugins" are real files in a temporary WP_PLUGIN_DIR: detection
+ * is based on each callback's file, and with a real file the mapping from
+ * folder to pretty name gets exercised too.
  */
 
 namespace Tests\Unit\DiluxOneMail;
@@ -22,8 +22,8 @@ class ObserverTest extends TestCase {
 	private static string $azure;
 
 	public static function setUpBeforeClass(): void {
-		// Dos plugins de mentira: uno conocido por su carpeta, y uno que se
-		// engancha con una closure —el caso de Azure App Service—.
+		// Two fake plugins: one known by its folder, and one that hooks in with
+		// a closure — the Azure App Service case.
 		self::$fluent = WP_PLUGIN_DIR . '/fluent-smtp/fluent-smtp.php';
 		self::$azure  = WP_PLUGIN_DIR . '/azure-app-service-email/plugin.php';
 
@@ -45,12 +45,12 @@ class ObserverTest extends TestCase {
 		$GLOBALS['wp_filter']             = array();
 	}
 
-	public function test_sin_nadie_mas_el_transporte_es_nuestro(): void {
+	public function test_with_nobody_else_around_the_transport_is_ours(): void {
 		$this->assertSame( array(), \diluxone_mail_other_mailers( true ) );
 		$this->assertTrue( \diluxone_mail_transport_active() );
 	}
 
-	public function test_un_plugin_conocido_en_phpmailer_init_se_nombra(): void {
+	public function test_a_known_plugin_on_phpmailer_init_is_named(): void {
 		\add_action( 'phpmailer_init', 'fluent_test_mailer' );
 
 		$otros = \diluxone_mail_other_mailers( true );
@@ -62,7 +62,7 @@ class ObserverTest extends TestCase {
 		$this->assertFalse( \diluxone_mail_transport_active() );
 	}
 
-	public function test_una_closure_en_pre_wp_mail_se_rastrea_a_su_archivo(): void {
+	public function test_a_closure_on_pre_wp_mail_is_traced_back_to_its_file(): void {
 		$closure = require self::$azure;
 
 		\add_filter( 'pre_wp_mail', $closure, 10, 2 );
@@ -75,13 +75,13 @@ class ObserverTest extends TestCase {
 		$this->assertSame( 'pre_wp_mail', \diluxone_mail_other_mailers( true )[0]['how'] );
 	}
 
-	public function test_nuestros_propios_hooks_no_cuentan(): void {
+	public function test_our_own_hooks_do_not_count(): void {
 		\add_action( 'phpmailer_init', 'diluxone_mail_transport_active' );
 
 		$this->assertSame( array(), \diluxone_mail_hook_origins( 'phpmailer_init' ) );
 	}
 
-	public function test_el_modo_manda_sobre_la_deteccion(): void {
+	public function test_the_mode_overrules_detection(): void {
 		\add_action( 'phpmailer_init', 'fluent_test_mailer' );
 		\diluxone_mail_other_mailers( true );
 
@@ -92,7 +92,7 @@ class ObserverTest extends TestCase {
 		$this->assertFalse( \diluxone_mail_transport_active() );
 	}
 
-	public function test_desenganchar_saca_solo_al_interceptor(): void {
+	public function test_detaching_removes_only_the_interceptor(): void {
 		$closure = require self::$azure;
 		$propio  = static fn( $pre ) => $pre;
 
@@ -103,11 +103,11 @@ class ObserverTest extends TestCase {
 		\diluxone_mail_pre_wp_mail_unhook( array() );
 
 		$this->assertSame( array(), \diluxone_mail_pre_wp_mail_interceptors() );
-		// El otro callback —de este archivo, que no es un plugin— sigue ahí.
+		// The other callback — from this file, which is not a plugin — is still there.
 		$this->assertArrayHasKey( 20, $GLOBALS['wp_filter']['pre_wp_mail']->callbacks );
 	}
 
-	public function test_sin_la_casilla_no_se_desengancha_nada(): void {
+	public function test_without_the_checkbox_nothing_is_detached(): void {
 		$closure = require self::$azure;
 		\add_filter( 'pre_wp_mail', $closure, 10, 2 );
 
@@ -116,7 +116,7 @@ class ObserverTest extends TestCase {
 		$this->assertCount( 1, \diluxone_mail_pre_wp_mail_interceptors() );
 	}
 
-	public function test_el_origen_de_un_metodo_y_de_un_invocable(): void {
+	public function test_the_origin_of_a_method_and_of_an_invokable(): void {
 		$obj = new class() {
 			public function m(): void {}
 			public function __invoke(): void {}
@@ -127,7 +127,7 @@ class ObserverTest extends TestCase {
 		$this->assertSame( '', \diluxone_mail_callback_origin( 'no_existe_esta_funcion' )['file'] );
 	}
 
-	public function test_el_aviso_del_observador_ofrece_tomar_el_control(): void {
+	public function test_the_observer_notice_offers_to_take_over(): void {
 		\add_action( 'phpmailer_init', 'fluent_test_mailer' );
 		\diluxone_mail_other_mailers( true );
 
@@ -144,7 +144,7 @@ class ObserverTest extends TestCase {
 		$this->assertSame( '', ob_get_clean() );
 	}
 
-	public function test_el_aviso_de_pre_wp_mail(): void {
+	public function test_the_pre_wp_mail_notice(): void {
 		ob_start();
 		\diluxone_mail_pre_wp_mail_notice();
 		$this->assertSame( '', ob_get_clean() );

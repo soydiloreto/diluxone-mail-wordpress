@@ -16,37 +16,37 @@
  * @package DiluxOneMail
  *
  * ---------------------------------------------------------------------------
- * Por qué existe
+ * Why this exists
  *
- * WordPress manda el correo con la función de PHP que le pide al sistema
- * operativo que lo despache, y en un hosting de hoy eso no llega a ningún
- * lado: sin un servidor que lo autentique, Gmail y Outlook lo descartan sin
- * avisarle a nadie. El sitio funciona, el formulario dice «gracias», y el
- * correo no existió nunca.
+ * WordPress sends mail through the PHP function that asks the operating
+ * system to deliver it, and on today's hosting that reaches nobody: with no
+ * server to authenticate it, Gmail and Outlook drop it without telling
+ * anyone. The site works, the form says "thank you", and the email never
+ * existed.
  *
- * Conectar un servidor SMTP lo hacen ocho plugins y lo hacen bien. Este
- * también lo hace, aburrido y sólido, porque es el piso. Pero el piso no es
- * el producto: las dos cosas por las que este plugin existe son las que
- * ninguno de esos ocho hace.
+ * Connecting an SMTP server is something eight plugins already do, and do
+ * well. This one does it too, boring and solid, because it is the floor. But
+ * the floor is not the product: the two things this plugin exists for are the
+ * ones none of those eight does.
  *
- * La primera es que el historial de correo cuelga de la ficha de cada
- * persona. Todos muestran una lista global de envíos; ninguno deja abrir un
- * usuario y ver qué se le mandó a él. Cuando alguien escribe «no me llegó el
- * mail», la respuesta está en su ficha, no en una lista de diez mil filas.
+ * The first is that the mail history hangs off each person's profile. They
+ * all show one global list of sends; none lets you open a user and see what
+ * was sent to them. When somebody writes "I never got the email", the answer
+ * is on their profile, not in a list of ten thousand rows.
  *
- * La segunda es que lee el DNS del dominio y explica en castellano qué está
- * roto: cuántos lookups consume el SPF de los diez que permite el estándar,
- * qué proveedores declara que ya no usa, si el DKIM está publicado, y qué
- * implica de verdad la política DMARC que tiene puesta.
+ * The second is that it reads the domain's DNS and explains what is broken:
+ * how many of the standard's ten DNS lookups the SPF record burns, which
+ * providers it still declares but no longer uses, whether DKIM is published,
+ * and what the DMARC policy in place actually implies.
  *
- * Y una decisión de entrada: si al activarse encuentra otro plugin ya
- * gestionando el correo, no pelea. Se pone a registrar y a diagnosticar sin
- * tocar el envío, y lo dice. Un sitio al que le anda el correo no tiene por
- * qué romperse para probar esto.
+ * And one decision about how it arrives: if another plugin is already
+ * handling the mail when this one is activated, it does not fight. It logs
+ * and diagnoses without touching delivery, and says so. A site whose mail
+ * works should not have to break to try this out.
  *
- * Lo que no hace y no va a hacer: mandar el correo por su cuenta. Eso es un
- * servicio de envío, con su infraestructura, su reputación de IP y su soporte
- * de rebotes. Acá se conecta el proveedor que ya tiene el sitio, y punto.
+ * What it does not do and will not do: send the mail itself. That is a
+ * sending service, with its infrastructure, its IP reputation and its bounce
+ * handling. Here you connect the provider the site already has, full stop.
  * ---------------------------------------------------------------------------
  */
 
@@ -58,13 +58,27 @@ define( 'DILUXONE_MAIL_URL', plugin_dir_url( __FILE__ ) );
 define( 'DILUXONE_MAIL_FILE', __FILE__ );
 
 /**
- * Las traducciones.
+ * Translations.
  *
- * Las cadenas del código están en inglés y las traducciones viajan con el
- * plugin, en languages/. WordPress carga solas las de wordpress.org, que acá
- * no existen todavía.
+ * Strings in the code are English and the Spanish translation ships with the
+ * plugin, in languages/. It is what makes the DNS diagnosis read as prose
+ * rather than as a dump of DNS records.
+ *
+ * The wordpress.org Plugin Check warns that this call has not been needed
+ * since WordPress 4.6, and for a plugin that does NOT ship its own
+ * translations it is right: the ones from translate.wordpress.org load by
+ * themselves. But WP_Textdomain_Registry::get_paths_for_domain() only looks
+ * at WP_LANG_DIR/plugins, WP_LANG_DIR/themes and a custom path "if somebody
+ * registered one" — and the only thing that registers one is this function.
+ * Without it nobody loads the .mo that ships in languages/, and the plugin
+ * stays in English for anyone installing it from GitHub, or before the
+ * translation lives on wordpress.org.
+ *
+ * The day the translation lives on translate.wordpress.org, this function is
+ * deleted and the warning goes with it.
  */
 function diluxone_mail_load_textdomain(): void {
+	// phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- See above: this is the only thing that registers the path of the .mo the plugin ships.
 	load_plugin_textdomain(
 		'diluxone-mail',
 		false,
@@ -74,25 +88,26 @@ function diluxone_mail_load_textdomain(): void {
 add_action( 'init', 'diluxone_mail_load_textdomain' );
 
 /**
- * Cada archivo de includes/ es independiente y sólo registra hooks. Se cargan
- * por orden alfabético a propósito: si alguno necesitara a otro para arrancar,
- * eso sería un acoplamiento que hay que resolver con un hook, no con el orden.
+ * Every file in includes/ is independent and only registers hooks. They are
+ * loaded in alphabetical order on purpose: if one needed another to have run
+ * first, that would be a coupling to solve with a hook, not with the order.
  */
-foreach ( (array) glob( DILUXONE_MAIL_DIR . 'includes/*.php' ) as $diluxone_mail_archivo ) {
-	require_once (string) $diluxone_mail_archivo;
+foreach ( (array) glob( DILUXONE_MAIL_DIR . 'includes/*.php' ) as $diluxone_mail_file ) {
+	require_once (string) $diluxone_mail_file;
 }
 
 /**
- * Al activar: las tablas del historial.
+ * On activation: the log tables.
  *
- * La creación vive en includes/log.php junto al esquema, porque también hace
- * falta cuando el plugin cambia de versión —donde este hook no corre— y dos
- * copias del mismo CREATE TABLE se desincronizan a la primera columna nueva.
+ * Creating them lives in includes/log.php next to the schema, because it is
+ * also needed when the plugin changes version — where this hook does not run
+ * — and two copies of the same CREATE TABLE drift apart at the first new
+ * column.
  */
 register_activation_hook( __FILE__, 'diluxone_mail_install' );
 
 /**
- * Al desactivar: se saca la purga del cron. Las tablas se quedan; ver
+ * On deactivation: the purge is taken off cron. The tables stay; see
  * includes/cron.php.
  */
 register_deactivation_hook( __FILE__, 'diluxone_mail_deactivate' );

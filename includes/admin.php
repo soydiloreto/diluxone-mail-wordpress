@@ -1,11 +1,11 @@
 <?php
 /**
- * El menú y lo que comparten sus pantallas.
+ * The menu and what its screens share.
  *
- * Cada entrada del menú es una pantalla con vida propia. Lo que está acá es
- * lo que todas repiten: el título con el nombre del plugin adelante, los
- * avisos, la URL de una pantalla, y los avisos de «esto no lo podés cambiar
- * desde acá» que son la parte más importante de un formulario que no miente.
+ * Every menu entry is a screen with a life of its own. What lives here is
+ * what all of them repeat: the title with the plugin's name in front, the
+ * notices, a screen's URL, and the "you cannot change this from here" notes
+ * that are the most important part of a form that does not lie.
  *
  * @package DiluxOneMail
  */
@@ -15,27 +15,26 @@ defined( 'ABSPATH' ) || exit;
 const DILUXONE_MAIL_MENU = 'diluxone-mail';
 
 /**
- * El nombre con el que se presenta el plugin en el escritorio.
+ * The name the plugin introduces itself with in the dashboard.
  *
- * Se escribe una sola vez: lo usan el menú, el título de cada pantalla y la
- * pestaña del navegador. Escrito en tres lados, tarde o temprano dicen tres
- * cosas distintas.
+ * Written once: the menu, every screen title and the browser tab all use it.
+ * Written in three places, sooner or later they say three different things.
  */
 function diluxone_mail_plugin_name(): string {
 	return (string) apply_filters( 'diluxone_mail_plugin_name', __( 'DiluxOne Mail', 'diluxone-mail' ) );
 }
 
-/** El título de una pantalla, con el nombre del plugin adelante. */
+/** A screen's title, with the plugin's name in front. */
 function diluxone_mail_screen_title( string $title ): string {
 	return sprintf(
-		/* translators: 1: nombre del plugin, 2: nombre de la pantalla */
-		_x( '%1$s | %2$s', 'título de una pantalla del escritorio', 'diluxone-mail' ),
+		/* translators: 1: plugin name, 2: screen name */
+		_x( '%1$s | %2$s', 'title of a dashboard screen', 'diluxone-mail' ),
 		diluxone_mail_plugin_name(),
 		$title
 	);
 }
 
-/** Lo mismo, en la pestaña del navegador. */
+/** The same, in the browser tab. */
 function diluxone_mail_admin_title( string $admin_title, string $title ): string {
 	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 
@@ -48,7 +47,7 @@ function diluxone_mail_admin_title( string $admin_title, string $title ): string
 add_filter( 'admin_title', 'diluxone_mail_admin_title', 10, 2 );
 
 /**
- * Las pantallas del menú, en orden.
+ * The menu's screens, in order.
  *
  * @return array<string, string>
  */
@@ -61,7 +60,7 @@ function diluxone_mail_screens(): array {
 	);
 }
 
-/** El menú. */
+/** The menu. */
 function diluxone_mail_menu(): void {
 	add_menu_page(
 		diluxone_mail_plugin_name(),
@@ -87,7 +86,7 @@ function diluxone_mail_menu(): void {
 add_action( 'admin_menu', 'diluxone_mail_menu' );
 
 /**
- * La URL de una pantalla del plugin, con los argumentos que haga falta.
+ * The URL of one of the plugin's screens, with whatever arguments are needed.
  *
  * @param array<string, mixed> $args
  */
@@ -96,11 +95,12 @@ function diluxone_mail_admin_url( string $screen, array $args = array() ): strin
 }
 
 /**
- * La cabecera común: título y, si hay, los avisos que valen en todas.
+ * The shared header: title and, where there are any, the notices that apply
+ * everywhere.
  *
- * Los avisos de modo observador y de pre_wp_mail van en todas las pantallas
- * del plugin y no sólo en ajustes: quien mira el historial y ve «entregado a
- * FluentSMTP» tiene que tener la explicación a mano.
+ * The observer-mode and pre_wp_mail notices go on every screen of the plugin
+ * and not only on settings: whoever looks at the log and sees "handed to
+ * FluentSMTP" needs the explanation at hand.
  */
 function diluxone_mail_screen_open( string $title ): void {
 	echo '<div class="wrap diluxone-mail-admin">';
@@ -111,12 +111,12 @@ function diluxone_mail_screen_open( string $title ): void {
 	diluxone_mail_pre_wp_mail_notice();
 }
 
-/** El cierre. */
+/** The closing tag. */
 function diluxone_mail_screen_close(): void {
 	echo '</div>';
 }
 
-/** Un aviso corto arriba de la pantalla. */
+/** A short notice at the top of the screen. */
 function diluxone_mail_notice( string $text, string $type = 'success' ): void {
 	printf(
 		'<div class="notice notice-%1$s is-dismissible"><p>%2$s</p></div>',
@@ -126,20 +126,20 @@ function diluxone_mail_notice( string $text, string $type = 'success' ): void {
 }
 
 /**
- * El aviso que corresponde al `diluxone_mail_done` de la URL.
+ * The notice matching the `diluxone_mail_done` key in the URL.
  *
- * Cada acción del admin redirige con una clave, y acá está el texto de cada
- * una. Un texto que no está acá no se muestra: la clave viene de la URL.
+ * Every admin action redirects with a key, and the text of each one is here.
+ * A text that is not here is not shown: the key comes from the URL.
  */
 function diluxone_mail_done_notice(): void {
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sólo elige un texto de una lista cerrada; no cambia nada.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- It only picks a text from a closed list; it changes nothing.
 	$done = isset( $_GET['diluxone_mail_done'] ) ? sanitize_key( wp_unslash( $_GET['diluxone_mail_done'] ) ) : '';
 
 	if ( '' === $done ) {
 		return;
 	}
 
-	$textos = array(
+	$texts = array(
 		'saved'           => array( __( 'Settings saved.', 'diluxone-mail' ), 'success' ),
 		'profile-applied' => array( __( 'Provider profile applied. Paste the credentials and save.', 'diluxone-mail' ), 'success' ),
 		'took-over'       => array( __( 'DiluxOne Mail is now handling this site\'s outgoing mail.', 'diluxone-mail' ), 'success' ),
@@ -150,25 +150,25 @@ function diluxone_mail_done_notice(): void {
 		'not-allowed'     => array( __( 'This site\'s settings are fixed by the network and cannot be changed here.', 'diluxone-mail' ), 'warning' ),
 	);
 
-	if ( isset( $textos[ $done ] ) ) {
-		diluxone_mail_notice( $textos[ $done ][0], $textos[ $done ][1] );
+	if ( isset( $texts[ $done ] ) ) {
+		diluxone_mail_notice( $texts[ $done ][0], $texts[ $done ][1] );
 	}
 }
 
 /**
- * Cómo se explica de dónde salió un valor.
+ * How the provenance of a value is explained.
  *
- * Es el texto que va al lado de cada control de sólo lectura, y el que usa
- * la pantalla de estado. Nombra el origen concreto porque «definido por el
- * entorno» sin decir cuál manda a la gente a buscar a ciegas.
+ * It is the text next to every read-only control, and the one the status
+ * screen uses. It names the concrete origin, because "defined by the
+ * environment" without saying which sends people looking blindly.
  */
 function diluxone_mail_source_label( string $source, string $origin ): string {
 	switch ( $source ) {
 		case 'constant':
-			/* translators: %s: nombre de la constante */
+			/* translators: %s: name of the constant */
 			return sprintf( __( 'defined by the environment — PHP constant %s', 'diluxone-mail' ), $origin );
 		case 'env':
-			/* translators: %s: nombre de la variable */
+			/* translators: %s: name of the variable */
 			return sprintf( __( 'defined by the environment — variable %s', 'diluxone-mail' ), $origin );
 		case 'network':
 			return __( 'set by the network', 'diluxone-mail' );
@@ -180,67 +180,68 @@ function diluxone_mail_source_label( string $source, string $origin ): string {
 }
 
 /**
- * ¿Este ajuste lo está forzando el sitio desde código?
+ * Is the site fixing this setting from code?
  *
- * Otro plugin puede fijar un valor por el filtro `diluxone_mail_option`
- * —porque en ese sitio no es una opción sino cómo funciona—. Cuando eso pasa,
- * el control del admin se guarda y no cambia nada, que es exactamente la clase
- * de mentira que hay que evitar en una pantalla de ajustes. Con esto se puede
- * mostrar al lado del control.
+ * Another plugin can pin a value through the `diluxone_mail_option` filter —
+ * because on that site it is not an option but how things work. When that
+ * happens the control in the dashboard saves and changes nothing, which is
+ * exactly the kind of lie a settings screen has to avoid. With this it can be
+ * shown next to the control.
  */
 function diluxone_mail_option_forced( string $key ): bool {
 	return diluxone_mail_option( $key ) !== diluxone_mail_option_stored( $key )['value'];
 }
 
 /**
- * Quién está fijando un ajuste desde el código.
+ * Who is fixing a setting from code.
  *
- * «Algo del sitio decidió esto» no le sirve a nadie: quien lee eso quiere ir
- * a sacarlo, y no sabe dónde. Acá sale el archivo y la función.
+ * "Something on the site decided this" is of no use to anybody: whoever reads
+ * that wants to go and remove it, and does not know where. Here the file and
+ * the function come out.
  *
  * @return array<int, string>
  */
 function diluxone_mail_option_forced_by(): array {
-	$quienes = array();
+	$who = array();
 
-	foreach ( diluxone_mail_hook_origins( 'diluxone_mail_option' ) as $origen ) {
-		$quienes[] = ltrim( str_replace( wp_normalize_path( WP_PLUGIN_DIR ), '', $origen['file'] ), '/' );
+	foreach ( diluxone_mail_hook_origins( 'diluxone_mail_option' ) as $origin ) {
+		$who[] = ltrim( str_replace( wp_normalize_path( WP_PLUGIN_DIR ), '', $origin['file'] ), '/' );
 	}
 
-	return $quienes;
+	return $who;
 }
 
-/** El aviso de que un ajuste lo fija el código, con quién lo fija. */
+/** The notice that a setting is fixed from code, naming who fixes it. */
 function diluxone_mail_forced_notice( string $key ): void {
 	if ( ! diluxone_mail_option_forced( $key ) ) {
 		return;
 	}
 
-	$quienes = diluxone_mail_option_forced_by();
+	$who = diluxone_mail_option_forced_by();
 	?>
 	<p class="description diluxone-mail-forced">
 		<?php esc_html_e( 'This site fixes this from code: whatever is chosen here, it stays as it is.', 'diluxone-mail' ); ?>
-		<?php if ( array() !== $quienes ) : ?>
-			<code><?php echo esc_html( implode( ', ', $quienes ) ); ?></code>
+		<?php if ( array() !== $who ) : ?>
+			<code><?php echo esc_html( implode( ', ', $who ) ); ?></code>
 		<?php endif; ?>
 	</p>
 	<?php
 }
 
 /**
- * Carga una vista de templates/ con sus datos.
+ * Loads a view from templates/ with its data.
  *
  * @param array<string, mixed> $data
  */
 function diluxone_mail_view( string $name, array $data = array() ): void {
-	$archivo = DILUXONE_MAIL_DIR . 'templates/' . $name . '.php';
+	$file = DILUXONE_MAIL_DIR . 'templates/' . $name . '.php';
 
-	if ( file_exists( $archivo ) ) {
-		include $archivo;
+	if ( file_exists( $file ) ) {
+		include $file;
 	}
 }
 
-/** Los estilos del admin del plugin. */
+/** The plugin's dashboard styles. */
 function diluxone_mail_admin_styles( string $hook ): void {
 	if ( false === strpos( $hook, 'diluxone-mail' ) && ! in_array( $hook, array( 'profile.php', 'user-edit.php' ), true ) ) {
 		return;

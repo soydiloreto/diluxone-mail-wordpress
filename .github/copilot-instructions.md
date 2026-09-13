@@ -144,9 +144,9 @@ Save your review tokens for things that matter.
 
 - **Yoda conditions ARE used** in comparisons against literals
   (`'' === $value`), following WPCS. Don't suggest the swap.
-- **Spanish comments and English code.** Identifiers, hooks and strings are in
-  English; the comments explaining *why* are in Spanish, and that is
-  deliberate — the maintainer reads them. Don't suggest translating them.
+- **Everything in English**, comments included. This is a hard rule across all
+  of this maintainer's plugins: never write a comment, a docblock, a
+  `translators:` note or a test name in Spanish.
 - **Comments explain decisions, not mechanics.** A comment that says what the
   next line does is noise and gets removed; one that says why the obvious
   alternative was rejected stays. Don't ask for more of the first kind.

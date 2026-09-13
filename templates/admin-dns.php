@@ -1,10 +1,10 @@
 <?php
 /**
- * La vista del diagnóstico de entregabilidad.
+ * The view of the deliverability diagnosis.
  *
- * Primero las conclusiones, en prosa. Después los datos de los que salen,
- * para quien quiera verificarlos: el árbol del SPF con los lookups de cada
- * rama, los selectores DKIM probados, el registro DMARC parseado.
+ * The conclusions first, in prose. Then the data they come from, for anybody
+ * who wants to check them: the SPF tree with each branch's lookups, the DKIM
+ * selectors probed, the parsed DMARC record.
  *
  * @package DiluxOneMail
  * @var array<string, mixed> $data
@@ -21,7 +21,7 @@ if ( ! is_array( $diluxone_mail_r ) ) :
 	return;
 endif;
 
-$diluxone_mail_niveles = array(
+$diluxone_mail_levels = array(
 	'error'   => __( 'Problem', 'diluxone-mail' ),
 	'warning' => __( 'Warning', 'diluxone-mail' ),
 	'info'    => __( 'Note', 'diluxone-mail' ),
@@ -31,7 +31,7 @@ $diluxone_mail_niveles = array(
 <p class="diluxone-mail-dns-meta">
 	<?php
 	printf(
-		/* translators: 1: dominio, 2: hace cuánto, 3: resolver */
+		/* translators: 1: domain, 2: how long ago, 3: resolver */
 		esc_html__( 'Domain %1$s, checked %2$s ago via %3$s.', 'diluxone-mail' ),
 		'<code>' . esc_html( (string) $diluxone_mail_r['domain'] ) . '</code>',
 		esc_html( human_time_diff( (int) $diluxone_mail_r['generated_at'] ) ),
@@ -41,7 +41,7 @@ $diluxone_mail_niveles = array(
 	<?php if ( '' !== (string) $diluxone_mail_r['provider'] ) : ?>
 		<?php
 		printf(
-			/* translators: %s: nombre del proveedor */
+			/* translators: %s: provider name */
 			esc_html__( 'Configured transport: %s.', 'diluxone-mail' ),
 			esc_html( (string) $diluxone_mail_r['profile_name'] )
 		);
@@ -55,7 +55,7 @@ $diluxone_mail_niveles = array(
 <div class="diluxone-mail-findings">
 	<?php foreach ( $diluxone_mail_r['findings'] as $diluxone_mail_h ) : ?>
 		<div class="diluxone-mail-finding diluxone-mail-finding--<?php echo esc_attr( (string) $diluxone_mail_h['level'] ); ?>">
-			<span class="diluxone-mail-finding__level"><?php echo esc_html( (string) ( $diluxone_mail_niveles[ (string) $diluxone_mail_h['level'] ] ?? $diluxone_mail_h['level'] ) ); ?></span>
+			<span class="diluxone-mail-finding__level"><?php echo esc_html( (string) ( $diluxone_mail_levels[ (string) $diluxone_mail_h['level'] ] ?? $diluxone_mail_h['level'] ) ); ?></span>
 			<strong><?php echo esc_html( (string) $diluxone_mail_h['title'] ); ?></strong>
 			<p><?php echo esc_html( (string) $diluxone_mail_h['text'] ); ?></p>
 		</div>
@@ -69,7 +69,7 @@ $diluxone_mail_niveles = array(
 	<p>
 		<?php
 		printf(
-			/* translators: 1: lookups, 2: límite */
+			/* translators: 1: lookups, 2: limit */
 			esc_html__( '%1$d of %2$d DNS lookups.', 'diluxone-mail' ),
 			(int) $diluxone_mail_r['spf']['lookups'],
 			(int) DILUXONE_MAIL_SPF_MAX_LOOKUPS
@@ -79,22 +79,22 @@ $diluxone_mail_niveles = array(
 	<table class="widefat striped diluxone-mail-spf-tree">
 		<thead><tr><th><?php esc_html_e( 'Domain', 'diluxone-mail' ); ?></th><th><?php esc_html_e( 'Record', 'diluxone-mail' ); ?></th><th><?php esc_html_e( 'Lookups', 'diluxone-mail' ); ?></th></tr></thead>
 		<tbody>
-			<?php foreach ( $diluxone_mail_r['spf']['tree'] as $diluxone_mail_nodo ) : ?>
+			<?php foreach ( $diluxone_mail_r['spf']['tree'] as $diluxone_mail_node ) : ?>
 				<tr>
-					<td style="padding-left: <?php echo esc_attr( (string) ( 10 + 20 * (int) $diluxone_mail_nodo['depth'] ) ); ?>px"><code><?php echo esc_html( (string) $diluxone_mail_nodo['domain'] ); ?></code></td>
+					<td style="padding-left: <?php echo esc_attr( (string) ( 10 + 20 * (int) $diluxone_mail_node['depth'] ) ); ?>px"><code><?php echo esc_html( (string) $diluxone_mail_node['domain'] ); ?></code></td>
 					<td>
-						<?php if ( '' !== (string) $diluxone_mail_nodo['record'] ) : ?>
-							<code><?php echo esc_html( (string) $diluxone_mail_nodo['record'] ); ?></code>
+						<?php if ( '' !== (string) $diluxone_mail_node['record'] ) : ?>
+							<code><?php echo esc_html( (string) $diluxone_mail_node['record'] ); ?></code>
 						<?php endif; ?>
-						<?php if ( '' !== (string) $diluxone_mail_nodo['error'] ) : ?>
-							<span class="diluxone-mail-status diluxone-mail-status--failed"><?php echo esc_html( (string) $diluxone_mail_nodo['error'] ); ?></span>
+						<?php if ( '' !== (string) $diluxone_mail_node['error'] ) : ?>
+							<span class="diluxone-mail-status diluxone-mail-status--failed"><?php echo esc_html( (string) $diluxone_mail_node['error'] ); ?></span>
 						<?php endif; ?>
 					</td>
-					<td><?php echo esc_html( (string) $diluxone_mail_nodo['lookups'] ); ?>
+					<td><?php echo esc_html( (string) $diluxone_mail_node['lookups'] ); ?>
 					<?php
-					if ( isset( $diluxone_mail_nodo['subtotal'] ) && (int) $diluxone_mail_nodo['subtotal'] !== (int) $diluxone_mail_nodo['lookups'] ) :
+					if ( isset( $diluxone_mail_node['subtotal'] ) && (int) $diluxone_mail_node['subtotal'] !== (int) $diluxone_mail_node['lookups'] ) :
 						?>
-						<span class="description">(<?php echo esc_html( (string) $diluxone_mail_nodo['subtotal'] ); ?> <?php esc_html_e( 'with children', 'diluxone-mail' ); ?>)</span><?php endif; ?></td>
+						<span class="description">(<?php echo esc_html( (string) $diluxone_mail_node['subtotal'] ); ?> <?php esc_html_e( 'with children', 'diluxone-mail' ); ?>)</span><?php endif; ?></td>
 				</tr>
 			<?php endforeach; ?>
 		</tbody>

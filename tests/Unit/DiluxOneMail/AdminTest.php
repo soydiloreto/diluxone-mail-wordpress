@@ -1,8 +1,8 @@
 <?php
 /**
- * Lo que las pantallas calculan antes de pintar, y lo que se puede pintar
- * sin WordPress: procedencias, avisos, el estado, los datos del formulario,
- * la prueba de envío, la privacidad y el cron.
+ * What the screens work out before painting, and what can be painted without
+ * WordPress: provenances, notices, the status, the form data, the test send,
+ * privacy and cron.
  */
 
 namespace Tests\Unit\DiluxOneMail;
@@ -44,12 +44,12 @@ class AdminTest extends TestCase {
 		\diluxone_mail_other_mailers( true );
 		\diluxone_mail_current( null, true );
 
-		foreach ( \diluxone_mail_config_fields() as $sufijo ) {
-			putenv( 'DILUXONE_MAIL_' . $sufijo );
+		foreach ( \diluxone_mail_config_fields() as $suffix ) {
+			putenv( 'DILUXONE_MAIL_' . $suffix );
 		}
 	}
 
-	public function test_la_procedencia_se_explica_con_su_nombre(): void {
+	public function test_the_provenance_is_explained_by_name(): void {
 		$this->assertStringContainsString( 'DILUXONE_MAIL_HOST', \diluxone_mail_source_label( 'constant', 'DILUXONE_MAIL_HOST' ) );
 		$this->assertStringContainsString( 'variable DILUXONE_MAIL_HOST', \diluxone_mail_source_label( 'env', 'DILUXONE_MAIL_HOST' ) );
 		$this->assertSame( 'set by the network', \diluxone_mail_source_label( 'network', '' ) );
@@ -57,7 +57,7 @@ class AdminTest extends TestCase {
 		$this->assertSame( 'default value', \diluxone_mail_source_label( 'default', '' ) );
 	}
 
-	public function test_los_titulos_y_las_urls(): void {
+	public function test_the_titles_and_the_urls(): void {
 		$this->assertSame( 'DiluxOne Mail | Settings', \diluxone_mail_screen_title( 'Settings' ) );
 		$this->assertStringContainsString( 'page=diluxone-mail-log', \diluxone_mail_admin_url( 'diluxone-mail-log', array( 'view' => 3 ) ) );
 		$this->assertStringContainsString( 'view=3', \diluxone_mail_admin_url( 'diluxone-mail-log', array( 'view' => 3 ) ) );
@@ -65,13 +65,13 @@ class AdminTest extends TestCase {
 		$this->assertCount( 4, \diluxone_mail_screens() );
 	}
 
-	public function test_los_avisos_de_las_acciones(): void {
+	public function test_the_notices_for_each_action(): void {
 		$_GET['diluxone_mail_done'] = 'saved';
 		ob_start();
 		\diluxone_mail_done_notice();
 		$this->assertStringContainsString( 'Settings saved.', ob_get_clean() );
 
-		$_GET['diluxone_mail_done'] = 'no-existe';
+		$_GET['diluxone_mail_done'] = 'does-not-exist';
 		ob_start();
 		\diluxone_mail_done_notice();
 		$this->assertSame( '', ob_get_clean() );
@@ -83,7 +83,7 @@ class AdminTest extends TestCase {
 		$this->assertStringContainsString( '&lt;b&gt;', $html );
 	}
 
-	public function test_un_ajuste_forzado_por_codigo_se_detecta_y_se_nombra(): void {
+	public function test_a_setting_forced_by_code_is_detected_and_named(): void {
 		$this->assertFalse( \diluxone_mail_option_forced( 'diluxone_mail_mode' ) );
 
 		$plugin = WP_PLUGIN_DIR . '/cst-core/cst-core.php';
@@ -101,7 +101,7 @@ class AdminTest extends TestCase {
 		$this->assertStringContainsString( 'fixes this from code', ob_get_clean() );
 	}
 
-	public function test_la_cabecera_y_el_cierre_de_una_pantalla(): void {
+	public function test_a_screen_header_and_footer(): void {
 		ob_start();
 		\diluxone_mail_screen_open( 'Status' );
 		\diluxone_mail_screen_close();
@@ -111,8 +111,8 @@ class AdminTest extends TestCase {
 		$this->assertStringEndsWith( '</div>', $html );
 	}
 
-	public function test_los_datos_del_formulario_marcan_lo_que_manda_el_entorno(): void {
-		putenv( 'DILUXONE_MAIL_HOST=smtp.entorno.test' );
+	public function test_the_form_data_flags_what_the_environment_dictates(): void {
+		putenv( 'DILUXONE_MAIL_HOST=smtp.environment.test' );
 		\update_option( 'diluxone_mail_provider', 'sendgrid' );
 		\update_option( 'diluxone_mail_pass', 'algo' );
 
@@ -120,14 +120,14 @@ class AdminTest extends TestCase {
 
 		$this->assertTrue( $d['editable'] );
 		$this->assertTrue( $d['fields']['diluxone_mail_host']['readonly'] );
-		$this->assertSame( 'smtp.entorno.test', $d['fields']['diluxone_mail_host']['value'] );
+		$this->assertSame( 'smtp.environment.test', $d['fields']['diluxone_mail_host']['value'] );
 		$this->assertFalse( $d['fields']['diluxone_mail_port']['readonly'] );
 		$this->assertSame( 'SendGrid', $d['profile']['name'] );
 		$this->assertTrue( $d['has_password'] );
 		$this->assertNull( $d['test'] );
 	}
 
-	public function test_en_una_red_sin_permiso_el_sitio_ve_todo_de_solo_lectura(): void {
+	public function test_on_a_network_without_permission_the_site_sees_everything_read_only(): void {
 		$GLOBALS['_test_multisite'] = true;
 		\update_site_option( 'diluxone_mail_host', 'smtp.red.test' );
 
@@ -142,7 +142,7 @@ class AdminTest extends TestCase {
 		$this->assertStringContainsString( 'network', $red['back_url'] );
 	}
 
-	public function test_el_estado_dice_quien_manda_y_de_donde_sale_cada_valor(): void {
+	public function test_the_status_says_who_sends_and_where_each_value_comes_from(): void {
 		\update_option( 'diluxone_mail_mode', 'transport' );
 		\update_option( 'diluxone_mail_pass', 'secreta' );
 		$GLOBALS['wpdb']->next_results = array( array( 'status' => 'sent', 'n' => 2 ) );
@@ -157,19 +157,19 @@ class AdminTest extends TestCase {
 		$this->assertSame( 'local', $s['environment'] );
 	}
 
-	public function test_la_prueba_de_envio_cuenta_lo_que_paso(): void {
+	public function test_the_test_send_reports_what_happened(): void {
 		\add_action( 'wp_mail_failed', 'diluxone_mail_on_failed' );
 		\update_option( 'diluxone_mail_mode', 'transport' );
 		\update_option( 'diluxone_mail_provider', 'mailjet' );
 		\update_option( 'diluxone_mail_host', 'in-v3.mailjet.com' );
 
-		$ok = \diluxone_mail_send_test( 'alguien@ejemplo.test' );
+		$ok = \diluxone_mail_send_test( 'somebody@example.test' );
 		$this->assertTrue( $ok['ok'] );
-		$this->assertSame( 'alguien@ejemplo.test', $ok['to'] );
+		$this->assertSame( 'somebody@example.test', $ok['to'] );
 		$this->assertStringContainsString( 'in-v3.mailjet.com', $GLOBALS['_test_wp_mail_calls'][0]['message'] );
 
 		$GLOBALS['_test_wp_mail_fails'] = '535 Authentication failed';
-		$fail                           = \diluxone_mail_send_test( 'alguien@ejemplo.test' );
+		$fail                           = \diluxone_mail_send_test( 'somebody@example.test' );
 		$this->assertFalse( $fail['ok'] );
 		$this->assertSame( '535 Authentication failed', $fail['error'] );
 
@@ -177,7 +177,7 @@ class AdminTest extends TestCase {
 		$this->assertFalse( \diluxone_mail_debug_enabled() );
 	}
 
-	public function test_el_resultado_de_la_prueba_se_consume_una_vez(): void {
+	public function test_the_test_result_is_consumed_once(): void {
 		$this->assertNull( \diluxone_mail_test_result_take() );
 
 		\set_transient( 'diluxone_mail_test_1', array( 'ok' => true ), 60 );
@@ -186,7 +186,7 @@ class AdminTest extends TestCase {
 		$this->assertNull( \diluxone_mail_test_result_take() );
 	}
 
-	public function test_la_privacidad_se_registra_solo_si_esta_prendida(): void {
+	public function test_privacy_hooks_are_registered_only_when_the_log_is_on(): void {
 		$this->assertArrayHasKey( 'diluxone-mail', \diluxone_mail_register_exporter( array() ) );
 		$this->assertArrayHasKey( 'diluxone-mail', \diluxone_mail_register_eraser( array() ) );
 
@@ -197,8 +197,8 @@ class AdminTest extends TestCase {
 		$this->assertSame( array(), \diluxone_mail_register_eraser( array() ) );
 	}
 
-	public function test_el_exportador_y_el_borrador(): void {
-		$GLOBALS['wpdb']->next_results = array( array( 'id' => 1, 'sent_at' => '2026-01-01 00:00:00', 'subject' => 'Hola', 'from_email' => 'a@x.test', 'status' => 'sent' ) );
+	public function test_the_exporter_and_the_eraser(): void {
+		$GLOBALS['wpdb']->next_results = array( array( 'id' => 1, 'sent_at' => '2026-01-01 00:00:00', 'subject' => 'Hello', 'from_email' => 'a@x.test', 'status' => 'sent' ) );
 
 		$e = \diluxone_mail_export_personal_data( 'a@x.test' );
 		$this->assertCount( 1, $e['data'] );
@@ -209,7 +209,7 @@ class AdminTest extends TestCase {
 		$this->assertFalse( \diluxone_mail_erase_personal_data( 'a@x.test' )['items_removed'] );
 	}
 
-	public function test_el_cron_se_programa_una_vez_y_se_saca_al_desactivar(): void {
+	public function test_cron_is_scheduled_once_and_cleared_on_deactivation(): void {
 		\diluxone_mail_schedule_purge();
 		$primero = $GLOBALS['_test_cron']['diluxone_mail_purge'];
 

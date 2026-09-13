@@ -1,30 +1,30 @@
 <?php
 /**
- * Cómo entra cada envío al historial.
+ * How each send gets into the log.
  *
- * La función wp_mail() pasa por cuatro puntos, y acá hay un gancho en cada uno:
+ * A call to wp_mail() passes through four points, and there is a hook on
+ * each one:
  *
- *   1. El filtro `wp_mail`, con los argumentos ya armados. Es donde se anota
- *      el envío —todavía sin resultado— y donde entra el filtro propio
- *      `diluxone_mail_atts`, que es el punto por el que el día de mañana va
- *      a pasar la plantilla de marca. Se anota ANTES de mandar, a propósito:
- *      si PHP muere en el medio, la fila queda como «enviando», que es la
- *      verdad. Anotarla después es perder justamente los envíos que fallaron
- *      peor.
- *   2. `pre_wp_mail`, dos veces. Al principio, para preguntarle al filtro
- *      `diluxone_mail_should_send` si alguien quiere cancelar este envío —el
- *      centro de preferencias y la lista de supresión del futuro—. Y al
- *      final de todo, para mirar si otro plugin ya cortó el envío ahí: si el
- *      valor acumulado no es null, alguien contestó, WordPress va a hacer
- *      return sin mandar, y ninguno de los dos hooks de abajo va a sonar.
- *   3. `wp_mail_succeeded`, que confirma que PHPMailer entregó al servidor.
- *   4. `wp_mail_failed`, con el error.
+ *   1. The `wp_mail` filter, with the arguments already built. That is where
+ *      the send is recorded — with no outcome yet — and where the plugin's
+ *      own `diluxone_mail_atts` filter sits, the point the branded template
+ *      will go through one day. It is recorded BEFORE sending, on purpose:
+ *      if PHP dies half way through, the row stays as "sending", which is the
+ *      truth. Recording it afterwards loses precisely the sends that failed
+ *      worst.
+ *   2. `pre_wp_mail`, twice. First, to ask the `diluxone_mail_should_send`
+ *      filter whether anybody wants to cancel this send — the preference
+ *      centre and the suppression list of the future. And last of all, to see
+ *      whether another plugin already cut the send short there: if the
+ *      accumulated value is not null somebody answered, WordPress is going to
+ *      return without sending, and neither of the two hooks below will fire.
+ *   3. `wp_mail_succeeded`, which confirms PHPMailer handed it to the server.
+ *   4. `wp_mail_failed`, with the error.
  *
- * El id que ata las filas del historial con el detalle y con el correo real
- * es un UUID propio, y se escribe además como Message-ID del mensaje. Eso es
- * lo que va a permitir casar un rebote que llegue por webhook con la fila que
- * corresponde: el proveedor devuelve el Message-ID, y el Message-ID es
- * nuestro.
+ * The id tying the log rows to the detail and to the real email is a UUID of
+ * our own, written into the message as its Message-ID as well. That is what
+ * will let a bounce arriving over a webhook be matched to the right row: the
+ * provider gives back the Message-ID, and the Message-ID is ours.
  *
  * @package DiluxOneMail
  */
@@ -32,119 +32,119 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * El envío que está en curso en esta petición.
+ * The send currently in flight on this request.
  *
- * La función wp_mail() no es reentrante en la práctica, así que alcanza con un lugar.
+ * In practice wp_mail() is not reentrant, so a single slot is enough.
  *
- * @param array<string, mixed>|null $set   Guardar esto.
- * @param bool                      $clear Vaciar.
+ * @param array<string, mixed>|null $set   Store this.
+ * @param bool                      $clear Empty it.
  * @return array<string, mixed>|null
  */
 function diluxone_mail_current( ?array $set = null, bool $clear = false ): ?array {
-	static $actual = null;
+	static $current = null;
 
 	if ( $clear ) {
-		$actual = null;
+		$current = null;
 	}
 
 	if ( null !== $set ) {
-		$actual = $set;
+		$current = $set;
 	}
 
-	return $actual;
+	return $current;
 }
 
 /**
- * Las direcciones que hay en un campo de destinatarios.
+ * The addresses in a recipient field.
  *
- * La función wp_mail() acepta una cadena separada por comas, una lista, y en las
- * cabeceras el formato «Nombre <dirección>». Se sacan las direcciones, en
- * minúsculas y sin repetidas, que es la forma en la que están indexadas.
+ * A call to wp_mail() accepts a comma-separated string, a list, and in the
+ * headers the "Name <address>" form. The addresses are pulled out,
+ * lower-cased and de-duplicated, which is how they are indexed.
  *
  * @param string|array<int, string> $raw
  * @return array<int, string>
  */
 function diluxone_mail_parse_addresses( $raw ): array {
-	$partes = is_array( $raw ) ? $raw : explode( ',', (string) $raw );
-	$salida = array();
+	$parts = is_array( $raw ) ? $raw : explode( ',', (string) $raw );
+	$out   = array();
 
-	foreach ( $partes as $parte ) {
-		$parte = trim( (string) $parte );
+	foreach ( $parts as $part ) {
+		$part = trim( (string) $part );
 
-		if ( '' === $parte ) {
+		if ( '' === $part ) {
 			continue;
 		}
 
-		if ( preg_match( '/<([^>]+)>/', $parte, $m ) ) {
-			$parte = $m[1];
+		if ( preg_match( '/<([^>]+)>/', $part, $m ) ) {
+			$part = $m[1];
 		}
 
-		$parte = strtolower( trim( $parte ) );
+		$part = strtolower( trim( $part ) );
 
-		if ( is_email( $parte ) ) {
-			$salida[ $parte ] = $parte;
+		if ( is_email( $part ) ) {
+			$out[ $part ] = $part;
 		}
 	}
 
-	return array_values( $salida );
+	return array_values( $out );
 }
 
 /**
- * Los destinatarios de un envío, con su tipo.
+ * A send's recipients, with their kind.
  *
  * @param array<string, mixed> $atts
  * @return array<int, array{email: string, kind: string}>
  */
 function diluxone_mail_recipients( array $atts ): array {
-	$salida = array();
+	$out = array();
 
 	foreach ( diluxone_mail_parse_addresses( $atts['to'] ?? '' ) as $email ) {
-		$salida[] = array(
+		$out[] = array(
 			'email' => $email,
 			'kind'  => 'to',
 		);
 	}
 
-	foreach ( diluxone_mail_header_lines( $atts['headers'] ?? '' ) as $linea ) {
-		if ( ! preg_match( '/^(cc|bcc):\s*(.+)$/i', $linea, $m ) ) {
+	foreach ( diluxone_mail_header_lines( $atts['headers'] ?? '' ) as $line ) {
+		if ( ! preg_match( '/^(cc|bcc):\s*(.+)$/i', $line, $m ) ) {
 			continue;
 		}
 
 		foreach ( diluxone_mail_parse_addresses( $m[2] ) as $email ) {
-			$salida[] = array(
+			$out[] = array(
 				'email' => $email,
 				'kind'  => strtolower( $m[1] ),
 			);
 		}
 	}
 
-	return $salida;
+	return $out;
 }
 
 /**
- * Las cabeceras como lista de líneas, vengan como vengan.
+ * The headers as a list of lines, however they arrive.
  *
  * @param string|array<int|string, string> $headers
  * @return array<int, string>
  */
 function diluxone_mail_header_lines( $headers ): array {
 	if ( is_array( $headers ) ) {
-		$lineas = array();
+		$lines = array();
 
-		foreach ( $headers as $clave => $valor ) {
-			$lineas[] = is_string( $clave ) ? $clave . ': ' . $valor : (string) $valor;
+		foreach ( $headers as $key => $value ) {
+			$lines[] = is_string( $key ) ? $key . ': ' . $value : (string) $value;
 		}
 
-		return $lineas;
+		return $lines;
 	}
 
-	$lineas = preg_split( '/\r\n|\r|\n/', (string) $headers );
+	$lines = preg_split( '/\r\n|\r|\n/', (string) $headers );
 
-	return array_values( array_filter( array_map( 'trim', false === $lineas ? array() : $lineas ) ) );
+	return array_values( array_filter( array_map( 'trim', false === $lines ? array() : $lines ) ) );
 }
 
 /**
- * El remitente y el tipo de contenido que declaran las cabeceras, si alguno.
+ * The sender and content type the headers declare, if any.
  *
  * @param array<string, mixed> $atts
  * @return array{from: string, type: string}
@@ -153,10 +153,10 @@ function diluxone_mail_header_meta( array $atts ): array {
 	$from = '';
 	$type = 'text/plain';
 
-	foreach ( diluxone_mail_header_lines( $atts['headers'] ?? '' ) as $linea ) {
-		if ( preg_match( '/^from:\s*(.+)$/i', $linea, $m ) ) {
+	foreach ( diluxone_mail_header_lines( $atts['headers'] ?? '' ) as $line ) {
+		if ( preg_match( '/^from:\s*(.+)$/i', $line, $m ) ) {
 			$from = diluxone_mail_parse_addresses( $m[1] )[0] ?? '';
-		} elseif ( preg_match( '/^content-type:\s*([^;]+)/i', $linea, $m ) ) {
+		} elseif ( preg_match( '/^content-type:\s*([^;]+)/i', $line, $m ) ) {
 			$type = strtolower( trim( $m[1] ) );
 		}
 	}
@@ -168,31 +168,32 @@ function diluxone_mail_header_meta( array $atts ): array {
 }
 
 /**
- * Qué plugin o tema originó el envío.
+ * Which plugin or theme originated the send.
  *
- * Se mira la pila de llamadas y se toma el primer archivo que no sea de este
- * plugin ni del núcleo de WordPress. Sale la carpeta del plugin o el nombre
- * del tema, que es lo que hace falta para decir «esto lo mandó WooCommerce».
+ * The call stack is walked and the first file that belongs neither to this
+ * plugin nor to WordPress core is taken. Out comes the plugin's folder or the
+ * theme's name, which is what you need in order to say "WooCommerce sent
+ * this".
  */
 function diluxone_mail_caller(): string {
 	$plugins = trailingslashit( wp_normalize_path( WP_PLUGIN_DIR ) );
-	$temas   = trailingslashit( wp_normalize_path( get_theme_root() ) );
-	$propio  = wp_normalize_path( DILUXONE_MAIL_DIR );
+	$themes  = trailingslashit( wp_normalize_path( get_theme_root() ) );
+	$own     = wp_normalize_path( DILUXONE_MAIL_DIR );
 
-	// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace -- No es depuración: es la forma de saber quién llamó a wp_mail(), y se limita a 40 marcos sin argumentos para que no cueste.
-	foreach ( debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 40 ) as $marco ) {
-		$archivo = wp_normalize_path( (string) ( $marco['file'] ?? '' ) );
+	// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_debug_backtrace -- This is not debugging: it is how we know who called wp_mail(), and it is capped at 40 frames with no arguments so it stays cheap.
+	foreach ( debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 40 ) as $frame ) {
+		$file = wp_normalize_path( (string) ( $frame['file'] ?? '' ) );
 
-		if ( '' === $archivo || 0 === strpos( $archivo, $propio ) ) {
+		if ( '' === $file || 0 === strpos( $file, $own ) ) {
 			continue;
 		}
 
-		if ( 0 === strpos( $archivo, $plugins ) ) {
-			return 'plugin:' . (string) strtok( substr( $archivo, strlen( $plugins ) ), '/' );
+		if ( 0 === strpos( $file, $plugins ) ) {
+			return 'plugin:' . (string) strtok( substr( $file, strlen( $plugins ) ), '/' );
 		}
 
-		if ( 0 === strpos( $archivo, $temas ) ) {
-			return 'theme:' . (string) strtok( substr( $archivo, strlen( $temas ) ), '/' );
+		if ( 0 === strpos( $file, $themes ) ) {
+			return 'theme:' . (string) strtok( substr( $file, strlen( $themes ) ), '/' );
 		}
 	}
 
@@ -200,21 +201,21 @@ function diluxone_mail_caller(): string {
 }
 
 /**
- * El envío entra al historial.
+ * The send enters the log.
  *
- * Es también el punto de extensión para transformar el mensaje: lo primero
- * que se hace es pasar los argumentos por `diluxone_mail_atts`, y lo que
- * salga de ahí es lo que se manda y lo que se registra.
+ * It is also the extension point for transforming the message: the first
+ * thing done is passing the arguments through `diluxone_mail_atts`, and
+ * whatever comes out is what gets sent and what gets recorded.
  *
  * @param array<string, mixed> $atts
  * @return array<string, mixed>
  */
 function diluxone_mail_capture( array $atts ): array {
 	/**
-	 * Filtra los argumentos de wp_mail() antes de mandarlos y de anotarlos.
+	 * Filters wp_mail()'s arguments before sending and before recording them.
 	 *
-	 * Es el lugar para transformar el cuerpo —una plantilla de marca, por
-	 * ejemplo— sin tocar a quien llamó a wp_mail().
+	 * This is the place to transform the body — a branded template, for
+	 * instance — without touching whoever called wp_mail().
 	 *
 	 * @param array<string, mixed> $atts to, subject, message, headers, attachments.
 	 */
@@ -226,35 +227,35 @@ function diluxone_mail_capture( array $atts ): array {
 		return $atts;
 	}
 
-	$uuid      = wp_generate_uuid4();
-	$meta      = diluxone_mail_header_meta( $atts );
-	$cfg       = diluxone_mail_config();
-	$from      = '' !== $meta['from'] ? $meta['from'] : $cfg['from'];
-	$extendido = (bool) diluxone_mail_option( 'diluxone_mail_log_extended' );
+	$uuid     = wp_generate_uuid4();
+	$meta     = diluxone_mail_header_meta( $atts );
+	$cfg      = diluxone_mail_config();
+	$from     = '' !== $meta['from'] ? $meta['from'] : $cfg['from'];
+	$extended = (bool) diluxone_mail_option( 'diluxone_mail_log_extended' );
 
-	$adjuntos = array_map( 'basename', array_map( 'strval', (array) ( $atts['attachments'] ?? array() ) ) );
-	$filas    = array();
+	$attachments = array_map( 'basename', array_map( 'strval', (array) ( $atts['attachments'] ?? array() ) ) );
+	$rows        = array();
 
-	foreach ( diluxone_mail_recipients( $atts ) as $destinatario ) {
-		$filas[] = array(
-			'email'       => $destinatario['email'],
-			'kind'        => $destinatario['kind'],
+	foreach ( diluxone_mail_recipients( $atts ) as $recipient ) {
+		$rows[] = array(
+			'email'       => $recipient['email'],
+			'kind'        => $recipient['kind'],
 			'from_email'  => $from,
 			'subject'     => (string) ( $atts['subject'] ?? '' ),
 			'status'      => 'pending',
 			'provider'    => diluxone_mail_transport_active() ? $cfg['provider'] : 'observer',
 			'source'      => diluxone_mail_caller(),
-			'headers'     => $extendido ? (string) wp_json_encode( diluxone_mail_header_lines( $atts['headers'] ?? '' ) ) : '',
-			'attachments' => $extendido ? (string) wp_json_encode( array_values( $adjuntos ) ) : '',
+			'headers'     => $extended ? (string) wp_json_encode( diluxone_mail_header_lines( $atts['headers'] ?? '' ) ) : '',
+			'attachments' => $extended ? (string) wp_json_encode( array_values( $attachments ) ) : '',
 			'message_id'  => $uuid,
 		);
 	}
 
-	if ( array() === $filas ) {
+	if ( array() === $rows ) {
 		return $atts;
 	}
 
-	diluxone_mail_log_insert( $filas );
+	diluxone_mail_log_insert( $rows );
 
 	if ( (bool) diluxone_mail_option( 'diluxone_mail_log_body' ) ) {
 		diluxone_mail_detail_save(
@@ -266,9 +267,9 @@ function diluxone_mail_capture( array $atts ): array {
 		);
 	}
 
-	// El historial extendido guarda el diálogo SMTP entero, y para eso hay
-	// que pedirle a PHPMailer que lo cuente desde antes de conectar.
-	if ( $extendido ) {
+	// The extended log stores the whole SMTP dialogue, and for that PHPMailer
+	// has to be asked to narrate it from before it connects.
+	if ( $extended ) {
 		diluxone_mail_debug_buffer( null, true );
 		diluxone_mail_debug_enabled( true );
 	}
@@ -277,7 +278,7 @@ function diluxone_mail_capture( array $atts ): array {
 		array(
 			'uuid'     => $uuid,
 			'atts'     => $atts,
-			'extended' => $extendido,
+			'extended' => $extended,
 		)
 	);
 
@@ -286,11 +287,12 @@ function diluxone_mail_capture( array $atts ): array {
 add_filter( 'wp_mail', 'diluxone_mail_capture', PHP_INT_MAX );
 
 /**
- * ¿Alguien quiere cancelar este envío?
+ * Does anybody want to cancel this send?
  *
- * Corre primero de todos en pre_wp_mail. Si el filtro dice que no se mande,
- * se devuelve false —WordPress lo toma como «ya me ocupé»— y la fila queda
- * como suprimida, que es distinto de fallida: nadie intentó mandarla.
+ * It runs first of all on pre_wp_mail. If the filter says not to send, false
+ * is returned — WordPress reads that as "I already took care of it" — and the
+ * row is left as suppressed, which is not the same as failed: nobody tried to
+ * send it.
  *
  * @param mixed                $pre
  * @param array<string, mixed> $atts
@@ -302,10 +304,10 @@ function diluxone_mail_maybe_suppress( $pre, array $atts ) {
 	}
 
 	/**
-	 * Filtra si un envío tiene que salir.
+	 * Filters whether a send should go out.
 	 *
-	 * Devolver false lo cancela y lo deja anotado como suprimido. Es el
-	 * lugar para una lista de supresión o las preferencias de una persona.
+	 * Returning false cancels it and records it as suppressed. This is the
+	 * place for a suppression list or a person's preferences.
 	 *
 	 * @param bool                 $send
 	 * @param array<string, mixed> $atts
@@ -314,10 +316,10 @@ function diluxone_mail_maybe_suppress( $pre, array $atts ) {
 		return null;
 	}
 
-	$actual = diluxone_mail_current();
+	$current = diluxone_mail_current();
 
-	if ( null !== $actual ) {
-		diluxone_mail_log_set_status( (string) $actual['uuid'], 'suppressed' );
+	if ( null !== $current ) {
+		diluxone_mail_log_set_status( (string) $current['uuid'], 'suppressed' );
 		diluxone_mail_current( null, true );
 	}
 
@@ -326,12 +328,12 @@ function diluxone_mail_maybe_suppress( $pre, array $atts ) {
 add_filter( 'pre_wp_mail', 'diluxone_mail_maybe_suppress', 1, 2 );
 
 /**
- * ¿Otro plugin cortó el envío antes de PHPMailer?
+ * Did another plugin cut the send short before PHPMailer?
  *
- * Corre último en pre_wp_mail. Si a esta altura el valor no es null, alguien
- * más contestó y WordPress no va a mandar nada por su cuenta. El envío se
- * anota como entregado a ese plugin: lo que pasó después, no lo sabe nadie
- * desde acá.
+ * It runs last on pre_wp_mail. If the value is not null by this point,
+ * somebody else answered and WordPress is not going to send anything itself.
+ * The send is recorded as handed to that plugin: what happened afterwards is
+ * something nobody here can know.
  *
  * @param mixed                $pre
  * @param array<string, mixed> $atts
@@ -342,10 +344,10 @@ function diluxone_mail_watch_pre_wp_mail( $pre, array $atts ) {
 		return $pre;
 	}
 
-	$actual = diluxone_mail_current();
+	$current = diluxone_mail_current();
 
-	if ( null !== $actual ) {
-		diluxone_mail_log_set_status( (string) $actual['uuid'], 'intercepted', '', diluxone_mail_pre_wp_mail_culprit() );
+	if ( null !== $current ) {
+		diluxone_mail_log_set_status( (string) $current['uuid'], 'intercepted', '', diluxone_mail_pre_wp_mail_culprit() );
 		diluxone_mail_current( null, true );
 	}
 
@@ -354,31 +356,32 @@ function diluxone_mail_watch_pre_wp_mail( $pre, array $atts ) {
 add_filter( 'pre_wp_mail', 'diluxone_mail_watch_pre_wp_mail', PHP_INT_MAX, 2 );
 
 /**
- * El Message-ID del correo es el id del historial.
+ * The email's Message-ID is the log's id.
  *
- * Se pone último en phpmailer_init para que no lo pise nadie. No es tocar el
- * transporte: es una cabecera del mensaje, y es la que los proveedores
- * devuelven cuando avisan de un rebote.
+ * Set last on phpmailer_init so nobody overwrites it. This is not touching
+ * the transport: it is a header of the message, and it is the one providers
+ * give back when they report a bounce.
  *
- * @param mixed $phpmailer Lo que traiga el hook; se comprueba el tipo adentro.
+ * @param mixed $phpmailer Whatever the hook passes; the type is checked inside.
  */
 function diluxone_mail_stamp_message_id( $phpmailer ): void {
-	$actual = diluxone_mail_current();
+	$current = diluxone_mail_current();
 
-	if ( null === $actual || ! $phpmailer instanceof PHPMailer\PHPMailer\PHPMailer ) {
+	if ( null === $current || ! $phpmailer instanceof PHPMailer\PHPMailer\PHPMailer ) {
 		return;
 	}
 
 	$host = wp_parse_url( home_url(), PHP_URL_HOST );
 
-	$phpmailer->MessageID = sprintf( '<%s@%s>', (string) $actual['uuid'], is_string( $host ) && '' !== $host ? $host : 'localhost' );
+	$phpmailer->MessageID = sprintf( '<%s@%s>', (string) $current['uuid'], is_string( $host ) && '' !== $host ? $host : 'localhost' );
 }
 add_action( 'phpmailer_init', 'diluxone_mail_stamp_message_id', PHP_INT_MAX );
 
 /**
- * Lo último que dijo el servidor, para guardarlo con la fila.
+ * The last thing the server said, to store alongside the row.
  *
- * Es el «250 OK queued as …» del proveedor, que trae su propio id de cola.
+ * It is the provider's "250 OK queued as …", which carries their own queue
+ * id.
  */
 function diluxone_mail_last_smtp_reply(): string {
 	global $phpmailer;
@@ -395,10 +398,10 @@ function diluxone_mail_last_smtp_reply(): string {
 }
 
 /**
- * Anota lo que pasó en el último envío, para la pantalla de estado.
+ * Records what happened on the last send, for the status screen.
  *
- * Aparte del historial porque el historial se puede apagar y esto no: que
- * un sitio sepa si su correo anda es lo mínimo.
+ * Separate from the log because the log can be turned off and this cannot:
+ * a site knowing whether its mail works is the bare minimum.
  */
 function diluxone_mail_remember_result( bool $ok, string $error ): void {
 	update_option(
@@ -414,28 +417,29 @@ function diluxone_mail_remember_result( bool $ok, string $error ): void {
 }
 
 /**
- * Cierra el envío en curso con su resultado.
+ * Closes the in-flight send with its outcome.
  *
- * Es lo común a «salió» y «falló»: el estado de las filas, el diálogo SMTP
- * si el historial extendido lo pidió, y soltar el envío en curso.
+ * It is what "sent" and "failed" have in common: the rows' status, the SMTP
+ * dialogue if the extended log asked for it, and letting go of the in-flight
+ * send.
  */
 function diluxone_mail_finish( string $status, string $error ): void {
-	$actual = diluxone_mail_current();
+	$current = diluxone_mail_current();
 
-	if ( null === $actual ) {
+	if ( null === $current ) {
 		return;
 	}
 
-	diluxone_mail_log_set_status( (string) $actual['uuid'], $status, $error, diluxone_mail_last_smtp_reply() );
+	diluxone_mail_log_set_status( (string) $current['uuid'], $status, $error, diluxone_mail_last_smtp_reply() );
 
-	if ( ! empty( $actual['extended'] ) ) {
-		diluxone_mail_detail_save( (string) $actual['uuid'], array( 'transcript' => diluxone_mail_debug_buffer() ) );
+	if ( ! empty( $current['extended'] ) ) {
+		diluxone_mail_detail_save( (string) $current['uuid'], array( 'transcript' => diluxone_mail_debug_buffer() ) );
 	}
 
 	diluxone_mail_current( null, true );
 }
 
-/** Entregado al servidor. */
+/** Handed to the server. */
 function diluxone_mail_on_succeeded(): void {
 	diluxone_mail_finish( 'sent', '' );
 	diluxone_mail_remember_result( true, '' );
@@ -443,7 +447,7 @@ function diluxone_mail_on_succeeded(): void {
 add_action( 'wp_mail_succeeded', 'diluxone_mail_on_succeeded' );
 
 /**
- * Falló, y esto es por qué.
+ * It failed, and this is why.
  *
  * @param WP_Error $error
  */

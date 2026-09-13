@@ -1,13 +1,13 @@
 <?php
 /**
- * Base de los tests del diagnóstico de DNS.
+ * Base for the DNS diagnosis tests.
  *
- * El DNS no se consulta en un test unitario: se siembra. La costura es el
- * caché de consultas —cada respuesta vive en un site transient con una clave
- * conocida— así que un test escribe ahí lo que el «DNS» tiene que contestar
- * y después llama al análisis de verdad. Lo que se prueba es el parseo y la
- * lógica, que es lo que puede estar mal; la consulta en sí la prueba el
- * diagnóstico contra dominios reales en el E2E.
+ * A unit test does not query the DNS: it seeds it. The seam is the lookup
+ * cache — every answer lives in a site transient under a known key — so a test
+ * writes there what the "DNS" is meant to answer and then calls the real
+ * analysis. What is tested is the parsing and the logic, which is what can be
+ * wrong; the lookup itself is exercised by the E2E diagnosis against real
+ * domains.
  */
 
 namespace Tests\Unit\DiluxOneMail;
@@ -33,12 +33,12 @@ abstract class DnsTestCase extends TestCase {
 		$GLOBALS['_test_multisite']          = false;
 		$GLOBALS['wp_filter']                = array();
 
-		// Lo que no esté sembrado no tiene que ir al DNS de verdad: el
-		// resolver es DoH y el wp_remote_get() de los stubs no contesta.
+		// Anything not seeded must not reach the real DNS: the resolver is DoH
+		// and the stubs' wp_remote_get() does not answer.
 		\update_option( 'diluxone_mail_dns_resolver', 'doh' );
 	}
 
-	/** Vuelve a armar el informe de un dominio sin tirar las respuestas sembradas. */
+	/** Rebuilds a domain's report without discarding the seeded answers. */
 	protected function diagnose( string $domain ): array {
 		\delete_site_transient( 'diluxone_mail_diagnosis_' . md5( $domain ) );
 
@@ -46,7 +46,7 @@ abstract class DnsTestCase extends TestCase {
 	}
 
 	/**
-	 * Siembra la respuesta del DNS para un nombre y un tipo.
+	 * Seeds the DNS answer for a name and a type.
 	 *
 	 * @param array<int, string> $records
 	 */
@@ -57,7 +57,7 @@ abstract class DnsTestCase extends TestCase {
 		);
 	}
 
-	/** Un nombre sin registros: NXDOMAIN. */
+	/** A name with no records: NXDOMAIN. */
 	protected function nothing( string $name, string $type ): void {
 		$this->dns( $name, $type, array() );
 	}

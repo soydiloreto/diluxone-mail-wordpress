@@ -1,13 +1,13 @@
 <?php
 /**
- * El plugin en una red de verdad.
+ * The plugin on a real network.
  *
- * Corre contra el sitio de pruebas de wp-env convertido a multisitio con
- * `wp core multisite-convert` y con un segundo sitio creado. Lo que se
- * prueba es lo que no se puede probar con stubs: que las tablas sean una
- * sola para la red, que un envío desde el sitio 2 quede con su site_id, que
- * la ficha de una persona vea lo de todos los sitios, y que la precedencia
- * red/sitio funcione con las options de WordPress de verdad.
+ * It runs against the wp-env test site converted to multisite with
+ * `wp core multisite-convert` and with a second site created. What is tested
+ * is what stubs cannot test: that the tables are one set for the whole
+ * network, that a send from site 2 carries its site_id, that a person's
+ * profile sees every site's, and that the network/site precedence works with
+ * real WordPress options.
  */
 
 namespace Tests\Multisite;
@@ -38,7 +38,7 @@ class NetworkTest extends IntegrationTestCase {
 		update_site_option( 'diluxone_mail_log_enabled', 1 );
 	}
 
-	/** El segundo sitio de la red, creado por el script de la suite. */
+	/** The network's second site, created by the suite's script. */
 	private function segundo_sitio(): int {
 		$sitios = get_sites( array( 'number' => 2, 'orderby' => 'id', 'order' => 'ASC' ) );
 
@@ -53,32 +53,32 @@ class NetworkTest extends IntegrationTestCase {
 		return $fn;
 	}
 
-	public function test_las_tablas_son_de_la_red(): void {
+	public function test_the_tables_belong_to_the_network(): void {
 		global $wpdb;
 
 		$this->assertStringStartsWith( $wpdb->base_prefix, diluxone_mail_log_table() );
 		$this->assertSame( $wpdb->base_prefix . 'diluxone_mail_log', diluxone_mail_log_table() );
 	}
 
-	public function test_un_envio_desde_otro_sitio_queda_con_su_site_id(): void {
+	public function test_a_send_from_another_site_carries_its_site_id(): void {
 		$sitio2 = $this->segundo_sitio();
 
 		switch_to_blog( $sitio2 );
 
 		$fn = $this->interceptar();
-		wp_mail( 'desde-dos@ejemplo.test', 'Desde el sitio 2', 'x' );
+		wp_mail( 'desde-dos@example.test', 'Desde el sitio 2', 'x' );
 		remove_filter( 'pre_wp_mail', $fn, 10 );
 
 		restore_current_blog();
 
-		$fila = diluxone_mail_log_query( array( 'emails' => array( 'desde-dos@ejemplo.test' ), 'site_id' => null ) )['rows'][0];
+		$row = diluxone_mail_log_query( array( 'emails' => array( 'desde-dos@example.test' ), 'site_id' => null ) )['rows'][0];
 
-		$this->assertSame( $sitio2, (int) $fila['site_id'] );
-		// Desde el sitio principal, filtrando por sitio, no se ve.
-		$this->assertSame( 0, diluxone_mail_log_query( array( 'emails' => array( 'desde-dos@ejemplo.test' ) ) )['total'] );
+		$this->assertSame( $sitio2, (int) $row['site_id'] );
+		// From the main site, filtering by site, it is not visible.
+		$this->assertSame( 0, diluxone_mail_log_query( array( 'emails' => array( 'desde-dos@example.test' ) ) )['total'] );
 	}
 
-	public function test_la_ficha_de_una_persona_ve_todos_los_sitios(): void {
+	public function test_a_persons_profile_sees_every_site(): void {
 		$id   = $this->alguien();
 		$user = get_user_by( 'id', $id );
 
@@ -94,7 +94,7 @@ class NetworkTest extends IntegrationTestCase {
 		$this->assertSame( 2, diluxone_mail_log_count( diluxone_mail_user_emails( $user ) ) );
 	}
 
-	public function test_la_red_manda_y_el_sitio_solo_pisa_con_permiso(): void {
+	public function test_the_network_wins_and_the_site_only_overrides_with_permission(): void {
 		update_site_option( 'diluxone_mail_host', 'smtp.red.test' );
 		update_option( 'diluxone_mail_host', 'smtp.sitio.test' );
 
@@ -107,13 +107,13 @@ class NetworkTest extends IntegrationTestCase {
 		$this->assertSame( 'smtp.sitio.test', diluxone_mail_config_value( 'host' )['value'] );
 	}
 
-	public function test_guardar_en_un_sitio_sin_permiso_no_hace_nada(): void {
+	public function test_saving_on_a_site_without_permission_does_nothing(): void {
 		diluxone_mail_save_options( array( 'diluxone_mail_host' => 'smtp.intento.test' ), 'site' );
 
 		$this->assertFalse( get_option( 'diluxone_mail_host' ) );
 	}
 
-	public function test_la_version_del_esquema_vive_en_la_red(): void {
+	public function test_the_schema_version_lives_on_the_network(): void {
 		$this->assertSame( DILUXONE_MAIL_DB_VERSION, (int) get_site_option( 'diluxone_mail_db_version' ) );
 	}
 }

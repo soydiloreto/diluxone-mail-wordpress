@@ -1,11 +1,11 @@
 <?php
 /**
- * Los flujos del admin contra un WordPress de verdad: nonces reales,
- * permisos reales, redirecciones reales, y las pantallas pintando con los
- * datos de la base.
+ * The admin flows against a real WordPress: real nonces, real capabilities,
+ * real redirects, and the screens painting with data from the database.
  *
- * wp_safe_redirect() termina en exit(); el filtro wp_redirect corre antes y
- * acá lanza una excepción con la URL, que es lo que el test quiere ver.
+ * wp_safe_redirect() ends in exit(); the wp_redirect filter runs before that
+ * and here throws an exception carrying the URL, which is what the test wants
+ * to see.
  */
 
 namespace Tests\Integration;
@@ -52,7 +52,7 @@ class AdminFlowTest extends IntegrationTestCase {
 			return $e->getMessage();
 		}
 
-		$this->fail( 'no redirigió' );
+		$this->fail( 'it did not redirect' );
 	}
 
 	private function nonce( string $action ): void {
@@ -66,7 +66,7 @@ class AdminFlowTest extends IntegrationTestCase {
 		return $fn;
 	}
 
-	public function test_aplicar_un_perfil_y_guardar_los_ajustes_con_nonce_real(): void {
+	public function test_applying_a_profile_and_saving_the_settings_with_a_real_nonce(): void {
 		$this->nonce( 'diluxone_mail_settings' );
 		$_POST['scope']                  = 'site';
 		$_POST['diluxone_mail_provider'] = 'mailjet';
@@ -79,7 +79,7 @@ class AdminFlowTest extends IntegrationTestCase {
 			'_wpnonce'               => $_REQUEST['_wpnonce'],
 			'diluxone_mail_host'     => 'smtp.propio.test',
 			'diluxone_mail_pass'     => 'clave nueva',
-			'diluxone_mail_from'     => 'hola@propio.test',
+			'diluxone_mail_from'     => 'hello@propio.test',
 			'diluxone_mail_log_body' => '1',
 		);
 
@@ -90,20 +90,20 @@ class AdminFlowTest extends IntegrationTestCase {
 		$this->assertSame( 0, (int) get_option( 'diluxone_mail_log_extended' ) );
 	}
 
-	public function test_sin_nonce_valido_no_se_guarda_nada(): void {
+	public function test_without_a_valid_nonce_nothing_is_saved(): void {
 		$_POST['scope']              = 'site';
 		$_POST['diluxone_mail_host'] = 'smtp.ataque.test';
 		$_REQUEST['_wpnonce']        = 'inventado';
 
 		try {
 			diluxone_mail_save_settings();
-			$this->fail( 'tendría que haber muerto' );
+			$this->fail( 'it should have died' );
 		} catch ( \WPAjaxDieContinueException $e ) {
 			$this->assertFalse( get_option( 'diluxone_mail_host' ) );
 		}
 	}
 
-	public function test_sin_permiso_no_se_guarda_nada(): void {
+	public function test_without_the_capability_nothing_is_saved(): void {
 		wp_set_current_user( $this->alguien( 'subscriber' ) );
 		$this->nonce( 'diluxone_mail_settings' );
 		$_POST['scope'] = 'site';
@@ -112,55 +112,55 @@ class AdminFlowTest extends IntegrationTestCase {
 		diluxone_mail_save_settings();
 	}
 
-	public function test_tomar_el_control_y_revalidar(): void {
+	public function test_taking_over_and_revalidating(): void {
 		$this->nonce( 'diluxone_mail_take_over' );
 		$this->assertStringContainsString( 'took-over', $this->redirect_of( 'diluxone_mail_take_over' ) );
 		$this->assertSame( 'transport', get_option( 'diluxone_mail_mode' ) );
 
-		update_option( 'diluxone_mail_from', 'hola@example.org' );
+		update_option( 'diluxone_mail_from', 'hello@example.org' );
 		update_option( 'diluxone_mail_dns_resolver', 'doh' );
 		$this->nonce( 'diluxone_mail_revalidate' );
 		$this->assertStringContainsString( 'revalidated', $this->redirect_of( 'diluxone_mail_revalidate' ) );
 		$this->assertIsArray( get_site_transient( 'diluxone_mail_diagnosis_' . md5( 'example.org' ) ) );
 	}
 
-	public function test_el_reenvio_de_verdad_con_el_cuerpo_guardado(): void {
+	public function test_a_real_resend_with_the_stored_body(): void {
 		update_option( 'diluxone_mail_mode', 'observe' );
 		update_option( 'diluxone_mail_log_body', 1 );
 
 		$fn = $this->interceptar();
-		wp_mail( 'ana@ejemplo.test', 'Original', '<p>Cuerpo</p>', array( 'Content-Type: text/html' ) );
+		wp_mail( 'ana@example.test', 'Original', '<p>Body</p>', array( 'Content-Type: text/html' ) );
 
-		$fila = diluxone_mail_log_query( array( 'emails' => array( 'ana@ejemplo.test' ) ) )['rows'][0];
+		$row = diluxone_mail_log_query( array( 'emails' => array( 'ana@example.test' ) ) )['rows'][0];
 
-		$_GET['id'] = (string) $fila['id'];
-		$this->nonce( 'diluxone_mail_resend_' . (int) $fila['id'] );
+		$_GET['id'] = (string) $row['id'];
+		$this->nonce( 'diluxone_mail_resend_' . (int) $row['id'] );
 
 		$url = $this->redirect_of( 'diluxone_mail_resend_action' );
 		remove_filter( 'pre_wp_mail', $fn, 10 );
 
 		$this->assertStringContainsString( 'diluxone_mail_done=resent', $url );
-		$this->assertSame( 2, diluxone_mail_log_query( array( 'emails' => array( 'ana@ejemplo.test' ) ) )['total'] );
+		$this->assertSame( 2, diluxone_mail_log_query( array( 'emails' => array( 'ana@example.test' ) ) )['total'] );
 
-		$reenvio = diluxone_mail_log_query( array( 'emails' => array( 'ana@ejemplo.test' ) ) )['rows'][0];
-		$this->assertSame( 'Original', $reenvio['subject'] );
-		$this->assertSame( '<p>Cuerpo</p>', diluxone_mail_detail_get( (string) $reenvio['message_id'] )['body'] );
+		$resend = diluxone_mail_log_query( array( 'emails' => array( 'ana@example.test' ) ) )['rows'][0];
+		$this->assertSame( 'Original', $resend['subject'] );
+		$this->assertSame( '<p>Body</p>', diluxone_mail_detail_get( (string) $resend['message_id'] )['body'] );
 	}
 
-	public function test_el_reenvio_sin_cuerpo_avisa(): void {
+	public function test_a_resend_without_a_body_says_so(): void {
 		update_option( 'diluxone_mail_mode', 'observe' );
 		$fn = $this->interceptar();
-		wp_mail( 'sin@ejemplo.test', 'Sin cuerpo', 'x' );
+		wp_mail( 'sin@example.test', 'Sin cuerpo', 'x' );
 		remove_filter( 'pre_wp_mail', $fn, 10 );
 
-		$fila       = diluxone_mail_log_query( array( 'emails' => array( 'sin@ejemplo.test' ) ) )['rows'][0];
-		$_GET['id'] = (string) $fila['id'];
-		$this->nonce( 'diluxone_mail_resend_' . (int) $fila['id'] );
+		$row       = diluxone_mail_log_query( array( 'emails' => array( 'sin@example.test' ) ) )['rows'][0];
+		$_GET['id'] = (string) $row['id'];
+		$this->nonce( 'diluxone_mail_resend_' . (int) $row['id'] );
 
 		$this->assertStringContainsString( 'no-body', $this->redirect_of( 'diluxone_mail_resend_action' ) );
 	}
 
-	public function test_la_ficha_de_una_persona_pinta_lo_suyo(): void {
+	public function test_a_persons_profile_paints_their_own(): void {
 		update_option( 'diluxone_mail_mode', 'observe' );
 		$id   = $this->alguien();
 		$user = get_user_by( 'id', $id );
@@ -182,13 +182,13 @@ class AdminFlowTest extends IntegrationTestCase {
 		$this->assertSame( '', (string) ob_get_clean() );
 	}
 
-	public function test_las_pantallas_pintan_con_datos_reales(): void {
+	public function test_the_screens_paint_with_real_data(): void {
 		update_option( 'diluxone_mail_mode', 'observe' );
-		update_option( 'diluxone_mail_from', 'hola@example.org' );
+		update_option( 'diluxone_mail_from', 'hello@example.org' );
 		update_option( 'diluxone_mail_dns_resolver', 'doh' );
 
 		$fn = $this->interceptar();
-		wp_mail( 'lista@ejemplo.test', 'En la lista', 'x' );
+		wp_mail( 'list@example.test', 'En la lista', 'x' );
 		remove_filter( 'pre_wp_mail', $fn, 10 );
 
 		set_current_screen( 'toplevel_page_diluxone-mail' );
@@ -203,17 +203,17 @@ class AdminFlowTest extends IntegrationTestCase {
 		$log = (string) ob_get_clean();
 		$this->assertStringContainsString( 'En la lista', $log );
 
-		$fila        = diluxone_mail_log_query( array( 'emails' => array( 'lista@ejemplo.test' ) ) )['rows'][0];
-		$_GET['view'] = (string) $fila['id'];
+		$row        = diluxone_mail_log_query( array( 'emails' => array( 'list@example.test' ) ) )['rows'][0];
+		$_GET['view'] = (string) $row['id'];
 		ob_start();
 		diluxone_mail_screen_log();
 		$detalle = (string) ob_get_clean();
-		$this->assertStringContainsString( (string) $fila['message_id'], $detalle );
+		$this->assertStringContainsString( (string) $row['message_id'], $detalle );
 
 		ob_start();
 		diluxone_mail_screen_status();
-		$estado = (string) ob_get_clean();
-		$this->assertStringContainsString( 'Observer mode', $estado );
+		$status = (string) ob_get_clean();
+		$this->assertStringContainsString( 'Observer mode', $status );
 
 		ob_start();
 		diluxone_mail_screen_dns();
@@ -222,12 +222,12 @@ class AdminFlowTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * DoH de verdad, contra un resolver público, desde el contenedor.
+	 * A real DoH lookup, against a public resolver, from the container.
 	 *
-	 * Es la única consulta al DNS real de la suite y se hace a propósito:
-	 * dns_get_record() se prueba en el E2E, DoH acá.
+	 * It is the suite's only real DNS query and it is deliberate:
+	 * dns_get_record() is exercised in the E2E, DoH here.
 	 */
-	public function test_doh_contra_un_resolver_publico(): void {
+	public function test_doh_against_a_public_resolver(): void {
 		update_option( 'diluxone_mail_dns_resolver', 'doh' );
 
 		$r = diluxone_mail_dns_lookup( 'pablodiloreto.com', 'TXT' );
@@ -241,7 +241,7 @@ class AdminFlowTest extends IntegrationTestCase {
 		$this->assertSame( 'cache', diluxone_mail_dns_lookup( 'pablodiloreto.com', 'TXT' )['source'] );
 	}
 
-	public function test_la_purga_esta_programada_y_la_privacidad_registrada(): void {
+	public function test_the_purge_is_scheduled_and_privacy_is_registered(): void {
 		diluxone_mail_schedule_purge();
 		$this->assertNotFalse( wp_next_scheduled( 'diluxone_mail_purge' ) );
 
@@ -252,21 +252,21 @@ class AdminFlowTest extends IntegrationTestCase {
 		$this->assertFalse( wp_next_scheduled( 'diluxone_mail_purge' ) );
 	}
 
-	public function test_la_tabla_del_historial_pagina_de_verdad(): void {
+	public function test_the_log_table_really_paginates(): void {
 		update_option( 'diluxone_mail_mode', 'observe' );
 		$fn = $this->interceptar();
 		for ( $i = 0; $i < 35; $i++ ) {
-			wp_mail( "p{$i}@ejemplo.test", "Mensaje {$i}", 'x' );
+			wp_mail( "p{$i}@example.test", "Mensaje {$i}", 'x' );
 		}
 		remove_filter( 'pre_wp_mail', $fn, 10 );
 
 		require_once DILUXONE_MAIL_DIR . 'includes/log-list-table.php';
 
 		$_REQUEST['paged'] = '2';
-		$tabla         = new \DiluxOne_Mail_Log_Table();
-		$tabla->prepare_items();
+		$table         = new \DiluxOne_Mail_Log_Table();
+		$table->prepare_items();
 
-		$this->assertCount( 5, $tabla->items );
-		$this->assertSame( 35, $tabla->get_pagination_arg( 'total_items' ) );
+		$this->assertCount( 5, $table->items );
+		$this->assertSame( 35, $table->get_pagination_arg( 'total_items' ) );
 	}
 }

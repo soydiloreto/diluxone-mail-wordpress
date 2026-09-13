@@ -1,6 +1,6 @@
 <?php
 /**
- * Las pantallas pintan sin romperse y dicen lo que tienen que decir.
+ * The screens paint without breaking and say what they are meant to say.
  */
 
 namespace Tests\Unit\DiluxOneMail;
@@ -17,7 +17,7 @@ class ScreensTest extends AdminTestCase {
 		require_once $fluent;
 	}
 
-	public function test_el_menu_y_los_estilos(): void {
+	public function test_the_menu_and_the_styles(): void {
 		$GLOBALS['_test_menu']    = array();
 		$GLOBALS['_test_submenu'] = array();
 		$GLOBALS['_test_styles']  = array();
@@ -33,7 +33,7 @@ class ScreensTest extends AdminTestCase {
 		$this->assertCount( 1, $GLOBALS['_test_styles'] );
 	}
 
-	public function test_la_pantalla_de_ajustes_muestra_los_perfiles_y_la_prueba(): void {
+	public function test_the_settings_screen_shows_the_profiles_and_the_test(): void {
 		\update_option( 'diluxone_mail_provider', 'mailjet' );
 		\set_transient( 'diluxone_mail_test_1', array( 'ok' => false, 'error' => '535 nope', 'transcript' => 'AUTH LOGIN', 'seconds' => 0.1, 'to' => 'a@x.test' ), 60 );
 
@@ -46,7 +46,7 @@ class ScreensTest extends AdminTestCase {
 		$this->assertStringNotContainsString( 'name="diluxone_mail_network_allow_override"', $html );
 	}
 
-	public function test_la_pantalla_de_ajustes_con_el_entorno_y_la_prueba_exitosa(): void {
+	public function test_the_settings_screen_with_the_environment_and_a_successful_test(): void {
 		putenv( 'DILUXONE_MAIL_PASS=secreta' );
 		putenv( 'DILUXONE_MAIL_PROVIDER=ses' );
 		\set_transient( 'diluxone_mail_test_1', array( 'ok' => true, 'error' => '', 'transcript' => '', 'seconds' => 0.2, 'to' => 'a@x.test' ), 60 );
@@ -59,7 +59,7 @@ class ScreensTest extends AdminTestCase {
 		$this->assertStringNotContainsString( 'secreta', $html );
 	}
 
-	public function test_la_pantalla_de_la_red(): void {
+	public function test_the_network_screen(): void {
 		$GLOBALS['_test_multisite'] = true;
 
 		$html = $this->render( 'diluxone_mail_screen_network' );
@@ -71,7 +71,7 @@ class ScreensTest extends AdminTestCase {
 		$this->assertStringContainsString( 'fixed by the network', $sitio );
 	}
 
-	public function test_la_pantalla_de_estado(): void {
+	public function test_the_status_screen(): void {
 		\update_option( 'diluxone_mail_mode', 'transport' );
 		\update_option( 'diluxone_mail_last_result', array( 'ok' => 0, 'time' => time() - 60, 'error' => 'boom', 'provider' => 'mailjet' ) );
 		$GLOBALS['_test_cron']['diluxone_mail_purge'] = time() + 3600;
@@ -88,7 +88,7 @@ class ScreensTest extends AdminTestCase {
 		$this->assertStringContainsString( 'Observer mode', $this->render( 'diluxone_mail_screen_status' ) );
 	}
 
-	public function test_la_pantalla_de_estado_en_una_red_y_con_interceptor(): void {
+	public function test_the_status_screen_on_a_network_and_with_an_interceptor(): void {
 		$GLOBALS['_test_multisite'] = true;
 		\update_site_option( 'diluxone_mail_unhook_pre_wp_mail', 1 );
 		\add_action( 'phpmailer_init', 'fluent_test_mailer' );
@@ -104,7 +104,7 @@ class ScreensTest extends AdminTestCase {
 		$this->assertStringContainsString( 'Delivered to the server', $html );
 	}
 
-	public function test_la_pantalla_del_historial(): void {
+	public function test_the_log_screen(): void {
 		$this->db->next_var     = 2;
 		$this->db->next_results = array( $this->row(), $this->row( array( 'id' => 8, 'kind' => 'cc', 'status' => 'failed', 'error' => 'no', 'provider' => 'observer', 'subject' => '' ) ) );
 
@@ -121,7 +121,7 @@ class ScreensTest extends AdminTestCase {
 		$this->assertStringContainsString( 'The mail log is off', $this->render( 'diluxone_mail_screen_log' ) );
 	}
 
-	public function test_la_pantalla_del_historial_vacia_y_con_filtros(): void {
+	public function test_the_log_screen_empty_and_with_filters(): void {
 		$_GET['status'] = 'failed';
 		$_GET['s']      = 'hola';
 		$_GET['all']    = '1';
@@ -135,7 +135,7 @@ class ScreensTest extends AdminTestCase {
 		$this->assertStringNotContainsString( 'site_id', $this->db->of( 'get_var' )[0]['sql'] );
 	}
 
-	public function test_el_detalle_de_un_mensaje(): void {
+	public function test_the_detail_of_a_message(): void {
 		$_GET['view']           = '7';
 		$this->db->next_row     = $this->row();
 		$this->db->next_results = array( $this->row(), $this->row( array( 'email' => 'b@x.test', 'kind' => 'cc' ) ) );
@@ -143,13 +143,13 @@ class ScreensTest extends AdminTestCase {
 		$html = $this->render( 'diluxone_mail_screen_log' );
 
 		$this->assertStringContainsString( 'uuid-7', $html );
-		$this->assertStringContainsString( 'X-Prueba', $html );
+		$this->assertStringContainsString( 'X-Test', $html );
 		$this->assertStringContainsString( 'a.pdf', $html );
 		$this->assertStringContainsString( 'b@x.test', $html );
 		$this->assertStringContainsString( 'body storage is off', $html );
 	}
 
-	public function test_el_detalle_con_cuerpo_html_y_dialogo(): void {
+	public function test_the_detail_with_an_html_body_and_a_dialogue(): void {
 		$_GET['view']       = '7';
 		$this->db->next_row = $this->row( array( 'error' => 'x', 'body' => '<p>hola</p>', 'body_type' => 'text/html', 'transcript' => 'EHLO' ) );
 
@@ -160,7 +160,7 @@ class ScreensTest extends AdminTestCase {
 		$this->assertStringContainsString( 'Resend to this recipient', $html );
 	}
 
-	public function test_el_detalle_de_un_mensaje_que_no_existe_o_de_otro_sitio(): void {
+	public function test_the_detail_of_a_message_that_does_not_exist_or_belongs_to_another_site(): void {
 		$_GET['view'] = '99';
 		$this->assertStringContainsString( 'no longer in the log', $this->render( 'diluxone_mail_screen_log' ) );
 
@@ -168,31 +168,31 @@ class ScreensTest extends AdminTestCase {
 		$GLOBALS['_test_blog_id']   = 2;
 		$this->db->next_row         = $this->row();
 
-		// El superadministrador lo ve; el stub dice que somos superadmin.
+		// A super admin sees it; the stub says we are one.
 		$this->assertStringContainsString( 'uuid-7', $this->render( 'diluxone_mail_screen_log' ) );
 		$GLOBALS['_test_blog_id'] = 1;
 	}
 
-	public function test_la_pantalla_de_entregabilidad(): void {
-		\update_option( 'diluxone_mail_from', 'hola@sano.test' );
-		$this->assertStringContainsString( 'sano.test', $this->render( 'diluxone_mail_screen_dns' ) );
+	public function test_the_deliverability_screen(): void {
+		\update_option( 'diluxone_mail_from', 'hello@healthy.test' );
+		$this->assertStringContainsString( 'healthy.test', $this->render( 'diluxone_mail_screen_dns' ) );
 
 		$html = $this->render( 'diluxone_mail_screen_dns' );
 		$this->assertStringContainsString( 'Revalidate', $html );
 		$this->assertStringContainsString( 'No record', $html );
 	}
 
-	public function test_la_pantalla_de_entregabilidad_sin_dominio(): void {
+	public function test_the_deliverability_screen_with_no_domain(): void {
 		\update_option( 'diluxone_mail_dns_domain', '' );
 
-		// Sin remitente ni dominio configurados sale el del sitio; forzamos
-		// vacío por el ajuste que la vista mira.
+		// With no sender and no domain configured the site's own comes out; an
+		// empty one is forced through the setting the view looks at.
 		\add_filter( 'diluxone_mail_option', static fn( $v, $k ) => 'diluxone_mail_dns_domain' === $k ? '' : $v, 10, 2 );
 
 		$this->assertIsString( $this->render( 'diluxone_mail_screen_dns' ) );
 	}
 
-	public function test_el_titulo_de_la_pestana_en_una_pantalla_del_plugin(): void {
+	public function test_the_tab_title_on_a_plugin_screen(): void {
 		$GLOBALS['_test_screen'] = new \WP_Screen( 'toplevel_page_diluxone-mail' );
 
 		$this->assertSame( 'DiluxOne Mail | Settings — Sitio', \diluxone_mail_admin_title( 'Settings — Sitio', 'Settings' ) );

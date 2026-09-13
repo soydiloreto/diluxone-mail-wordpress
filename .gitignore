@@ -17,6 +17,9 @@ vendor/
 # diffs without runtime benefit (the plugin ships with no vendor/).
 composer.lock
 
+# Backups tools leave behind when they migrate their own configuration
+*.bak
+
 # Build artifacts
 dist/
 build/

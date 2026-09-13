@@ -1,6 +1,6 @@
 <?php
 /**
- * La vista de la pantalla de estado.
+ * The view of the status screen.
  *
  * @package DiluxOneMail
  * @var array<string, mixed> $data
@@ -8,7 +8,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-$diluxone_mail_estados = diluxone_mail_log_statuses();
+$diluxone_mail_statuses = diluxone_mail_log_statuses();
 ?>
 <table class="widefat striped diluxone-mail-status-table">
 	<tbody>
@@ -23,7 +23,7 @@ $diluxone_mail_estados = diluxone_mail_log_statuses();
 					<strong><?php esc_html_e( 'DiluxOne Mail', 'diluxone-mail' ); ?></strong>
 					<?php
 					printf(
-						/* translators: %s: modo */
+						/* translators: %s: mode */
 						esc_html__( '(mode: %s)', 'diluxone-mail' ),
 						esc_html( (string) $data['mode'] )
 					);
@@ -41,7 +41,7 @@ $diluxone_mail_estados = diluxone_mail_log_statuses();
 					<p class="description">
 						<?php
 						printf(
-							/* translators: %s: nombres */
+							/* translators: %s: names */
 							esc_html__( 'Also active and hooked into mail: %s. This plugin runs last and takes precedence.', 'diluxone-mail' ),
 							esc_html( implode( ', ', array_column( $data['others'], 'name' ) ) )
 						);
@@ -68,9 +68,9 @@ $diluxone_mail_estados = diluxone_mail_log_statuses();
 			<th scope="row"><?php esc_html_e( 'Provider profile', 'diluxone-mail' ); ?></th>
 			<td><?php echo esc_html( (string) $data['profile']['name'] ); ?></td>
 		</tr>
-		<?php foreach ( $data['config'] as $diluxone_mail_campo => $diluxone_mail_v ) : ?>
+		<?php foreach ( $data['config'] as $diluxone_mail_field => $diluxone_mail_v ) : ?>
 			<tr>
-				<th scope="row"><code><?php echo esc_html( $diluxone_mail_campo ); ?></code></th>
+				<th scope="row"><code><?php echo esc_html( $diluxone_mail_field ); ?></code></th>
 				<td>
 					<code><?php echo esc_html( '' !== (string) $diluxone_mail_v['value'] ? (string) $diluxone_mail_v['value'] : '—' ); ?></code>
 					<span class="description"><?php echo esc_html( (string) $diluxone_mail_v['label'] ); ?></span>
@@ -98,8 +98,8 @@ $diluxone_mail_estados = diluxone_mail_log_statuses();
 				<?php if ( ! $data['log_enabled'] ) : ?>
 					<?php esc_html_e( 'Off.', 'diluxone-mail' ); ?>
 				<?php else : ?>
-					<?php foreach ( $data['totals'] as $diluxone_mail_estado => $diluxone_mail_n ) : ?>
-						<span class="diluxone-mail-status diluxone-mail-status--<?php echo esc_attr( (string) $diluxone_mail_estado ); ?>"><?php echo esc_html( (string) ( $diluxone_mail_estados[ $diluxone_mail_estado ] ?? $diluxone_mail_estado ) ); ?>: <?php echo esc_html( (string) $diluxone_mail_n ); ?></span>
+					<?php foreach ( $data['totals'] as $diluxone_mail_status => $diluxone_mail_n ) : ?>
+						<span class="diluxone-mail-status diluxone-mail-status--<?php echo esc_attr( (string) $diluxone_mail_status ); ?>"><?php echo esc_html( (string) ( $diluxone_mail_statuses[ $diluxone_mail_status ] ?? $diluxone_mail_status ) ); ?>: <?php echo esc_html( (string) $diluxone_mail_n ); ?></span>
 					<?php endforeach; ?>
 					<?php if ( array() === $data['totals'] ) : ?>
 						<?php esc_html_e( 'Empty.', 'diluxone-mail' ); ?>
@@ -110,7 +110,7 @@ $diluxone_mail_estados = diluxone_mail_log_statuses();
 						<?php if ( $data['next_purge'] > 0 ) : ?>
 							<?php
 							printf(
-								/* translators: %s: tiempo */
+								/* translators: %s: time */
 								esc_html__( 'Next purge in %s.', 'diluxone-mail' ),
 								esc_html( human_time_diff( $data['next_purge'] ) )
 							);
@@ -125,7 +125,7 @@ $diluxone_mail_estados = diluxone_mail_log_statuses();
 			<td>
 				<?php
 				printf(
-					/* translators: %s: dominio */
+					/* translators: %s: domain */
 					esc_html__( 'Diagnosing %s.', 'diluxone-mail' ),
 					'<code>' . esc_html( (string) $data['dns_domain'] ) . '</code>'
 				);

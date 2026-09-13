@@ -28,8 +28,8 @@ if ( ! defined( 'DILUXONE_MAIL_FILE' ) ) {
 	define( 'DILUXONE_MAIL_FILE', __DIR__ . '/diluxone-mail.php' );
 }
 
-// Constantes que WordPress define en tiempo de ejecución y que el análisis
-// estático no ve porque salen de wp-includes/default-constants.php.
+// Constants WordPress defines at runtime that static analysis never sees
+// because they come from wp-includes/default-constants.php.
 if ( ! defined( 'COOKIEHASH' ) ) {
 	define( 'COOKIEHASH', 'phpstan' );
 }

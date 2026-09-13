@@ -11,9 +11,9 @@ parameters:
   bootstrapFiles:
     - phpstan-bootstrap.php
 
-  # WP-CLI no está cargado cuando corre el sitio, así que el comando del
-  # plugin vive detrás de un `defined( 'WP_CLI' )`. Los stubs le dan al
-  # análisis la clase que en tiempo real trae WP-CLI.
+  # WP-CLI is not loaded when the site runs, so the plugin's command lives
+  # behind a `defined( 'WP_CLI' )`. The stubs give the analysis the class that
+  # WP-CLI provides at runtime.
   scanFiles:
     - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
 
@@ -30,13 +30,13 @@ parameters:
       - .wordpress-org/*
       - assets/*
 
-  # El plugin declara PHP 8.1 como mínimo, igual que su cabecera.
+  # The plugin declares PHP 8.1 as its minimum, same as its header.
   phpVersion: 80100
 
-  # Se stubean en phpstan-bootstrap.php para que el análisis las vea, pero su
-  # valor real sale de wp-config.php y cambia por instalación. Marcarlas
-  # dinámicas evita que PHPStan resuelva un `if ( WP_DEBUG )` como si siempre
-  # fuera falso por el valor del stub.
+  # They are stubbed in phpstan-bootstrap.php so the analysis can see them, but
+  # their real value comes from wp-config.php and changes per install. Marking
+  # them dynamic keeps PHPStan from resolving an `if ( WP_DEBUG )` as always
+  # false because of the stub's value.
   dynamicConstantNames:
     - WP_DEBUG
     - COOKIEHASH

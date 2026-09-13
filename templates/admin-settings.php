@@ -1,10 +1,10 @@
 <?php
 /**
- * La vista del formulario de ajustes, de un sitio o de la red.
+ * The view of the settings form, for a site or for the network.
  *
- * Recibe $data de diluxone_mail_settings_data(). Cada control mira su
- * propia procedencia y se pone de sólo lectura solo: no hay una regla
- * general de «este formulario está bloqueado», hay un motivo por control.
+ * It receives $data from diluxone_mail_settings_data(). Each control looks at
+ * its own provenance and makes itself read-only on its own: there is no blanket
+ * "this form is locked" rule, there is a reason per control.
  *
  * @package DiluxOneMail
  * @var array<string, mixed> $data
@@ -16,16 +16,16 @@ $diluxone_mail_f    = $data['fields'];
 $diluxone_mail_test = $data['test'];
 
 /**
- * Un control con su leyenda de procedencia.
+ * A control with its provenance caption.
  *
- * @param array<string, mixed> $campo
+ * @param array<string, mixed> $field
  */
-$diluxone_mail_source = static function ( array $campo ): void {
-	if ( 'site' === $campo['source'] || 'default' === $campo['source'] ) {
+$diluxone_mail_source = static function ( array $field ): void {
+	if ( 'site' === $field['source'] || 'default' === $field['source'] ) {
 		return;
 	}
 
-	printf( ' <span class="description diluxone-mail-source">— %s</span>', esc_html( (string) $campo['label'] ) );
+	printf( ' <span class="description diluxone-mail-source">— %s</span>', esc_html( (string) $field['label'] ) );
 };
 ?>
 
@@ -35,7 +35,7 @@ $diluxone_mail_source = static function ( array $campo ): void {
 			<?php if ( $diluxone_mail_test['ok'] ) : ?>
 				<?php
 				printf(
-					/* translators: 1: destinatario, 2: segundos */
+					/* translators: 1: recipient, 2: seconds */
 					esc_html__( 'Test message handed to the server for %1$s in %2$ss. Check the inbox — and the spam folder.', 'diluxone-mail' ),
 					esc_html( (string) $diluxone_mail_test['to'] ),
 					esc_html( (string) $diluxone_mail_test['seconds'] )
@@ -73,25 +73,25 @@ $diluxone_mail_source = static function ( array $campo ): void {
 		<tr>
 			<th scope="row"><label for="diluxone_mail_provider"><?php esc_html_e( 'Profile', 'diluxone-mail' ); ?></label></th>
 			<td>
-				<?php $diluxone_mail_bloqueado = $data['fields']['diluxone_mail_host']['readonly'] || in_array( $data['provider']['source'], array( 'constant', 'env' ), true ); ?>
-				<select name="diluxone_mail_provider" id="diluxone_mail_provider" <?php disabled( $diluxone_mail_bloqueado ); ?>>
+				<?php $diluxone_mail_locked = $data['fields']['diluxone_mail_host']['readonly'] || in_array( $data['provider']['source'], array( 'constant', 'env' ), true ); ?>
+				<select name="diluxone_mail_provider" id="diluxone_mail_provider" <?php disabled( $diluxone_mail_locked ); ?>>
 					<option value=""><?php esc_html_e( '— choose —', 'diluxone-mail' ); ?></option>
 					<?php
-					$diluxone_mail_grupo = '';
+					$diluxone_mail_group = '';
 					foreach ( $data['providers'] as $diluxone_mail_key => $diluxone_mail_p ) :
-						if ( $diluxone_mail_p['group'] !== $diluxone_mail_grupo ) :
-							if ( '' !== $diluxone_mail_grupo ) :
+						if ( $diluxone_mail_p['group'] !== $diluxone_mail_group ) :
+							if ( '' !== $diluxone_mail_group ) :
 								echo '</optgroup>';
 							endif;
-							$diluxone_mail_grupo = (string) $diluxone_mail_p['group'];
-							printf( '<optgroup label="%s">', esc_attr( $diluxone_mail_grupo ) );
+							$diluxone_mail_group = (string) $diluxone_mail_p['group'];
+							printf( '<optgroup label="%s">', esc_attr( $diluxone_mail_group ) );
 						endif;
 						?>
 						<option value="<?php echo esc_attr( $diluxone_mail_key ); ?>" <?php selected( $data['provider']['value'], $diluxone_mail_key ); ?>><?php echo esc_html( (string) $diluxone_mail_p['name'] ); ?></option>
 					<?php endforeach; ?>
 					</optgroup>
 				</select>
-				<?php if ( ! $diluxone_mail_bloqueado ) : ?>
+				<?php if ( ! $diluxone_mail_locked ) : ?>
 					<?php submit_button( __( 'Use this profile', 'diluxone-mail' ), 'secondary', 'apply', false ); ?>
 				<?php endif; ?>
 				<?php $diluxone_mail_source( array_merge( $data['provider'], array( 'label' => diluxone_mail_source_label( $data['provider']['source'], $data['provider']['origin'] ) ) ) ); ?>
@@ -213,14 +213,14 @@ $diluxone_mail_source = static function ( array $campo ): void {
 			<td>
 				<fieldset>
 					<?php
-					$diluxone_mail_modos = array(
+					$diluxone_mail_modes = array(
 						'auto'      => __( 'Automatic — send only when no other mail plugin is active; otherwise log and diagnose without touching delivery', 'diluxone-mail' ),
 						'transport' => __( 'Always send through this plugin, even if another mail plugin is active', 'diluxone-mail' ),
 						'observe'   => __( 'Never send — only log and diagnose', 'diluxone-mail' ),
 					);
-					foreach ( $diluxone_mail_modos as $diluxone_mail_valor => $diluxone_mail_texto ) :
+					foreach ( $diluxone_mail_modes as $diluxone_mail_value => $diluxone_mail_text ) :
 						?>
-						<label><input type="radio" name="diluxone_mail_mode" value="<?php echo esc_attr( $diluxone_mail_valor ); ?>" <?php checked( $diluxone_mail_f['diluxone_mail_mode']['value'], $diluxone_mail_valor ); ?> <?php disabled( $diluxone_mail_f['diluxone_mail_mode']['readonly'] ); ?>> <?php echo esc_html( $diluxone_mail_texto ); ?></label><br>
+						<label><input type="radio" name="diluxone_mail_mode" value="<?php echo esc_attr( $diluxone_mail_value ); ?>" <?php checked( $diluxone_mail_f['diluxone_mail_mode']['value'], $diluxone_mail_value ); ?> <?php disabled( $diluxone_mail_f['diluxone_mail_mode']['readonly'] ); ?>> <?php echo esc_html( $diluxone_mail_text ); ?></label><br>
 					<?php endforeach; ?>
 				</fieldset>
 				<?php diluxone_mail_forced_notice( 'diluxone_mail_mode' ); ?>

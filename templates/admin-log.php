@@ -1,6 +1,6 @@
 <?php
 /**
- * La vista del historial global.
+ * The view of the global log.
  *
  * @package DiluxOneMail
  * @var array<string, mixed> $data

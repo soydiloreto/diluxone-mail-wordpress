@@ -1,6 +1,6 @@
 <?php
 /**
- * PHPMailer, lo justo para ver qué le configura el transporte.
+ * PHPMailer, just enough to see what the transport configures on it.
  */
 namespace PHPMailer\PHPMailer {
 	if (!class_exists('PHPMailer\PHPMailer\Exception')) {

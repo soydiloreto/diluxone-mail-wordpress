@@ -1,51 +1,51 @@
 <?php
 /**
- * El historial de envíos: sus tablas y cómo se escriben y se leen.
+ * The send log: its tables, and how they are written and read.
  *
- * Tabla propia y no postmeta: esto crece a cientos de miles de filas en un
- * sitio con algo de movimiento, y la tabla de metadatos de WordPress no tiene
- * índice por lo que acá se busca —una dirección de correo y una fecha—.
+ * Its own tables rather than postmeta: this grows to hundreds of thousands of
+ * rows on a site with any traffic, and WordPress's metadata table has no
+ * index on what gets searched here — an email address and a date.
  *
- * Son dos tablas, y conviene entender por qué antes de tocarlas.
+ * There are two tables, and it is worth understanding why before touching
+ * them.
  *
- * La primera guarda UNA FILA POR DESTINATARIO, no por mensaje. Un wp_mail() a
- * tres personas deja tres filas. Parece redundante y es la decisión que hace
- * funcionar todo lo demás:
+ * The first stores ONE ROW PER RECIPIENT, not per message. A wp_mail() to
+ * three people leaves three rows. It looks redundant and it is the decision
+ * that makes everything else work:
  *
- *   - La consulta que importa —«qué se le mandó a esta persona»— queda en un
- *     índice, sin JOIN y sin buscar adentro de un campo con todos los
- *     destinatarios. Es la pantalla que abre alguien de soporte mientras
- *     tiene a la persona esperando del otro lado.
- *   - Quien iba en copia aparece igual. Indexar sólo el primer destinatario
- *     deja afuera a los demás, que también son gente que pregunta.
- *   - Un rebote es de una dirección, no de un mensaje. Cuando entren los
- *     webhooks del proveedor, marcar la fila correcta va a ser un UPDATE por
- *     dirección y no una corrección del modelo de datos.
+ *   - The query that matters — "what was sent to this person" — stays on an
+ *     index, with no JOIN and no searching inside a field holding every
+ *     recipient. It is the screen somebody on support opens while the person
+ *     waits on the other end of the line.
+ *   - Whoever was in copy shows up too. Indexing only the first recipient
+ *     leaves the rest out, and they also ask questions.
+ *   - A bounce belongs to an address, not to a message. When the provider
+ *     webhooks arrive, marking the right row will be an UPDATE by address and
+ *     not a correction of the data model.
  *
- * La segunda guarda el detalle de cada mensaje —el cuerpo, si el sitio lo
- * prendió, y el diálogo SMTP con el proveedor, si prendió el historial
- * extendido—, una fila por mensaje. Está aparte por tres razones: tiene su
- * propia retención —más corta, porque es lo más pesado y lo más sensible—,
- * no se duplica en un envío masivo, y apagarlo es vaciar una tabla y no
- * migrar una columna.
+ * The second stores each message's detail — the body, if the site turned it
+ * on, and the SMTP dialogue with the provider, if it turned the extended log
+ * on — one row per message. It is separate for three reasons: it has its own
+ * retention, shorter, because it is the heaviest and most sensitive thing
+ * stored; it is not duplicated on a bulk send; and turning it off is
+ * emptying a table rather than migrating a column.
  *
- * El índice va por DIRECCIÓN DE CORREO y no por ID de usuario, a propósito:
- * se le manda correo a direcciones que no son de ningún usuario —un
- * formulario de contacto, un aviso al administrador de una tienda— y la gente
- * cambia su dirección. La ficha de una persona busca por la suya de ahora, y
- * por las anteriores si el sitio las conserva.
+ * The index is on the EMAIL ADDRESS and not on a user ID, on purpose: mail
+ * goes to addresses that belong to no user — a contact form, a notice to a
+ * shop's administrator — and people change their address. A person's profile
+ * looks up their current one, and their previous ones if the site keeps them.
  *
- * En una red las tablas son UNA para toda la red —con el prefijo base y una
- * columna site_id— y no una por sitio. Las personas son de la red, no de un
- * sitio: la ficha de alguien tiene que mostrar todo lo que se le mandó desde
- * cualquier sitio, y una tabla por sitio obligaría a recorrerlas todas.
+ * On a network the tables are ONE for the whole network — on the base prefix
+ * and with a site_id column — and not one per site. People belong to the
+ * network, not to a site: somebody's profile has to show everything sent to
+ * them from any site, and one table per site would mean walking all of them.
  *
- * Todo el archivo habla con la base directamente y sin caché, y tiene que ser
- * así: es una tabla propia que la API de WordPress no conoce, y un historial
- * que se cachea es un historial que miente durante el tiempo del caché. Los
- * nombres de las tablas van por el marcador %i de prepare() —WordPress 6.2—,
- * que los entrecomilla como identificadores: por eso el mínimo del plugin es
- * 6.2 y no 6.0.
+ * The whole file talks to the database directly and without caching, and it
+ * has to: these are custom tables the WordPress API knows nothing about, and
+ * a log that is cached is a log that lies for as long as the cache lasts.
+ * Table names go through prepare()'s %i placeholder — WordPress 6.2 — which
+ * quotes them as identifiers: that is why the plugin's minimum is 6.2 and not
+ * 6.0.
  *
  * phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery
  * phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -57,16 +57,16 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * La versión del esquema.
+ * The schema version.
  *
- * Se sube a mano cuando cambia un CREATE TABLE de acá abajo. Es lo que hace
- * que una actualización por FTP o por git —que no dispara la activación—
- * igual cree la columna nueva.
+ * Bumped by hand when a CREATE TABLE below changes. It is what makes an
+ * update over FTP or through git — which never fires activation — create the
+ * new column anyway.
  */
 const DILUXONE_MAIL_DB_VERSION = 2;
 
 /**
- * Los estados que puede tener una fila, con su nombre para la gente.
+ * The states a row can be in, with their human-readable names.
  *
  * @return array<string, string>
  */
@@ -77,22 +77,22 @@ function diluxone_mail_log_statuses(): array {
 		'failed'      => __( 'Failed', 'diluxone-mail' ),
 		'intercepted' => __( 'Handed to another plugin', 'diluxone-mail' ),
 		'suppressed'  => __( 'Not sent (suppressed)', 'diluxone-mail' ),
-		// Los dos de abajo no los escribe nadie todavía: los van a escribir
-		// los webhooks de rebotes. Están en la lista para que la columna ya
-		// tenga su lugar y la pantalla sepa cómo llamarlos.
+		// Nobody writes the two below yet: the bounce webhooks will. They are
+		// on the list so the column already has room for them and the screen
+		// knows what to call them.
 		'bounced'     => __( 'Bounced', 'diluxone-mail' ),
 		'complained'  => __( 'Marked as spam', 'diluxone-mail' ),
 	);
 }
 
-/** El nombre de la tabla del historial. Prefijo base: una por red. */
+/** The log table's name. Base prefix: one per network. */
 function diluxone_mail_log_table(): string {
 	global $wpdb;
 
 	return $wpdb->base_prefix . 'diluxone_mail_log';
 }
 
-/** El nombre de la tabla del detalle de cada mensaje. */
+/** The name of the per-message detail table. */
 function diluxone_mail_detail_table(): string {
 	global $wpdb;
 
@@ -100,13 +100,13 @@ function diluxone_mail_detail_table(): string {
 }
 
 /**
- * Crea o actualiza las tablas.
+ * Creates or updates the tables.
  *
- * Corre en la activación y también en admin_init cuando la versión guardada
- * quedó vieja. dbDelta() es exigente con el formato del SQL —dos espacios
- * después de PRIMARY KEY, el tipo en minúsculas, una definición por renglón—
- * y si no se lo respeta no falla: recrea la tabla en cada carga sin decir
- * nada. El formato de abajo es el que espera.
+ * It runs on activation and also on admin_init when the stored version has
+ * gone stale. dbDelta() is picky about the SQL's formatting — two spaces
+ * after PRIMARY KEY, lower-case types, one definition per line — and when
+ * that is not respected it does not fail: it recreates the table on every
+ * page load without saying a word. The formatting below is what it expects.
  */
 function diluxone_mail_install(): void {
 	global $wpdb;
@@ -117,10 +117,10 @@ function diluxone_mail_install(): void {
 	$log     = diluxone_mail_log_table();
 	$detail  = diluxone_mail_detail_table();
 
-	// 191 y no 255 en las columnas indexadas: en utf8mb4 cada carácter ocupa
-	// hasta cuatro bytes, y el índice de InnoDB en las versiones que todavía
-	// hay dadas vuelta no pasa de 767. 191 × 4 = 764, que entra justo. Es la
-	// misma cuenta que hace WordPress en sus propias tablas.
+	// 191 and not 255 on the indexed columns: in utf8mb4 each character takes
+	// up to four bytes, and InnoDB's index on the versions still out there
+	// does not go past 767. 191 x 4 = 764, which just fits. It is the same
+	// arithmetic WordPress does on its own tables.
 	$sql = "CREATE TABLE {$log} (
 		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 		site_id bigint(20) unsigned NOT NULL DEFAULT 1,
@@ -158,17 +158,19 @@ function diluxone_mail_install(): void {
 	dbDelta( $sql );
 	dbDelta( $sql_detail );
 
-	// La versión va en la red cuando hay red: las tablas son de la red.
+	// The version goes on the network when there is one: the tables belong to
+	// the network.
 	update_site_option( 'diluxone_mail_db_version', DILUXONE_MAIL_DB_VERSION );
 }
 
 /**
- * Crea las tablas cuando el plugin se actualizó sin pasar por la activación.
+ * Creates the tables when the plugin was updated without going through
+ * activation.
  *
- * Una actualización por FTP, por git o por un despliegue automático no
- * dispara register_activation_hook(). Sin esto, la columna que agregue la
- * próxima versión no existe en ninguno de esos sitios, y el primer envío
- * después de actualizar falla con un error de SQL.
+ * An update over FTP, through git or from an automated deploy does not fire
+ * register_activation_hook(). Without this the column the next version adds
+ * does not exist on any of those sites, and the first send after updating
+ * fails with an SQL error.
  */
 function diluxone_mail_maybe_install(): void {
 	if ( (int) get_site_option( 'diluxone_mail_db_version', 0 ) === DILUXONE_MAIL_DB_VERSION ) {
@@ -180,31 +182,31 @@ function diluxone_mail_maybe_install(): void {
 add_action( 'admin_init', 'diluxone_mail_maybe_install' );
 
 /**
- * Escribe las filas de un mensaje: una por destinatario.
+ * Writes a message's rows: one per recipient.
  *
- * @param array<int, array<string, mixed>> $filas
+ * @param array<int, array<string, mixed>> $rows
  */
-function diluxone_mail_log_insert( array $filas ): void {
+function diluxone_mail_log_insert( array $rows ): void {
 	global $wpdb;
 
-	foreach ( $filas as $fila ) {
+	foreach ( $rows as $row ) {
 		$wpdb->insert(
 			diluxone_mail_log_table(),
 			array(
-				'site_id'     => (int) ( $fila['site_id'] ?? get_current_blog_id() ),
-				'sent_at'     => (string) ( $fila['sent_at'] ?? current_time( 'mysql', true ) ),
-				'email'       => (string) $fila['email'],
-				'kind'        => (string) ( $fila['kind'] ?? 'to' ),
-				'from_email'  => (string) ( $fila['from_email'] ?? '' ),
-				'subject'     => (string) ( $fila['subject'] ?? '' ),
-				'status'      => (string) ( $fila['status'] ?? 'pending' ),
-				'error'       => (string) ( $fila['error'] ?? '' ),
-				'response'    => (string) ( $fila['response'] ?? '' ),
-				'provider'    => (string) ( $fila['provider'] ?? '' ),
-				'source'      => (string) ( $fila['source'] ?? '' ),
-				'headers'     => (string) ( $fila['headers'] ?? '' ),
-				'attachments' => (string) ( $fila['attachments'] ?? '' ),
-				'message_id'  => (string) ( $fila['message_id'] ?? '' ),
+				'site_id'     => (int) ( $row['site_id'] ?? get_current_blog_id() ),
+				'sent_at'     => (string) ( $row['sent_at'] ?? current_time( 'mysql', true ) ),
+				'email'       => (string) $row['email'],
+				'kind'        => (string) ( $row['kind'] ?? 'to' ),
+				'from_email'  => (string) ( $row['from_email'] ?? '' ),
+				'subject'     => (string) ( $row['subject'] ?? '' ),
+				'status'      => (string) ( $row['status'] ?? 'pending' ),
+				'error'       => (string) ( $row['error'] ?? '' ),
+				'response'    => (string) ( $row['response'] ?? '' ),
+				'provider'    => (string) ( $row['provider'] ?? '' ),
+				'source'      => (string) ( $row['source'] ?? '' ),
+				'headers'     => (string) ( $row['headers'] ?? '' ),
+				'attachments' => (string) ( $row['attachments'] ?? '' ),
+				'message_id'  => (string) ( $row['message_id'] ?? '' ),
 			),
 			array( '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
 		);
@@ -212,11 +214,11 @@ function diluxone_mail_log_insert( array $filas ): void {
 }
 
 /**
- * Cambia el estado de todas las filas de un mensaje.
+ * Changes the status of every row of a message.
  *
- * El error y la respuesta pasan por diluxone_mail_redact() acá y no en quien
- * llama, porque quien llama es el que se olvida: el texto del error viene del
- * servidor y puede repetir la credencial que rechazó.
+ * The error and the response go through diluxone_mail_redact() here and not
+ * in the caller, because the caller is the one who forgets: the error text
+ * comes from the server and may repeat the credential it rejected.
  */
 function diluxone_mail_log_set_status( string $message_id, string $status, string $error = '', string $response = '' ): void {
 	global $wpdb;
@@ -239,13 +241,13 @@ function diluxone_mail_log_set_status( string $message_id, string $status, strin
 }
 
 /**
- * Filas del historial, filtradas y paginadas.
+ * Log rows, filtered and paginated.
  *
  * @param array<string, mixed> $args
- *        emails:   array<string>  sólo estas direcciones (la ficha de una persona).
- *        status:   string         sólo este estado.
- *        search:   string         texto libre en asunto o dirección.
- *        site_id:  int|null       sólo este sitio; null = toda la red.
+ *        emails:   array<string>  only these addresses (a person's profile).
+ *        status:   string         only this status.
+ *        search:   string         free text in subject or address.
+ *        site_id:  int|null       only this site; null = the whole network.
  *        page:     int
  *        per_page: int
  * @return array{rows: array<int, array<string, mixed>>, total: int}
@@ -286,19 +288,23 @@ function diluxone_mail_log_query( array $args = array() ): array {
 		$params[] = (int) $site_id;
 	}
 
-	$tabla = diluxone_mail_log_table();
+	$table = diluxone_mail_log_table();
 	$sql   = 'WHERE ' . implode( ' AND ', $where );
 
-	// El nombre de la tabla va por %i, que prepare() entrecomilla como
-	// identificador. $sql se arma sólo con marcadores y $params los llena.
-	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $sql son marcadores; los valores van en $params.
-	$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i {$sql}", array_merge( array( $tabla ), $params ) ) );
+	// The table name goes through %i, which prepare() quotes as an
+	// identifier. $sql is the only part built at run time, and it is built
+	// exclusively from literals written above and placeholders: not one value
+	// from anybody enters the string, they all travel in $params and
+	// prepare() puts them in. The sniffs cannot follow that — they see an
+	// implode() and warn — so they are switched off by name, with the reason.
+	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, PluginCheck.Security.DirectDB.UnescapedDBParameter
+	$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i {$sql}", array_merge( array( $table ), $params ) ) );
 
 	$params[] = $per_page;
 	$params[] = ( $page - 1 ) * $per_page;
 
 	$rows = $wpdb->get_results(
-		$wpdb->prepare( "SELECT * FROM %i {$sql} ORDER BY sent_at DESC, id DESC LIMIT %d OFFSET %d", array_merge( array( $tabla ), $params ) ),
+		$wpdb->prepare( "SELECT * FROM %i {$sql} ORDER BY sent_at DESC, id DESC LIMIT %d OFFSET %d", array_merge( array( $table ), $params ) ),
 		ARRAY_A
 	);
 	// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
@@ -310,7 +316,7 @@ function diluxone_mail_log_query( array $args = array() ): array {
 }
 
 /**
- * Una fila por su id.
+ * One row, by its id.
  *
  * @return array<string, mixed>|null
  */
@@ -323,7 +329,7 @@ function diluxone_mail_log_get( int $id ): ?array {
 }
 
 /**
- * Todas las filas de un mismo mensaje: cada destinatario con su estado.
+ * Every row of the same message: each recipient with their status.
  *
  * @return array<int, array<string, mixed>>
  */
@@ -336,7 +342,7 @@ function diluxone_mail_log_recipients_of( string $message_id ): array {
 }
 
 /**
- * Cuántos envíos tiene una dirección. Para la ficha de la persona.
+ * How many sends an address has. For a person's profile.
  *
  * @param array<int, string> $emails
  */
@@ -351,60 +357,61 @@ function diluxone_mail_log_count( array $emails ): int {
 }
 
 /**
- * Cuántas filas hay por estado. Para la pantalla de estado.
+ * How many rows there are per status. For the status screen.
  *
  * @return array<string, int>
  */
 function diluxone_mail_log_totals( ?int $site_id ): array {
 	global $wpdb;
 
-	$tabla = diluxone_mail_log_table();
+	$table = diluxone_mail_log_table();
 
 	$rows = null === $site_id
-		? $wpdb->get_results( $wpdb->prepare( 'SELECT status, COUNT(*) AS n FROM %i GROUP BY status', $tabla ), ARRAY_A )
-		: $wpdb->get_results( $wpdb->prepare( 'SELECT status, COUNT(*) AS n FROM %i WHERE site_id = %d GROUP BY status', $tabla, $site_id ), ARRAY_A );
+		? $wpdb->get_results( $wpdb->prepare( 'SELECT status, COUNT(*) AS n FROM %i GROUP BY status', $table ), ARRAY_A )
+		: $wpdb->get_results( $wpdb->prepare( 'SELECT status, COUNT(*) AS n FROM %i WHERE site_id = %d GROUP BY status', $table, $site_id ), ARRAY_A );
 
-	$salida = array();
+	$out = array();
 
 	foreach ( is_array( $rows ) ? $rows : array() as $row ) {
-		$salida[ (string) $row['status'] ] = (int) $row['n'];
+		$out[ (string) $row['status'] ] = (int) $row['n'];
 	}
 
-	return $salida;
+	return $out;
 }
 
 /**
- * Guarda o completa el detalle de un mensaje.
+ * Stores or completes a message's detail.
  *
- * Se escribe en dos momentos —el cuerpo al anotar, el diálogo SMTP al
- * terminar— así que lo que llega se funde con lo que ya había.
+ * It is written at two moments — the body when the send is recorded, the SMTP
+ * dialogue when it finishes — so whatever arrives is merged with what was
+ * already there.
  *
- * @param array{body?: string, body_type?: string, transcript?: string} $campos
+ * @param array{body?: string, body_type?: string, transcript?: string} $fields
  */
-function diluxone_mail_detail_save( string $message_id, array $campos ): void {
+function diluxone_mail_detail_save( string $message_id, array $fields ): void {
 	global $wpdb;
 
 	if ( '' === $message_id ) {
 		return;
 	}
 
-	$actual = diluxone_mail_detail_get( $message_id );
+	$current = diluxone_mail_detail_get( $message_id );
 
 	$wpdb->replace(
 		diluxone_mail_detail_table(),
 		array(
 			'message_id' => $message_id,
 			'created_at' => current_time( 'mysql', true ),
-			'body'       => (string) ( $campos['body'] ?? $actual['body'] ?? '' ),
-			'body_type'  => (string) ( $campos['body_type'] ?? $actual['body_type'] ?? 'text/plain' ),
-			'transcript' => diluxone_mail_redact( (string) ( $campos['transcript'] ?? $actual['transcript'] ?? '' ) ),
+			'body'       => (string) ( $fields['body'] ?? $current['body'] ?? '' ),
+			'body_type'  => (string) ( $fields['body_type'] ?? $current['body_type'] ?? 'text/plain' ),
+			'transcript' => diluxone_mail_redact( (string) ( $fields['transcript'] ?? $current['transcript'] ?? '' ) ),
 		),
 		array( '%s', '%s', '%s', '%s', '%s' )
 	);
 }
 
 /**
- * El detalle de un mensaje, si se guardó algo.
+ * A message's detail, if anything was stored.
  *
  * @return array{body: string, body_type: string, transcript: string}|null
  */
@@ -425,44 +432,44 @@ function diluxone_mail_detail_get( string $message_id ): ?array {
 }
 
 /**
- * Borra lo que venció, según las retenciones configuradas.
+ * Deletes what has expired, according to the configured retention.
  *
- * El detalle primero y con su propia fecha, que es más corta. Y si no hay
- * nada que lo justifique —ni cuerpo ni historial extendido prendidos— se
- * vacía la tabla entera: un cuerpo guardado cuando la casilla estaba
- * prendida no tiene por qué sobrevivir a que la apaguen.
+ * The detail first and with its own, shorter date. And if nothing justifies
+ * keeping it — neither the body nor the extended log is on — the whole table
+ * is emptied: a body stored while the checkbox was on has no business
+ * surviving somebody turning it off.
  *
  * @return array{log: int, details: int}
  */
 function diluxone_mail_log_purge(): array {
 	global $wpdb;
 
-	$dias_log     = max( 1, (int) diluxone_mail_option( 'diluxone_mail_log_retention_days' ) );
-	$dias_detalle = max( 1, (int) diluxone_mail_option( 'diluxone_mail_log_detail_retention_days' ) );
-	$log          = diluxone_mail_log_table();
-	$detail       = diluxone_mail_detail_table();
-	$guarda_algo  = (bool) diluxone_mail_option( 'diluxone_mail_log_body' ) || (bool) diluxone_mail_option( 'diluxone_mail_log_extended' );
+	$log_days    = max( 1, (int) diluxone_mail_option( 'diluxone_mail_log_retention_days' ) );
+	$detail_days = max( 1, (int) diluxone_mail_option( 'diluxone_mail_log_detail_retention_days' ) );
+	$log         = diluxone_mail_log_table();
+	$detail      = diluxone_mail_detail_table();
+	$keeps_any   = (bool) diluxone_mail_option( 'diluxone_mail_log_body' ) || (bool) diluxone_mail_option( 'diluxone_mail_log_extended' );
 
-	$detalles = $guarda_algo
-		? (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s', $detail, gmdate( 'Y-m-d H:i:s', time() - $dias_detalle * DAY_IN_SECONDS ) ) )
+	$details = $keeps_any
+		? (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s', $detail, gmdate( 'Y-m-d H:i:s', time() - $detail_days * DAY_IN_SECONDS ) ) )
 		: (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i', $detail ) );
 
-	$filas = (int) $wpdb->query(
-		$wpdb->prepare( 'DELETE FROM %i WHERE sent_at < %s', $log, gmdate( 'Y-m-d H:i:s', time() - $dias_log * DAY_IN_SECONDS ) )
+	$rows = (int) $wpdb->query(
+		$wpdb->prepare( 'DELETE FROM %i WHERE sent_at < %s', $log, gmdate( 'Y-m-d H:i:s', time() - $log_days * DAY_IN_SECONDS ) )
 	);
 
 	return array(
-		'log'     => $filas,
-		'details' => $detalles,
+		'log'     => $rows,
+		'details' => $details,
 	);
 }
 
 /**
- * Borra todo lo de una dirección. Para el borrador de datos personales.
+ * Deletes everything belonging to one address. For the personal-data eraser.
  *
- * El detalle de los mensajes que sólo iban a esa persona se va también; el
- * de un mensaje que iba a más gente se queda, porque es de los otros
- * destinatarios tanto como de ella.
+ * The detail of messages that went only to that person goes too; the detail
+ * of a message that went to more people stays, because it belongs to the
+ * other recipients as much as to them.
  */
 function diluxone_mail_log_delete_by_email( string $email ): int {
 	global $wpdb;
@@ -489,7 +496,7 @@ function diluxone_mail_log_delete_by_email( string $email ): int {
 		)
 	);
 
-	$borradas = (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE email = %s', $log, $email ) );
+	$deleted = (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE email = %s', $log, $email ) );
 
-	return $borradas;
+	return $deleted;
 }

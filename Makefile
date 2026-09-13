@@ -76,10 +76,10 @@ update: ## Update dev dependencies (composer update).
 # -- Linting / static analysis ----------------------------------------
 .PHONY: lint
 lint: ## PHPCS + WordPress Coding Standards.
-	# --no-cache a propósito: PHPCS cachea por archivo y, cuando un archivo
-	# vuelve a un contenido que ya analizó, responde con el resultado viejo.
-	# Eso da verde en local mientras el CI —que siempre arranca limpio— está
-	# en rojo, y se pierde media hora buscando la diferencia.
+	# --no-cache on purpose: PHPCS caches per file and, when a file goes back to
+	# content it has already analysed, answers with the old result. That is
+	# green locally while CI — which always starts clean — is red, and half an
+	# hour goes into finding the difference.
 	$(VENDOR) ./vendor/bin/phpcs --no-cache
 
 .PHONY: lint-fix
@@ -144,6 +144,27 @@ else
 endif
 	tests/coverage-gate.sh build/clover.xml $(COVERAGE_MIN)
 
+# -- wp.org Plugin Check -----------------------------------------------
+# The same checks the plugin directory runs on submission. Checking the working
+# tree would report the tooling that never ships — .distignore itself, the
+# workflows, phpstan-bootstrap.php — so what gets checked is the zip's contents,
+# assembled into a folder of its own and copied next to the mounted repo inside
+# the container. --slug is passed because that folder is not named diluxone-mail
+# and every check would otherwise report a wrong folder name. This is what
+# pr-checks.yml does in CI.
+SHIP_DIR := /var/www/html/wp-content/plugins/diluxone-mail-ship
+
+.PHONY: plugin-check
+plugin-check: ## Run the official wp.org Plugin Check against the plugin as it ships.
+	rm -rf build/diluxone-mail
+	mkdir -p build/diluxone-mail
+	rsync -a --delete --exclude-from=.distignore --exclude='.git' --exclude='build' ./ build/diluxone-mail/
+	npx wp-env run tests-cli wp plugin install plugin-check --activate
+	npx wp-env run tests-cli sh -c "rm -rf $(SHIP_DIR) && cp -r /var/www/html/wp-content/plugins/diluxone-mail/build/diluxone-mail $(SHIP_DIR)"
+	-npx wp-env run tests-cli wp plugin check diluxone-mail-ship --slug=diluxone-mail
+	npx wp-env run tests-cli sh -c "rm -rf $(SHIP_DIR)"
+	rm -rf build/diluxone-mail
+
 # -- Aggregate ---------------------------------------------------------
 .PHONY: check
 check: lint stan psalm test coverage ## Run every quality gate CI runs (lint, stan, psalm, unit tests, coverage gate).
@@ -178,7 +199,7 @@ env-reset: ## Reset the wp-env tests site to a fresh single-site install (undoes
 	-npx wp-env run tests-cli wp config delete BLOG_ID_CURRENT_SITE >/dev/null 2>&1
 	-npx wp-env run tests-cli wp config delete WP_ALLOW_MULTISITE >/dev/null 2>&1
 	npx wp-env clean tests
-	# wp-env 11 resetea la base pero no siempre vuelve a instalar WordPress.
+	# wp-env 11 resets the database but does not always reinstall WordPress.
 	npx wp-env run tests-cli wp core is-installed >/dev/null 2>&1 || npx wp-env run tests-cli wp core install --url=http://localhost:8891 --title=Tests --admin_user=admin --admin_password=password --admin_email=admin@example.test --skip-email
 
 # -- Deploy / release --------------------------------------------------
