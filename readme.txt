@@ -101,10 +101,12 @@ No, and it never will. It connects to the provider you already have.
 
 == Screenshots ==
 
-1. Provider settings, showing which values come from the environment.
-2. The mail history of a single person, on their user profile.
-3. The DNS diagnosis: SPF lookup count, DKIM selectors and DMARC policy.
-4. Status: active profile, detected environment and observer mode.
+1. Every message sent to one person, on their own user profile, with a resend button.
+2. The deliverability diagnosis in prose: SPF lookup count, DKIM selectors and DMARC policy, each with what it means.
+3. The mail log: one row per recipient, filterable by status, with the real SMTP error on a failure.
+4. One message in full — recipients, headers, body and the SMTP conversation that delivered it.
+5. Provider settings. Picking a profile fills in host, port and encryption; values the environment sets are read-only.
+6. Status: who sends the mail, where each value comes from, and what happened on the last send.
 
 == Changelog ==
 

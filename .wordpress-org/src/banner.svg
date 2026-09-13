@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1544 500" width="1544" height="500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FDFCFA"/>
+      <stop offset="55%" stop-color="#FAFBFD"/>
+      <stop offset="100%" stop-color="#F6F8FB"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F7FAFD"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1544" height="500" fill="url(#bg)"/>
+
+  <!-- ── Background: faint envelopes, the way the offload banner has faint clouds ── -->
+  <g fill="none" stroke="#EDF2F7" stroke-width="7" stroke-linejoin="round">
+    <g transform="translate(90 70) rotate(-8)">
+      <rect x="0" y="0" width="180" height="120" rx="16"/>
+      <path d="M0 14 L90 80 L180 14"/>
+    </g>
+    <g transform="translate(1358 60) rotate(9)">
+      <rect x="0" y="0" width="176" height="116" rx="16"/>
+      <path d="M0 13 L88 77 L176 13"/>
+    </g>
+  </g>
+
+  <!-- ── Corner leaves: slim blades, tucked below the panels ── -->
+  <g fill="#E6EEF7" stroke="#DCE7F2" stroke-width="2">
+    <g transform="translate(96 500)">
+      <path d="M0 0 C-8 -52 10 -98 46 -124 C44 -72 28 -34 4 0 Z"/>
+      <path d="M46 -124 C30 -86 16 -44 4 0" fill="none" stroke="#D5E2EF" stroke-width="2.4"/>
+      <path d="M46 0 C44 -40 62 -76 100 -96 C86 -58 68 -26 50 0 Z"/>
+      <path d="M100 -96 C80 -66 64 -34 50 0" fill="none" stroke="#D5E2EF" stroke-width="2.4"/>
+    </g>
+    <g transform="translate(1448 500) scale(-1 1)">
+      <path d="M0 0 C-8 -52 10 -98 46 -124 C44 -72 28 -34 4 0 Z"/>
+      <path d="M46 -124 C30 -86 16 -44 4 0" fill="none" stroke="#D5E2EF" stroke-width="2.4"/>
+      <path d="M46 0 C44 -40 62 -76 100 -96 C86 -58 68 -26 50 0 Z"/>
+      <path d="M100 -96 C80 -66 64 -34 50 0" fill="none" stroke="#D5E2EF" stroke-width="2.4"/>
+    </g>
+  </g>
+
+  <!-- ══ LEFT: the site, and the people it writes to ══ -->
+  <g transform="translate(214 132)">
+    <rect x="0" y="0" width="356" height="236" rx="18" fill="url(#panel)" stroke="#CBD9E7" stroke-width="3"/>
+    <path d="M0 40 H356" stroke="#CBD9E7" stroke-width="3"/>
+    <g fill="#D5E1EE">
+      <circle cx="26" cy="20" r="6"/><circle cx="48" cy="20" r="6"/><circle cx="70" cy="20" r="6"/>
+    </g>
+
+    <!-- One row per person: avatar, name, and the messages they were sent -->
+    <g>
+      <circle cx="42" cy="82" r="17" fill="#E7EEF6"/>
+      <rect x="72" y="70" width="104" height="11" rx="5.5" fill="#DCE6F0"/>
+      <rect x="72" y="89" width="152" height="9" rx="4.5" fill="#E8EFF6"/>
+      <rect x="252" y="74" width="86" height="20" rx="10" fill="#EAF3FF" stroke="#CFE2FA" stroke-width="2"/>
+      <path d="M264 80 h20 v11 h-20 z M264 80 l10 7 l10 -7" fill="none" stroke="#9FC6F2" stroke-width="2.4" stroke-linejoin="round"/>
+      <rect x="292" y="81" width="34" height="7" rx="3.5" fill="#CFE2FA"/>
+    </g>
+    <g>
+      <circle cx="42" cy="140" r="17" fill="#E7EEF6"/>
+      <rect x="72" y="128" width="128" height="11" rx="5.5" fill="#DCE6F0"/>
+      <rect x="72" y="147" width="118" height="9" rx="4.5" fill="#E8EFF6"/>
+      <rect x="252" y="132" width="86" height="20" rx="10" fill="#EAF3FF" stroke="#CFE2FA" stroke-width="2"/>
+      <path d="M264 138 h20 v11 h-20 z M264 138 l10 7 l10 -7" fill="none" stroke="#9FC6F2" stroke-width="2.4" stroke-linejoin="round"/>
+      <rect x="292" y="139" width="34" height="7" rx="3.5" fill="#CFE2FA"/>
+    </g>
+    <g>
+      <circle cx="42" cy="198" r="17" fill="#E7EEF6"/>
+      <rect x="72" y="186" width="92" height="11" rx="5.5" fill="#DCE6F0"/>
+      <rect x="72" y="205" width="140" height="9" rx="4.5" fill="#E8EFF6"/>
+      <rect x="252" y="190" width="86" height="20" rx="10" fill="#EAF3FF" stroke="#CFE2FA" stroke-width="2"/>
+      <path d="M264 196 h20 v11 h-20 z M264 196 l10 7 l10 -7" fill="none" stroke="#9FC6F2" stroke-width="2.4" stroke-linejoin="round"/>
+      <rect x="292" y="197" width="34" height="7" rx="3.5" fill="#CFE2FA"/>
+    </g>
+  </g>
+
+  <!-- ── Dotted run in ── -->
+  <g fill="#B9CFE6">
+    <circle cx="608" cy="250" r="6"/><circle cx="634" cy="250" r="6"/><circle cx="660" cy="250" r="6"/>
+    <circle cx="686" cy="250" r="6"/><circle cx="712" cy="250" r="6"/>
+  </g>
+
+  <!-- ══ CENTRE: the message going out — the one accent of real colour ══ -->
+  <g transform="translate(772 250)">
+    <circle cx="0" cy="0" r="58" fill="#FFFFFF" stroke="#E2EAF3" stroke-width="3"/>
+    <g transform="translate(-31 -22)" fill="none" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="0" y="0" width="62" height="44" rx="8" fill="#EAF3FF" stroke="#3F8FE8" stroke-width="4.5"/>
+      <path d="M0 7 L31 30 L62 7" stroke="#F59321" stroke-width="4.5"/>
+    </g>
+  </g>
+
+  <!-- ── Dotted run out ── -->
+  <g fill="#F3C48A">
+    <circle cx="832" cy="250" r="6"/><circle cx="858" cy="250" r="6"/><circle cx="884" cy="250" r="6"/>
+    <circle cx="910" cy="250" r="6"/><circle cx="936" cy="250" r="6"/>
+  </g>
+
+  <!-- ══ RIGHT: what decides whether it arrives ══ -->
+  <g transform="translate(978 128)">
+    <rect x="0" y="0" width="330" height="244" rx="20" fill="url(#panel)" stroke="#CBD9E7" stroke-width="3"/>
+
+    <!-- SPF, DKIM, DMARC — each checked -->
+    <g>
+      <rect x="26" y="34" width="278" height="52" rx="12" fill="#F4F9FF" stroke="#DCE8F5" stroke-width="2.5"/>
+      <circle cx="58" cy="60" r="15" fill="#EAF6EE" stroke="#AFD9C0" stroke-width="2.5"/>
+      <path d="M51 60 l5 5 l9 -11" fill="none" stroke="#56A97A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="88" y="47" width="74" height="11" rx="5.5" fill="#CBDCEC"/>
+      <rect x="88" y="65" width="160" height="8" rx="4" fill="#E3EDF7"/>
+    </g>
+    <g>
+      <rect x="26" y="96" width="278" height="52" rx="12" fill="#F4F9FF" stroke="#DCE8F5" stroke-width="2.5"/>
+      <circle cx="58" cy="122" r="15" fill="#EAF6EE" stroke="#AFD9C0" stroke-width="2.5"/>
+      <path d="M51 122 l5 5 l9 -11" fill="none" stroke="#56A97A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="88" y="109" width="90" height="11" rx="5.5" fill="#CBDCEC"/>
+      <rect x="88" y="127" width="138" height="8" rx="4" fill="#E3EDF7"/>
+    </g>
+    <g>
+      <rect x="26" y="158" width="278" height="52" rx="12" fill="#FFFBF3" stroke="#F0E2CB" stroke-width="2.5"/>
+      <circle cx="58" cy="184" r="15" fill="#FFF6E6" stroke="#EFD5A3" stroke-width="2.5"/>
+      <path d="M58 177 v8" stroke="#D99B2B" stroke-width="3.4" stroke-linecap="round"/>
+      <circle cx="58" cy="191" r="2" fill="#D99B2B"/>
+      <rect x="88" y="171" width="106" height="11" rx="5.5" fill="#E0D3BC"/>
+      <rect x="88" y="189" width="120" height="8" rx="4" fill="#F2E8D8"/>
+    </g>
+  </g>
+</svg>

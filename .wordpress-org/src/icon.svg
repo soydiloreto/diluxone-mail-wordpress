@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <rect width="256" height="256" fill="#ffffff"/>
+  <g transform="translate(128 132) scale(0.88) translate(-128 -132)">
+    <g fill="none" stroke="#1a1a1a" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Envelope -->
+      <rect x="20" y="54" width="168" height="124" rx="18" fill="#4A9EFF"/>
+      <path d="M20 72 L104 134 L188 72"/>
+      <!-- Magnifier handle, drawn first so the ring sits on top -->
+      <path d="M206 196 L238 228" stroke="#FF8A00" stroke-width="34"/>
+      <path d="M206 196 L238 228"/>
+      <!-- Magnifier ring -->
+      <circle cx="176" cy="166" r="48" fill="#FFC93C"/>
+    </g>
+  </g>
+</svg>
