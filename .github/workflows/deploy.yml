@@ -1,0 +1,157 @@
+name: Deploy to WordPress.org
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  deploy:
+    name: Deploy to wp.org SVN
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Validate tag format (SemVer X.Y.Z, no 'v' prefix)
+        # First-line of defence on what reaches wp.org. Tags must be bare
+        # SemVer (e.g. 1.1.0, 2.0.4) — no 'v' prefix, no pre-release suffixes.
+        # If the maintainer ever fat-fingers a tag (`v1.1.0`, `1.10`,
+        # `1.1.0-beta`, etc.), this fails fast BEFORE any SVN operation.
+        #
+        # This complements the repository tag-protection ruleset (no delete,
+        # no force-update). The format enforcement is here rather than in the
+        # ruleset because the `tag_name_pattern` rule type is not currently
+        # available via the GitHub REST API on this account; a CI check is
+        # the equivalent guard.
+        run: |
+          set -e
+          tag="${GITHUB_REF#refs/tags/}"
+          echo "Tag pushed: ${tag}"
+          if ! [[ "${tag}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '${tag}' does not match the required SemVer format X.Y.Z (no 'v' prefix, no pre-release suffix)."
+            echo "::error::Examples of valid tags: 1.1.0, 2.0.4, 10.0.1"
+            echo "::error::Examples of REJECTED tags: v1.1.0, 1.10, 1.0, 1.0.0-beta, 1.0.0+build.1"
+            echo "::error::To fix: delete this tag locally (git tag -d ${tag}) and on origin (git push --delete origin ${tag}), then re-tag with the correct format."
+            exit 1
+          fi
+          echo "Tag format OK."
+
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check the wp.org credentials are configured
+        # Until the Plugin Review team approves the plugin there is no SVN
+        # repository to push to, and the secrets below cannot exist yet (see
+        # "First-time submission to wp.org" in docs/release.md). A tag pushed
+        # during that window would otherwise get all the way into the deploy
+        # action and fail there on an SVN error that says nothing about why.
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        run: |
+          set -e
+          if [ -z "${SVN_USERNAME}" ] || [ -z "${SVN_PASSWORD}" ]; then
+            echo "::error::SVN_USERNAME / SVN_PASSWORD are not set in the repository secrets, so there is nothing to deploy to."
+            echo "::error::If the plugin has not been approved by the wp.org Plugin Review team yet, this tag is premature: no SVN repository exists until approval. Delete it (git tag -d TAG && git push --delete origin TAG) and tag again after approval."
+            echo "::error::If it HAS been approved, add both secrets — see 'Required secrets' in docs/release.md."
+            exit 1
+          fi
+          echo "wp.org credentials present."
+
+      - name: Validate Stable tag === PHP Version (STRICT, no -dev suffix)
+        # On main between releases the plugin's PHP Version: header carries
+        # a -dev suffix (e.g. `1.1.0-dev`) while readme.txt's Stable tag
+        # holds the last-published version. That asymmetry is fine for PRs:
+        # pr-checks.yml only requires the base version to be at or ahead of
+        # Stable tag while a suffix is present. AT TAG TIME however, wp.org
+        # and Plugin Check require exact equality. This step enforces the
+        # strict alignment so a release never gets pushed to SVN with a
+        # mismatch — preventing the wp.org listing showing a stale
+        # "current version".
+        run: |
+          set -e
+          tag="${GITHUB_REF#refs/tags/}"
+          stable_tag=$(grep -oP '^Stable tag:\s*\K\S+' readme.txt)
+          php_version=$(grep -oP '^\s*\*\s*Version:\s*\K\S+' diluxone-mail.php)
+          define_version=$(grep -oP "DILUXONE_MAIL_VERSION',\s*'\K[^']+" diluxone-mail.php)
+
+          echo "Tag being deployed:          ${tag}"
+          echo "readme.txt Stable tag:       ${stable_tag}"
+          echo "PHP file Version header:     ${php_version}"
+          echo "PHP file DILUXONE_MAIL_VERSION:   ${define_version}"
+
+          fail=0
+          if [ "${stable_tag}" != "${tag}" ]; then
+            echo "::error::Stable tag (${stable_tag}) does not match the git tag (${tag}). Update readme.txt's 'Stable tag:' header to ${tag} before tagging."
+            fail=1
+          fi
+          if [ "${php_version}" != "${tag}" ]; then
+            echo "::error file=diluxone-mail.php::PHP Version header (${php_version}) does not match the git tag (${tag}). Drop any -dev/-alpha/-rc suffix and update Version: to ${tag} before tagging."
+            fail=1
+          fi
+          if [ "${define_version}" != "${tag}" ]; then
+            echo "::error file=diluxone-mail.php::DILUXONE_MAIL_VERSION constant (${define_version}) does not match the git tag (${tag}). Update the constant to ${tag} before tagging."
+            fail=1
+          fi
+          if [ "${fail}" -ne 0 ]; then
+            echo "::error::Aborting deploy. The release-prep PR must drop pre-release suffixes from PHP and align all three version markers (Stable tag, Version, DILUXONE_MAIL_VERSION) to the tag value."
+            exit 1
+          fi
+
+          echo "All version markers aligned at ${tag}. Proceeding with SVN deploy."
+
+      - name: Cut the release notes from the readme changelog
+        # readme.txt's `= X.Y.Z =` block is the description of the release
+        # that already had to be written for wp.org; the GitHub release body
+        # is the same text rather than a second one kept in parallel.
+        # pr-checks.yml has already required the block to exist on the
+        # release-prep PR, so a missing one here means the tag does not point
+        # at the state that was reviewed.
+        run: |
+          set -e
+          tag="${GITHUB_REF#refs/tags/}"
+          mkdir -p build
+          awk -v tag="${tag}" '
+            $0 ~ "^=[[:space:]]*" tag "[[:space:]]*=" { inside = 1; next }
+            inside && /^=/ { exit }
+            inside { print }
+          ' readme.txt | sed -e '/./,$!d' > build/release-notes.md
+
+          if [ ! -s build/release-notes.md ]; then
+            echo "::error file=readme.txt::No changelog entry for ${tag}. Add a '= ${tag} =' section under '== Changelog ==' before tagging."
+            exit 1
+          fi
+
+          echo "Release notes for ${tag}:"
+          cat build/release-notes.md
+
+      - name: Keep the artwork sources out of the SVN assets upload
+        # The action uploads everything under .wordpress-org/ to SVN
+        # `assets/`, and it has no .assetsignore equivalent — only
+        # .distignore, which governs the zip. .wordpress-org/src/ holds the
+        # SVGs the icon and banner are rendered from and the script that
+        # captures the screenshots; wp.org has no use for any of it. Removing
+        # it from the runner's checkout leaves the repository untouched.
+        run: rm -rf .wordpress-org/src
+
+      - name: WordPress Plugin Deploy
+        id: deploy
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        with:
+          generate-zip: true
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          # The action defaults SLUG to the repository name. This repository is
+          # diluxone-mail-wordpress and the wordpress.org slug is diluxone-mail,
+          # so without this the deploy would target the wrong (non-existent)
+          # SVN path.
+          SLUG: diluxone-mail
+
+      - name: Publish the GitHub release
+        uses: softprops/action-gh-release@v3
+        with:
+          body_path: build/release-notes.md
+          # The zip the action builds from SVN trunk: the same bytes wp.org
+          # serves, for anyone installing from GitHub instead.
+          files: ${{ steps.deploy.outputs.zip-path }}

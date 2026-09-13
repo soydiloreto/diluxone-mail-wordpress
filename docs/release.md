@@ -68,7 +68,7 @@ Once the work for the next version is merged into `main` and CI is green:
 6. **The deploy workflow takes it from there.** [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) fires on tag push; it does:
    - Strict tag-format validation (`^[0-9]+\.[0-9]+\.[0-9]+$`).
    - Strict version-alignment of all three markers — PHP `Version:`, `DILUXONE_MAIL_VERSION`, readme `Stable tag:` — against the git tag.
-   - [`10up/action-wordpress-plugin-deploy@stable`](https://github.com/10up/action-wordpress-plugin-deploy) to push `/trunk` and tag `/tags/X.Y.Z` on the wp.org SVN, and to upload `.wordpress-org/` assets to the SVN `/assets/` directory.
+   - [`10up/action-wordpress-plugin-deploy@stable`](https://github.com/10up/action-wordpress-plugin-deploy) to push `/trunk` and tag `/tags/X.Y.Z` on the wp.org SVN, and to upload `.wordpress-org/` assets to the SVN `/assets/` directory. The action has no `.assetsignore` equivalent, so the workflow deletes `.wordpress-org/src/` from its checkout first — the artwork sources are not listing assets.
    - Generate the GitHub release with the changelog excerpt as the body.
 
 7. **Verify on wp.org** within ~10 minutes. The new version should appear at `https://wordpress.org/plugins/diluxone-mail/`. wp.org does not run automated rollouts — sites with auto-update enabled pick it up over the next ~12 hours via the WordPress core update check.
@@ -98,4 +98,4 @@ For the GitHub side, you can delete a Release and its Git tag, but only do so if
 
 ## First-time submission to wp.org
 
-Different from a normal release. You submit the plugin once at <https://wordpress.org/plugins/developers/add/> and wait for the WordPress.org Plugin Review team to approve. Until they do, **do not push tags** — there's no SVN repo to push to yet, and the deploy workflow will fail. After approval the wp.org SVN repo is provisioned and from then on the normal tag-driven release flow works.
+Different from a normal release. You submit the plugin once at <https://wordpress.org/plugins/developers/add/> and wait for the WordPress.org Plugin Review team to approve. Until they do, **do not push tags** — there's no SVN repo to push to yet. The `SVN_USERNAME` / `SVN_PASSWORD` secrets cannot exist either, so a tag pushed in that window fails on the workflow's credentials check, before anything is built or uploaded. After approval the wp.org SVN repo is provisioned and from then on the normal tag-driven release flow works.

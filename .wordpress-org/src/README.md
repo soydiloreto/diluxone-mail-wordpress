@@ -48,5 +48,7 @@ and again with `PHASE=b` once the site is switched to the provider profile.
 The numbering is deliberate and matches readme.txt: the two things no other
 plugin does come first.
 
-Everything in this directory is excluded from the plugin zip by `.distignore`.
-The deploy action uploads it to SVN `assets/` on its own.
+The whole `.wordpress-org/` directory is excluded from the plugin zip by
+`.distignore`; the deploy workflow uploads it to SVN `assets/` on its own. This
+`src/` folder is the exception on both counts — it is the source material, not a
+listing asset, so `deploy.yml` removes it from its checkout before the upload.

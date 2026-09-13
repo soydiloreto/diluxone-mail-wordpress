@@ -112,3 +112,8 @@ No, and it never will. It connects to the provider you already have.
 
 = 1.0.0 =
 * Initial release.
+
+== Upgrade Notice ==
+
+= 1.0.0 =
+First public release.
