@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-13T22:46:28+00:00\n"
+"POT-Creation-Date: 2026-09-13T23:07:23+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -45,7 +45,8 @@ msgid "Pablo Ariel Di Loreto"
 msgstr "Pablo Ariel Di Loreto"
 
 #: includes/admin-dns.php:16 includes/admin.php:69
-#: templates/admin-overview.php:175 templates/admin-overview.php:222
+#: templates/admin-overview.php:59 templates/admin-overview.php:231
+#: templates/admin-overview.php:280
 msgid "Deliverability"
 msgstr "Entregabilidad"
 
@@ -56,8 +57,8 @@ msgid "You are not allowed to do this."
 msgstr "No tenés permiso para hacer esto."
 
 #: includes/admin-log.php:27 includes/admin.php:68
-#: templates/admin-overview.php:171 templates/admin-status.php:96
-#: templates/settings-logging.php:24
+#: templates/admin-overview.php:58 templates/admin-overview.php:211
+#: templates/admin-status.php:96 templates/settings-logging.php:24
 msgid "Mail log"
 msgstr "Historial de correo"
 
@@ -78,6 +79,7 @@ msgid "Overview"
 msgstr "Resumen"
 
 #: includes/admin-settings.php:129 includes/admin.php:67
+#: templates/admin-overview.php:56
 msgid "Settings"
 msgstr "Ajustes"
 
@@ -741,7 +743,7 @@ msgstr "Filtrar"
 msgid "No messages logged yet."
 msgstr "Todavía no hay mensajes registrados."
 
-#: includes/log.php:75 templates/admin-overview.php:55
+#: includes/log.php:75 templates/admin-overview.php:89
 msgid "Sending"
 msgstr "Enviando"
 
@@ -1251,8 +1253,24 @@ msgstr ""
 msgid "Search subject or address"
 msgstr "Buscar por asunto o dirección"
 
+#: templates/admin-overview.php:50
+msgid "Welcome to DiluxOne Mail"
+msgstr "Bienvenido a DiluxOne Mail"
+
+#: templates/admin-overview.php:52
+msgid ""
+"Send WordPress mail through your own SMTP provider, keep a log of every "
+"message, and find out why the ones that leave still do not arrive."
+msgstr ""
+"Mandá el correo de WordPress por tu propio proveedor SMTP, guardá un "
+"registro de cada mensaje, y enterate por qué los que salen igual no llegan."
+
+#: templates/admin-overview.php:56
+msgid "Continue the setup"
+msgstr "Seguir con la configuración"
+
 #. translators: 1: recipient, 2: seconds
-#: templates/admin-overview.php:39 templates/settings-test.php:27
+#: templates/admin-overview.php:70 templates/settings-test.php:27
 #, php-format
 msgid ""
 "Test message handed to the server for %1$s in %2$ss. Check the inbox — and "
@@ -1261,35 +1279,31 @@ msgstr ""
 "Mensaje de prueba entregado al servidor para %1$s en %2$ss. Revisá la "
 "bandeja de entrada — y la de spam."
 
-#: templates/admin-overview.php:45 templates/settings-test.php:33
+#: templates/admin-overview.php:76 templates/settings-test.php:33
 msgid "The test message was not sent."
 msgstr "El mensaje de prueba no se envió."
 
-#: templates/admin-overview.php:58
+#: templates/admin-overview.php:93
 msgid "This plugin sends the mail of this site."
 msgstr "Este plugin envía el correo de este sitio."
 
 #. translators: 1: provider name, 2: SMTP host
-#: templates/admin-overview.php:64
+#: templates/admin-overview.php:98
 #, php-format
 msgid "Through %1$s, at %2$s."
 msgstr "Por %1$s, en %2$s."
 
-#: templates/admin-overview.php:66
-msgid "no host yet"
-msgstr "todavía sin servidor"
-
 #. translators: %s: the From address
-#: templates/admin-overview.php:75
+#: templates/admin-overview.php:109
 #, php-format
 msgid "Signed as %s."
 msgstr "Firmado como %s."
 
-#: templates/admin-overview.php:83
+#: templates/admin-overview.php:116
 msgid "This plugin is watching, not sending."
 msgstr "Este plugin está mirando, no enviando."
 
-#: templates/admin-overview.php:87
+#: templates/admin-overview.php:119
 msgid ""
 "There is no server configured yet, so nothing can go out through it. The "
 "setup card says which step is next."
@@ -1297,7 +1311,7 @@ msgstr ""
 "Todavía no hay servidor configurado, así que no puede salir nada por acá. La"
 " tarjeta de configuración dice cuál es el paso que sigue."
 
-#: templates/admin-overview.php:89
+#: templates/admin-overview.php:121
 msgid ""
 "The mode is set to never send. Messages are logged and diagnosed, and "
 "delivery is left to whoever else is doing it."
@@ -1306,7 +1320,7 @@ msgstr ""
 "diagnostican, y la entrega queda en manos de quien la esté haciendo."
 
 #. translators: %s: names of the plugins handling delivery
-#: templates/admin-overview.php:94
+#: templates/admin-overview.php:126
 #, php-format
 msgid ""
 "%s is handling delivery: it ends the send before this plugin is reached."
@@ -1314,59 +1328,63 @@ msgstr ""
 "%s se está ocupando de la entrega: termina el envío antes de que se llegue a"
 " este plugin."
 
-#: templates/admin-overview.php:102
+#: templates/admin-overview.php:133
 msgid "Full status"
 msgstr "Estado completo"
 
-#: templates/admin-overview.php:107
+#: templates/admin-overview.php:140
 msgid "Setup"
 msgstr "Configuración"
 
-#: templates/admin-overview.php:109
+#: templates/admin-overview.php:144
 msgid "All four steps are done."
 msgstr "Los cuatro pasos están hechos."
 
 #. translators: %d: how many steps are left
-#: templates/admin-overview.php:115
+#: templates/admin-overview.php:150
 #, php-format
 msgid "%d step left."
 msgid_plural "%d steps left."
 msgstr[0] "%d paso pendiente."
 msgstr[1] "%d pasos pendientes."
 
-#: templates/admin-overview.php:132
+#: templates/admin-overview.php:170
 msgid "Messages"
 msgstr "Mensajes"
 
-#: templates/admin-overview.php:134
+#: templates/admin-overview.php:174
 msgid "The log is off, so there is nothing to count."
 msgstr "El registro está apagado, así que no hay nada que contar."
 
 #. translators: 1: messages sent, 2: messages failed
-#: templates/admin-overview.php:140
+#: templates/admin-overview.php:180
 #, php-format
 msgid "%1$d sent, %2$d failed"
 msgstr "%1$d enviados, %2$d fallidos"
 
 #. translators: %s: how long ago
-#: templates/admin-overview.php:153
+#: templates/admin-overview.php:193
 #, php-format
 msgid "Last send went out %s ago."
 msgstr "El último envío salió hace %s."
 
 #. translators: 1: how long ago, 2: the error
-#: templates/admin-overview.php:162
+#: templates/admin-overview.php:202
 #, php-format
 msgid "Last send failed %1$s ago: %2$s"
 msgstr "El último envío falló hace %1$s: %2$s"
 
-#: templates/admin-overview.php:177
+#: templates/admin-overview.php:234
 msgid "There is no domain to check yet: it comes from the From address."
 msgstr ""
 "Todavía no hay dominio que revisar: sale de la dirección del remitente."
 
+#: templates/admin-overview.php:236
+msgid "Not diagnosed yet."
+msgstr "Todavía sin diagnosticar."
+
 #. translators: %s: the domain
-#: templates/admin-overview.php:183
+#: templates/admin-overview.php:241
 #, php-format
 msgid ""
 "%s has not been diagnosed yet. The check runs on the deliverability screen; "
@@ -1377,7 +1395,7 @@ msgstr ""
 "dibujar esta página."
 
 #. translators: %d: number of problems
-#: templates/admin-overview.php:194
+#: templates/admin-overview.php:252
 #, php-format
 msgid "%d problem found."
 msgid_plural "%d problems found."
@@ -1385,32 +1403,32 @@ msgstr[0] "%d problema encontrado."
 msgstr[1] "%d problemas encontrados."
 
 #. translators: %d: number of warnings
-#: templates/admin-overview.php:204
+#: templates/admin-overview.php:262
 #, php-format
 msgid "%d warning."
 msgid_plural "%d warnings."
 msgstr[0] "%d advertencia."
 msgstr[1] "%d advertencias."
 
-#: templates/admin-overview.php:210
+#: templates/admin-overview.php:268
 msgid "Nothing to fix."
 msgstr "No hay nada que corregir."
 
 #. translators: %s: the domain
-#: templates/admin-overview.php:216
+#: templates/admin-overview.php:274
 #, php-format
 msgid "SPF, DKIM and DMARC for %s."
 msgstr "SPF, DKIM y DMARC de %s."
 
-#: templates/admin-overview.php:233 templates/settings-test.php:51
+#: templates/admin-overview.php:291 templates/settings-test.php:51
 msgid "Send a test message"
 msgstr "Mandar un mensaje de prueba"
 
-#: templates/admin-overview.php:235 templates/settings-test.php:53
+#: templates/admin-overview.php:293 templates/settings-test.php:53
 msgid "Send to"
 msgstr "Mandar a"
 
-#: templates/admin-overview.php:237 templates/settings-test.php:55
+#: templates/admin-overview.php:295 templates/settings-test.php:55
 msgid "Send test"
 msgstr "Mandar prueba"
 
@@ -1980,6 +1998,9 @@ msgstr "Todavía nada."
 #: templates/user-profile.php:74
 msgid "See all in the mail log"
 msgstr "Ver todo en el historial de correo"
+
+#~ msgid "no host yet"
+#~ msgstr "todavía sin servidor"
 
 #~ msgid ""
 #~ "Choosing a profile fills in the host, port, encryption and — where the "

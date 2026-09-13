@@ -108,6 +108,26 @@ class TabsTest extends AdminTestCase {
 		$this->assertStringContainsString( 'diluxone_mail_test', $html );
 	}
 
+	public function test_the_overview_welcomes_and_balances_its_markup(): void {
+		$this->db->next_results = array();
+
+		$html = $this->render( 'diluxone_mail_screen_overview' );
+
+		$this->assertStringContainsString( 'Welcome to DiluxOne Mail', $html );
+		$this->assertStringContainsString( 'Continue the setup', $html );
+		$this->assertStringContainsString( 'dashicons-visibility', $html );
+		$this->assertStringContainsString( 'diluxone-mail-card--warn', $html );
+
+		// The cards are opened by a helper and closed by the template, which
+		// is exactly the shape that ends up with a stray </div> nobody sees
+		// until the admin menu collapses.
+		$this->assertSame(
+			substr_count( $html, '<div' ),
+			substr_count( $html, '</div>' ),
+			'the overview leaves a div unbalanced'
+		);
+	}
+
 	public function test_the_overview_once_it_is_all_done(): void {
 		$this->configured();
 		\diluxone_mail_verified( 'message' );
