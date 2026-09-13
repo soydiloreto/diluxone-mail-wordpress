@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-13T17:15:43+00:00\n"
+"POT-Creation-Date: 2026-09-13T22:46:59+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: diluxone-mail\n"
@@ -36,22 +36,25 @@ msgid "Pablo Ariel Di Loreto"
 msgstr ""
 
 #: includes/admin-dns.php:16
-#: includes/admin.php:58
+#: includes/admin.php:69
+#: templates/admin-overview.php:175
+#: templates/admin-overview.php:222
 msgid "Deliverability"
 msgstr ""
 
-#: includes/admin-dns.php:36
+#: includes/admin-dns.php:42
 #: includes/admin-log.php:62
-#: includes/admin-settings.php:115
-#: includes/observer.php:264
+#: includes/admin-settings.php:147
+#: includes/observer.php:300
 #: includes/user-profile.php:141
 msgid "You are not allowed to do this."
 msgstr ""
 
 #: includes/admin-log.php:27
-#: includes/admin.php:57
-#: templates/admin-settings.php:238
+#: includes/admin.php:68
+#: templates/admin-overview.php:171
 #: templates/admin-status.php:96
+#: templates/settings-logging.php:24
 msgid "Mail log"
 msgstr ""
 
@@ -67,88 +70,158 @@ msgstr ""
 msgid "Network settings"
 msgstr ""
 
-#: includes/admin-settings.php:97
-#: includes/admin.php:56
+#: includes/admin-overview.php:103
+#: includes/admin.php:66
+msgid "Overview"
+msgstr ""
+
+#: includes/admin-settings.php:129
+#: includes/admin.php:67
 msgid "Settings"
 msgstr ""
 
 #: includes/admin-status.php:60
-#: includes/admin.php:59
+#: includes/admin.php:70
 #: includes/log-list-table.php:47
 #: includes/privacy.php:90
 #: templates/user-profile.php:40
 msgid "Status"
 msgstr ""
 
-#: includes/admin.php:24
+#: includes/admin-tabs.php:37
+#: includes/log-list-table.php:48
+#: templates/admin-log-detail.php:37
+#: templates/settings-profile.php:30
+msgid "Provider"
+msgstr ""
+
+#: includes/admin-tabs.php:47
+#: templates/settings-server.php:52
+msgid "SMTP server"
+msgstr ""
+
+#: includes/admin-tabs.php:53
+#: templates/settings-sender.php:20
+msgid "Sender"
+msgstr ""
+
+#: includes/admin-tabs.php:59
+msgid "Test message"
+msgstr ""
+
+#: includes/admin-tabs.php:65
+msgid "Sending behaviour"
+msgstr ""
+
+#: includes/admin-tabs.php:71
+msgid "Log and privacy"
+msgstr ""
+
+#: includes/admin-tabs.php:80
+#: templates/settings-sites.php:18
+msgid "Sites"
+msgstr ""
+
+#: includes/admin-tabs.php:120
+msgid "Choose a provider profile first: it fills in the host, the port and the encryption this tab asks for."
+msgstr ""
+
+#: includes/admin-tabs.php:122
+msgid "The SMTP server has to answer first. Test the connection on the previous tab; until it does, there is nothing to send from."
+msgstr ""
+
+#: includes/admin-tabs.php:124
+msgid "Set the From address first: a provider will not deliver a message sent from an address it has not verified."
+msgstr ""
+
+#. translators: 1: step number, 2: name of the step
+#: includes/admin-tabs.php:218
+#, php-format
+msgctxt "numbered step in the settings screen"
+msgid "%1$d. %2$s"
+msgstr ""
+
+#: includes/admin.php:34
 #: templates/admin-status.php:23
 msgid "DiluxOne Mail"
 msgstr ""
 
 #. translators: 1: plugin name, 2: screen name
-#: includes/admin.php:31
+#: includes/admin.php:41
 #, php-format
 msgctxt "title of a dashboard screen"
 msgid "%1$s | %2$s"
 msgstr ""
 
-#: includes/admin.php:143
+#: includes/admin.php:155
 msgid "Settings saved."
 msgstr ""
 
-#: includes/admin.php:144
+#: includes/admin.php:156
 msgid "Provider profile applied. Paste the credentials and save."
 msgstr ""
 
-#: includes/admin.php:145
+#: includes/admin.php:157
 msgid "DiluxOne Mail is now handling this site's outgoing mail."
 msgstr ""
 
-#: includes/admin.php:146
+#: includes/admin.php:158
 msgid "Message resent."
 msgstr ""
 
-#: includes/admin.php:147
+#: includes/admin.php:159
 msgid "The message could not be resent. Check the mail log for the error."
 msgstr ""
 
-#: includes/admin.php:148
+#: includes/admin.php:160
 msgid "This message cannot be resent: its body was not stored. Turn on body storage in the settings to make future messages resendable."
 msgstr ""
 
-#: includes/admin.php:149
+#: includes/admin.php:161
 msgid "DNS cache cleared and the diagnosis run again."
 msgstr ""
 
-#: includes/admin.php:150
+#: includes/admin.php:162
+msgid "The server answered and the credentials work. They are saved."
+msgstr ""
+
+#: includes/admin.php:163
+msgid "The server did not accept the connection, so nothing was saved. What went wrong is below."
+msgstr ""
+
+#: includes/admin.php:164
+msgid "Test message sent."
+msgstr ""
+
+#: includes/admin.php:165
 msgid "This site's settings are fixed by the network and cannot be changed here."
 msgstr ""
 
 #. translators: %s: name of the constant
-#: includes/admin.php:169
+#: includes/admin.php:184
 #, php-format
 msgid "defined by the environment — PHP constant %s"
 msgstr ""
 
 #. translators: %s: name of the variable
-#: includes/admin.php:172
+#: includes/admin.php:187
 #, php-format
 msgid "defined by the environment — variable %s"
 msgstr ""
 
-#: includes/admin.php:174
+#: includes/admin.php:189
 msgid "set by the network"
 msgstr ""
 
-#: includes/admin.php:176
+#: includes/admin.php:191
 msgid "set on this site"
 msgstr ""
 
-#: includes/admin.php:178
+#: includes/admin.php:193
 msgid "default value"
 msgstr ""
 
-#: includes/admin.php:223
+#: includes/admin.php:238
 msgid "This site fixes this from code: whatever is chosen here, it stays as it is."
 msgstr ""
 
@@ -458,12 +531,6 @@ msgstr ""
 msgid "Subject"
 msgstr ""
 
-#: includes/log-list-table.php:48
-#: templates/admin-log-detail.php:37
-#: templates/admin-settings.php:69
-msgid "Provider"
-msgstr ""
-
 #: includes/log-list-table.php:49
 #: templates/admin-log-detail.php:38
 msgid "Sent by"
@@ -515,6 +582,7 @@ msgid "No messages logged yet."
 msgstr ""
 
 #: includes/log.php:75
+#: templates/admin-overview.php:55
 msgid "Sending"
 msgstr ""
 
@@ -544,12 +612,12 @@ msgid "Marked as spam"
 msgstr ""
 
 #. translators: %s: names of the detected plugins
-#: includes/observer.php:251
+#: includes/observer.php:287
 #, php-format
 msgid "%s is handling this site's outgoing mail. DiluxOne Mail is logging and diagnosing without touching it."
 msgstr ""
 
-#: includes/observer.php:255
+#: includes/observer.php:291
 msgid "Take over"
 msgstr ""
 
@@ -696,6 +764,14 @@ msgstr ""
 msgid "Anything else"
 msgstr ""
 
+#: includes/test-connection.php:158
+msgid "There is no host to connect to. Choose a provider profile, or type the server's address."
+msgstr ""
+
+#: includes/test-connection.php:201
+msgid "The server did not accept the connection and gave no reason. The dialogue below is everything it said."
+msgstr ""
+
 #: includes/test-send.php:29
 msgid "That is not a valid email address."
 msgstr ""
@@ -779,7 +855,7 @@ msgid "%1$d of %2$d DNS lookups."
 msgstr ""
 
 #: templates/admin-dns.php:80
-#: templates/admin-settings.php:278
+#: templates/admin-dns.php:176
 msgid "Domain"
 msgstr ""
 
@@ -855,6 +931,54 @@ msgstr ""
 msgid "No MX record."
 msgstr ""
 
+#: templates/admin-dns.php:166
+msgid "Options of the diagnosis"
+msgstr ""
+
+#: templates/admin-dns.php:179
+msgid "Leave empty to use the From address's domain, or the site's domain if there is none."
+msgstr ""
+
+#: templates/admin-dns.php:183
+msgid "Extra DKIM selectors"
+msgstr ""
+
+#: templates/admin-dns.php:186
+msgid "Comma-separated. Selectors cannot be listed over DNS; the diagnosis probes the common ones plus your provider's plus these."
+msgstr ""
+
+#: templates/admin-dns.php:190
+msgid "Resolver"
+msgstr ""
+
+#: templates/admin-dns.php:193
+msgid "System, falling back to DNS-over-HTTPS"
+msgstr ""
+
+#: templates/admin-dns.php:194
+msgid "System only (dns_get_record)"
+msgstr ""
+
+#: templates/admin-dns.php:195
+msgid "DNS-over-HTTPS only"
+msgstr ""
+
+#: templates/admin-dns.php:198
+msgid "Many hosts disable dns_get_record(). The DoH endpoint must answer the JSON format; Cloudflare and Google both do."
+msgstr ""
+
+#: templates/admin-dns.php:202
+msgid "Cache results for"
+msgstr ""
+
+#: templates/admin-dns.php:204
+msgid "hours"
+msgstr ""
+
+#: templates/admin-dns.php:210
+msgid "Save options"
+msgstr ""
+
 #: templates/admin-log-detail.php:14
 msgid "Back to the log"
 msgstr ""
@@ -888,7 +1012,7 @@ msgid "Body"
 msgstr ""
 
 #: templates/admin-log-detail.php:52
-#: templates/admin-settings.php:261
+#: templates/settings-logging.php:47
 msgid "Message body"
 msgstr ""
 
@@ -901,7 +1025,8 @@ msgid "The body was not stored — body storage is off in the settings — so th
 msgstr ""
 
 #: templates/admin-log-detail.php:62
-#: templates/admin-settings.php:51
+#: templates/settings-server.php:39
+#: templates/settings-test.php:39
 msgid "SMTP conversation"
 msgstr ""
 
@@ -914,311 +1039,154 @@ msgid "Search subject or address"
 msgstr ""
 
 #. translators: 1: recipient, 2: seconds
-#: templates/admin-settings.php:39
+#: templates/admin-overview.php:39
+#: templates/settings-test.php:27
 #, php-format
 msgid "Test message handed to the server for %1$s in %2$ss. Check the inbox — and the spam folder."
 msgstr ""
 
-#: templates/admin-settings.php:45
+#: templates/admin-overview.php:45
+#: templates/settings-test.php:33
 msgid "The test message was not sent."
 msgstr ""
 
-#: templates/admin-settings.php:60
-msgid "These settings are fixed by the network. You can see them here; changing them is done from the network settings."
+#: templates/admin-overview.php:58
+msgid "This plugin sends the mail of this site."
 msgstr ""
 
-#: templates/admin-settings.php:70
-msgid "Choosing a profile fills in the host, port, encryption and — where the provider imposes one — the username. Every value here was checked against the provider's documentation. You then paste the credential and save."
+#. translators: 1: provider name, 2: SMTP host
+#: templates/admin-overview.php:64
+#, php-format
+msgid "Through %1$s, at %2$s."
 msgstr ""
 
-#: templates/admin-settings.php:74
-msgid "Profile"
+#: templates/admin-overview.php:66
+msgid "no host yet"
 msgstr ""
 
-#: templates/admin-settings.php:78
-msgid "— choose —"
+#. translators: %s: the From address
+#: templates/admin-overview.php:75
+#, php-format
+msgid "Signed as %s."
 msgstr ""
 
-#: templates/admin-settings.php:95
-msgid "Use this profile"
+#: templates/admin-overview.php:83
+msgid "This plugin is watching, not sending."
 msgstr ""
 
-#: templates/admin-settings.php:99
-msgid "Provider documentation"
+#: templates/admin-overview.php:87
+msgid "There is no server configured yet, so nothing can go out through it. The setup card says which step is next."
 msgstr ""
 
-#: templates/admin-settings.php:111
-msgid "SMTP server"
+#: templates/admin-overview.php:89
+msgid "The mode is set to never send. Messages are logged and diagnosed, and delivery is left to whoever else is doing it."
 msgstr ""
 
-#: templates/admin-settings.php:114
-msgid "Host"
+#. translators: %s: names of the plugins handling delivery
+#: templates/admin-overview.php:94
+#, php-format
+msgid "%s is handling delivery: it ends the send before this plugin is reached."
 msgstr ""
 
-#: templates/admin-settings.php:119
-msgid "Replace the region in the host with the one your SES identity lives in."
+#: templates/admin-overview.php:102
+msgid "Full status"
 msgstr ""
 
-#: templates/admin-settings.php:124
-msgid "Port"
+#: templates/admin-overview.php:107
+msgid "Setup"
 msgstr ""
 
-#: templates/admin-settings.php:131
-msgid "Encryption"
+#: templates/admin-overview.php:109
+msgid "All four steps are done."
 msgstr ""
 
-#: templates/admin-settings.php:134
-msgid "STARTTLS (usually port 587)"
-msgstr ""
-
-#: templates/admin-settings.php:135
-msgid "SSL/TLS from the start (usually port 465)"
-msgstr ""
-
-#: templates/admin-settings.php:136
-msgid "None (local servers only)"
-msgstr ""
-
-#: templates/admin-settings.php:142
-msgid "Authentication"
-msgstr ""
-
-#: templates/admin-settings.php:144
-msgid "The server requires a username and password"
-msgstr ""
-
-#: templates/admin-settings.php:146
-msgid "Local profiles never authenticate and never try to upgrade to TLS, whatever the server offers. That is what makes Mailpit and MailHog work out of the box."
-msgstr ""
-
-#: templates/admin-settings.php:151
-msgid "Username"
-msgstr ""
-
-#: templates/admin-settings.php:161
-msgid "Password"
-msgstr ""
-
-#: templates/admin-settings.php:167
-msgid "stored — leave empty to keep it"
-msgstr ""
-
-#: templates/admin-settings.php:167
-msgid "not set"
-msgstr ""
-
-#: templates/admin-settings.php:172
-msgid "The password never comes back to the browser. It is redacted from the log, the status screen and any SMTP transcript."
-msgstr ""
-
-#: templates/admin-settings.php:176
-msgid "Timeout"
-msgstr ""
-
-#: templates/admin-settings.php:178
-msgid "seconds"
-msgstr ""
-
-#: templates/admin-settings.php:183
-msgid "Sender"
-msgstr ""
-
-#: templates/admin-settings.php:186
-msgid "From address"
-msgstr ""
-
-#: templates/admin-settings.php:190
-msgid "WordPress signs as wordpress@yourdomain by default, which usually does not exist and which most providers reject. Use an address on a domain the provider has verified."
-msgstr ""
-
-#: templates/admin-settings.php:194
-msgid "From name"
-msgstr ""
-
-#: templates/admin-settings.php:201
-msgid "Force sender"
-msgstr ""
-
-#: templates/admin-settings.php:203
-msgid "Replace the From address other plugins set, not only the WordPress default"
-msgstr ""
-
-#: templates/admin-settings.php:209
-msgid "How this plugin takes part in sending"
-msgstr ""
-
-#: templates/admin-settings.php:212
-msgid "Mode"
-msgstr ""
-
-#: templates/admin-settings.php:217
-msgid "Automatic — send only when no other mail plugin is active; otherwise log and diagnose without touching delivery"
-msgstr ""
-
-#: templates/admin-settings.php:218
-msgid "Always send through this plugin, even if another mail plugin is active"
-msgstr ""
-
-#: templates/admin-settings.php:219
-msgid "Never send — only log and diagnose"
-msgstr ""
-
-#: templates/admin-settings.php:230
-#: templates/admin-status.php:55
-msgid "pre_wp_mail interceptors"
-msgstr ""
-
-#: templates/admin-settings.php:232
-msgid "Detach plugins that intercept mail before PHPMailer, on every send"
-msgstr ""
-
-#: templates/admin-settings.php:233
-msgid "Only for the case where another plugin hooks pre_wp_mail and returns without sending — the message dies silently and no SMTP settings apply. If the intercepting plugin is the one actually delivering your mail, turning this on leaves the site with no mail at all. Each intercepting callback is removed individually; nothing else on that hook is touched."
-msgstr ""
-
-#: templates/admin-settings.php:241
-msgid "Log"
-msgstr ""
-
-#: templates/admin-settings.php:243
-msgid "Keep a log of every message: date, recipients, sender, subject, outcome, error, provider and which plugin sent it"
-msgstr ""
-
-#: templates/admin-settings.php:244
-msgid "This is what shows up on each user's profile."
-msgstr ""
-
-#: templates/admin-settings.php:248
-msgid "Keep for"
-msgstr ""
-
-#: templates/admin-settings.php:250
-#: templates/admin-settings.php:270
-msgid "days"
-msgstr ""
-
-#: templates/admin-settings.php:254
-msgid "Extended log"
-msgstr ""
-
-#: templates/admin-settings.php:256
-msgid "Also keep the headers, attachment names and the full SMTP conversation with the provider for each message"
-msgstr ""
-
-#: templates/admin-settings.php:257
-msgid "Useful when arguing with the provider's support. Costs capturing the SMTP dialogue on every send."
-msgstr ""
-
-#: templates/admin-settings.php:263
-msgid "Store the body of each message"
-msgstr ""
-
-#: templates/admin-settings.php:264
-msgid "Off by default on purpose."
-msgstr ""
-
-#: templates/admin-settings.php:264
-msgid "The body is personal data — names, orders, sometimes a temporary password — and storing it is what turns a technical log into a legal liability. It is also the only way to resend a message, so the resend button only works for messages logged while this is on."
-msgstr ""
-
-#: templates/admin-settings.php:268
-msgid "Keep bodies and transcripts for"
-msgstr ""
-
-#: templates/admin-settings.php:275
-msgid "DNS diagnostics"
-msgstr ""
-
-#: templates/admin-settings.php:281
-msgid "Leave empty to use the From address's domain, or the site's domain if there is none."
-msgstr ""
-
-#: templates/admin-settings.php:285
-msgid "Extra DKIM selectors"
-msgstr ""
-
-#: templates/admin-settings.php:288
-msgid "Comma-separated. Selectors cannot be listed over DNS; the diagnosis probes the common ones plus your provider's plus these."
-msgstr ""
-
-#: templates/admin-settings.php:292
-msgid "Resolver"
-msgstr ""
-
-#: templates/admin-settings.php:295
-msgid "System, falling back to DNS-over-HTTPS"
-msgstr ""
-
-#: templates/admin-settings.php:296
-msgid "System only (dns_get_record)"
-msgstr ""
-
-#: templates/admin-settings.php:297
-msgid "DNS-over-HTTPS only"
-msgstr ""
+#. translators: %d: how many steps are left
+#: templates/admin-overview.php:115
+#, php-format
+msgid "%d step left."
+msgid_plural "%d steps left."
+msgstr[0] ""
+msgstr[1] ""
 
-#: templates/admin-settings.php:300
-msgid "Many hosts disable dns_get_record(). The DoH endpoint must answer the JSON format; Cloudflare and Google both do."
+#: templates/admin-overview.php:132
+msgid "Messages"
 msgstr ""
 
-#: templates/admin-settings.php:304
-msgid "Cache results for"
+#: templates/admin-overview.php:134
+msgid "The log is off, so there is nothing to count."
 msgstr ""
 
-#: templates/admin-settings.php:306
-msgid "hours"
+#. translators: 1: messages sent, 2: messages failed
+#: templates/admin-overview.php:140
+#, php-format
+msgid "%1$d sent, %2$d failed"
 msgstr ""
 
-#: templates/admin-settings.php:311
-msgid "Privacy"
+#. translators: %s: how long ago
+#: templates/admin-overview.php:153
+#, php-format
+msgid "Last send went out %s ago."
 msgstr ""
 
-#: templates/admin-settings.php:314
-msgid "Personal data requests"
+#. translators: 1: how long ago, 2: the error
+#: templates/admin-overview.php:162
+#, php-format
+msgid "Last send failed %1$s ago: %2$s"
 msgstr ""
 
-#: templates/admin-settings.php:316
-msgid "Include a person's mail history in their data export"
+#: templates/admin-overview.php:177
+msgid "There is no domain to check yet: it comes from the From address."
 msgstr ""
 
-#: templates/admin-settings.php:317
-msgid "Delete a person's mail history when they ask to be erased"
+#. translators: %s: the domain
+#: templates/admin-overview.php:183
+#, php-format
+msgid "%s has not been diagnosed yet. The check runs on the deliverability screen; it is twenty DNS lookups, so it is not done to draw this page."
 msgstr ""
 
-#: templates/admin-settings.php:323
-msgid "Sites"
-msgstr ""
-
-#: templates/admin-settings.php:326
-msgid "Per-site overrides"
-msgstr ""
+#. translators: %d: number of problems
+#: templates/admin-overview.php:194
+#, php-format
+msgid "%d problem found."
+msgid_plural "%d problems found."
+msgstr[0] ""
+msgstr[1] ""
 
-#: templates/admin-settings.php:328
-msgid "Let each site override these settings with its own"
-msgstr ""
+#. translators: %d: number of warnings
+#: templates/admin-overview.php:204
+#, php-format
+msgid "%d warning."
+msgid_plural "%d warnings."
+msgstr[0] ""
+msgstr[1] ""
 
-#: templates/admin-settings.php:329
-msgid "Off, every site uses exactly this and sees it read-only. On, a site administrator can set a different provider or sender for their site; anything they do not set still comes from here."
+#: templates/admin-overview.php:210
+msgid "Nothing to fix."
 msgstr ""
 
-#: templates/admin-settings.php:336
-msgid "Save settings"
+#. translators: %s: the domain
+#: templates/admin-overview.php:216
+#, php-format
+msgid "SPF, DKIM and DMARC for %s."
 msgstr ""
 
-#: templates/admin-settings.php:344
+#: templates/admin-overview.php:233
+#: templates/settings-test.php:51
 msgid "Send a test message"
 msgstr ""
 
-#: templates/admin-settings.php:346
+#: templates/admin-overview.php:235
+#: templates/settings-test.php:53
 msgid "Send to"
 msgstr ""
 
-#: templates/admin-settings.php:348
+#: templates/admin-overview.php:237
+#: templates/settings-test.php:55
 msgid "Send test"
 msgstr ""
 
-#: templates/admin-settings.php:350
-msgid "If it fails you get the full SMTP error and the whole conversation with the server, with the password redacted."
+#: templates/admin-settings.php:20
+msgid "These settings are fixed by the network. You can see them here; changing them is done from the network settings."
 msgstr ""
 
 #: templates/admin-status.php:16
@@ -1255,6 +1223,11 @@ msgstr ""
 #: templates/admin-status.php:45
 #, php-format
 msgid "Also active and hooked into mail: %s. This plugin runs last and takes precedence."
+msgstr ""
+
+#: templates/admin-status.php:55
+#: templates/settings-sending.php:45
+msgid "pre_wp_mail interceptors"
 msgstr ""
 
 #: templates/admin-status.php:62
@@ -1348,6 +1321,271 @@ msgstr ""
 
 #: templates/admin-status.php:144
 msgid "schema"
+msgstr ""
+
+#: templates/settings-logging.php:27
+msgid "Log"
+msgstr ""
+
+#: templates/settings-logging.php:29
+msgid "Keep a log of every message: date, recipients, sender, subject, outcome, error, provider and which plugin sent it"
+msgstr ""
+
+#: templates/settings-logging.php:30
+msgid "This is what shows up on each user's profile."
+msgstr ""
+
+#: templates/settings-logging.php:34
+msgid "Keep for"
+msgstr ""
+
+#: templates/settings-logging.php:36
+#: templates/settings-logging.php:56
+msgid "days"
+msgstr ""
+
+#: templates/settings-logging.php:40
+msgid "Extended log"
+msgstr ""
+
+#: templates/settings-logging.php:42
+msgid "Also keep the headers, attachment names and the full SMTP conversation with the provider for each message"
+msgstr ""
+
+#: templates/settings-logging.php:43
+msgid "Useful when arguing with the provider's support. Costs capturing the SMTP dialogue on every send."
+msgstr ""
+
+#: templates/settings-logging.php:49
+msgid "Store the body of each message"
+msgstr ""
+
+#: templates/settings-logging.php:50
+msgid "Off by default on purpose."
+msgstr ""
+
+#: templates/settings-logging.php:50
+msgid "The body is personal data — names, orders, sometimes a temporary password — and storing it is what turns a technical log into a legal liability. It is also the only way to resend a message, so the resend button only works for messages logged while this is on."
+msgstr ""
+
+#: templates/settings-logging.php:54
+msgid "Keep bodies and transcripts for"
+msgstr ""
+
+#: templates/settings-logging.php:61
+msgid "Privacy"
+msgstr ""
+
+#: templates/settings-logging.php:64
+msgid "Personal data requests"
+msgstr ""
+
+#: templates/settings-logging.php:66
+msgid "Include a person's mail history in their data export"
+msgstr ""
+
+#: templates/settings-logging.php:67
+msgid "Delete a person's mail history when they ask to be erased"
+msgstr ""
+
+#: templates/settings-logging.php:73
+#: templates/settings-sending.php:54
+#: templates/settings-sites.php:29
+msgid "Save"
+msgstr ""
+
+#: templates/settings-profile.php:21
+msgid "Four steps: pick the provider, prove the server accepts the credentials, say who the mail comes from, and send a message to check it arrives. Each one opens the next."
+msgstr ""
+
+#: templates/settings-profile.php:31
+msgid "Choosing a profile fills in the host, port, encryption and — where the provider imposes one — the username. Every value here was checked against the provider's documentation. You then paste the credential on the next tab."
+msgstr ""
+
+#: templates/settings-profile.php:35
+msgid "Profile"
+msgstr ""
+
+#: templates/settings-profile.php:38
+msgid "— choose —"
+msgstr ""
+
+#: templates/settings-profile.php:55
+msgid "Use this profile"
+msgstr ""
+
+#: templates/settings-profile.php:59
+msgid "Provider documentation"
+msgstr ""
+
+#: templates/settings-sender.php:23
+msgid "From address"
+msgstr ""
+
+#: templates/settings-sender.php:27
+msgid "WordPress signs as wordpress@yourdomain by default, which usually does not exist and which most providers reject. Use an address on a domain the provider has verified."
+msgstr ""
+
+#: templates/settings-sender.php:31
+msgid "From name"
+msgstr ""
+
+#: templates/settings-sender.php:38
+msgid "Force sender"
+msgstr ""
+
+#: templates/settings-sender.php:40
+msgid "Replace the From address other plugins set, not only the WordPress default"
+msgstr ""
+
+#: templates/settings-sender.php:41
+msgid "Off, the address above is used only where WordPress would have signed as wordpress@yourdomain. On, it also replaces one another plugin — or a snippet in the theme — decided for the message."
+msgstr ""
+
+#: templates/settings-sender.php:48
+msgid "Save sender"
+msgstr ""
+
+#: templates/settings-sending.php:23
+msgid "How this plugin takes part in sending"
+msgstr ""
+
+#: templates/settings-sending.php:26
+msgid "Mode"
+msgstr ""
+
+#: templates/settings-sending.php:31
+msgid "Automatic — send only when no other mail plugin is active; otherwise log and diagnose without touching delivery"
+msgstr ""
+
+#: templates/settings-sending.php:32
+msgid "Always send through this plugin, even if another mail plugin is active"
+msgstr ""
+
+#: templates/settings-sending.php:33
+msgid "Never send — only log and diagnose"
+msgstr ""
+
+#: templates/settings-sending.php:40
+msgid "Another plugin counts as handling the mail when it replaces wp_mail() or answers pre_wp_mail — the two that end the send before this plugin is reached. One that only hooks phpmailer_init to add a header is not taking delivery away and does not change the mode."
+msgstr ""
+
+#: templates/settings-sending.php:47
+msgid "Detach plugins that intercept mail before PHPMailer, on every send"
+msgstr ""
+
+#: templates/settings-sending.php:48
+msgid "Only for the case where another plugin hooks pre_wp_mail and returns without sending — the message dies silently and no SMTP settings apply. If the intercepting plugin is the one actually delivering your mail, turning this on leaves the site with no mail at all. Each intercepting callback is removed individually; nothing else on that hook is touched."
+msgstr ""
+
+#. translators: %s: seconds
+#: templates/settings-server.php:28
+#, php-format
+msgid "The server answered in %ss and accepted the credentials."
+msgstr ""
+
+#: templates/settings-server.php:33
+msgid "The server did not accept the connection, so nothing was saved."
+msgstr ""
+
+#: templates/settings-server.php:54
+msgid "These values are saved by testing them. The button opens a session against the server, upgrades to TLS, authenticates and hangs up — no message is sent and no mailbox is needed. If it fails, nothing is stored and you get the server's own words for why."
+msgstr ""
+
+#: templates/settings-server.php:59
+msgid "Host"
+msgstr ""
+
+#: templates/settings-server.php:64
+msgid "Replace the region in the host with the one your SES identity lives in."
+msgstr ""
+
+#: templates/settings-server.php:67
+msgid "The profile assumes the mailbox runs next to PHP. Under Docker, DDEV, Lando or wp-env it does not: the host is the name of that service on the compose network — usually \"mailpit\" or \"mailhog\" — and \"localhost\" there means this container, where nothing is listening."
+msgstr ""
+
+#: templates/settings-server.php:72
+msgid "Port"
+msgstr ""
+
+#: templates/settings-server.php:79
+msgid "Encryption"
+msgstr ""
+
+#: templates/settings-server.php:82
+msgid "STARTTLS (usually port 587)"
+msgstr ""
+
+#: templates/settings-server.php:83
+msgid "SSL/TLS from the start (usually port 465)"
+msgstr ""
+
+#: templates/settings-server.php:84
+msgid "None (local servers only)"
+msgstr ""
+
+#: templates/settings-server.php:90
+msgid "Authentication"
+msgstr ""
+
+#: templates/settings-server.php:92
+msgid "The server requires a username and password"
+msgstr ""
+
+#: templates/settings-server.php:94
+msgid "Local profiles never authenticate and never try to upgrade to TLS, whatever the server offers. That is what makes Mailpit and MailHog work out of the box."
+msgstr ""
+
+#: templates/settings-server.php:99
+msgid "Username"
+msgstr ""
+
+#: templates/settings-server.php:109
+msgid "Password"
+msgstr ""
+
+#: templates/settings-server.php:115
+msgid "stored — leave empty to keep it"
+msgstr ""
+
+#: templates/settings-server.php:115
+msgid "not set"
+msgstr ""
+
+#: templates/settings-server.php:120
+msgid "The password never comes back to the browser. It is redacted from the log, the status screen and any SMTP transcript."
+msgstr ""
+
+#: templates/settings-server.php:124
+msgid "Timeout"
+msgstr ""
+
+#: templates/settings-server.php:126
+msgid "seconds"
+msgstr ""
+
+#: templates/settings-server.php:132
+msgid "Test connection and save"
+msgstr ""
+
+#: templates/settings-sites.php:21
+msgid "Per-site overrides"
+msgstr ""
+
+#: templates/settings-sites.php:23
+msgid "Let each site override these settings with its own"
+msgstr ""
+
+#: templates/settings-sites.php:24
+msgid "Off, every site uses exactly this and sees it read-only. On, a site administrator can set a different provider or sender for their site; anything they do not set still comes from here."
+msgstr ""
+
+#: templates/settings-test.php:57
+msgid "If it fails you get the full SMTP error and the whole conversation with the server, with the password redacted."
+msgstr ""
+
+#: templates/settings-test.php:62
+msgid "A message has already gone out with this configuration. Anything you change on the earlier tabs asks for the test again — the mark belongs to the settings, not to the button."
 msgstr ""
 
 #: templates/user-profile.php:11
