@@ -7,12 +7,12 @@
 # debajo de lo que hay y sólo se sube. Un número inventado alto no mide nada;
 # un número real que no puede bajar sí.
 #
-# Uso:   tests/coverage-gate.sh build/clover.xml 74
+# Uso:   tests/coverage-gate.sh build/clover.xml 94
 #
 set -euo pipefail
 
 CLOVER="${1:-build/clover.xml}"
-MIN="${2:-74}"
+MIN="${2:-94}"
 
 [ -f "$CLOVER" ] || { echo "no existe $CLOVER" >&2; exit 1; }
 

@@ -48,6 +48,9 @@ if (!defined('DILUXONE_MAIL_VERSION')) {
 require_once __DIR__ . '/stubs/wordpress-stubs.php';
 require_once __DIR__ . '/stubs/wp-includes/pluggable.php';
 require_once __DIR__ . '/stubs/wpdb.php';
+require_once __DIR__ . '/stubs/wp-admin-stubs.php';
+require_once __DIR__ . '/stubs/wp-cli.php';
+require_once __DIR__ . '/stubs/phpmailer.php';
 
 $GLOBALS['wpdb'] = new DiluxOne_Test_WPDB();
 

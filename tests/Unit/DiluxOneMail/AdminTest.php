@@ -32,6 +32,7 @@ class AdminTest extends TestCase {
 
 		$GLOBALS['_test_wp_options']      = array();
 		$GLOBALS['_test_wp_site_options'] = array();
+		$GLOBALS['_test_wp_transients']   = array();
 		$GLOBALS['_test_multisite']       = false;
 		$GLOBALS['_test_wp_mail_calls']   = array();
 		$GLOBALS['_test_wp_mail_fails']   = '';

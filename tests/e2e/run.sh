@@ -29,15 +29,39 @@ wpc() { npx wp-env run tests-cli wp "$@" 2>/dev/null; }
 
 # ── Mailpit en la red del wp-env ─────────────────────────────────────
 log "Buscando la red Docker del wp-env de pruebas"
-CID=$(docker ps --format '{{.Names}}' | grep -E -- '-tests-wordpress-1$' | head -1)
-[ -n "$CID" ] || fail "no hay un wp-env de pruebas corriendo (npx wp-env start)"
-NET=$(docker inspect "$CID" --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}')
-ok "red: $NET"
+# Se le pregunta al propio contenedor de WP-CLI —que es el que va a mandar—
+# en qué redes está, y no se adivina por el nombre: puede haber más de un
+# wp-env corriendo, y el hash del proyecto cambia entre versiones de wp-env.
+CLI_ID=$( (npx wp-env run tests-cli sh -c hostname 2>/dev/null || true) | grep -E '^[0-9a-f]{12}$' | head -1 || true)
+NETS=""
+[ -n "$CLI_ID" ] && NETS=$(docker inspect "$CLI_ID" --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}' 2>/dev/null || true)
+if [ -z "$NETS" ]; then
+  CID=$(docker ps --format '{{.Names}}' | grep -E -- '-tests-wordpress-1$' | head -1)
+  [ -n "$CID" ] || fail "no hay un wp-env de pruebas corriendo (npx wp-env start)"
+  NETS=$(docker inspect "$CID" --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}')
+fi
+NET=$(echo "$NETS" | awk '{print $1}')
+[ -n "$NET" ] || fail "no se pudo determinar la red del wp-env"
+ok "redes: $NETS"
 
 log "Levantando Mailpit"
 docker rm -f "$MAILPIT_NAME" >/dev/null 2>&1 || true
 docker run -d --name "$MAILPIT_NAME" --network "$NET" -p "${MAILPIT_PORT}:8025" "$MAILPIT_IMAGE" >/dev/null
-trap 'docker rm -f "$MAILPIT_NAME" >/dev/null 2>&1 || true' EXIT
+for n in $NETS; do [ "$n" = "$NET" ] || docker network connect "$n" "$MAILPIT_NAME" >/dev/null 2>&1 || true; done
+MU='/var/www/html/wp-content/mu-plugins'
+cleanup() {
+  docker rm -f "$MAILPIT_NAME" >/dev/null 2>&1 || true
+  npx wp-env run tests-cli sh -c "rm -f ${MU}/otro-mailer.php ${MU}/interceptor.php" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+# Deja un mu-plugin de mentira adentro del contenedor. El contenido viaja en
+# base64: entre el shell local, wp-env y docker hay tres capas de comillas y
+# un $ no sobrevive ninguna.
+mu_plugin() {
+  local name="$1" body="$2"
+  npx wp-env run tests-cli sh -c "mkdir -p ${MU} && echo '$(printf '%s' "$body" | base64 -w0)' | base64 -d > ${MU}/${name}" >/dev/null 2>&1
+}
 
 for _ in $(seq 1 30); do
   curl -sf "$API/info" >/dev/null && break
@@ -164,7 +188,86 @@ print('   mode:', rows['mode'], '| host:', rows['host'])
 "
 ok "estado coherente"
 
-# ── 9. El diagnóstico corre contra un dominio real (sólo lectura) ────
+# ── 9. Reenviar desde el historial deja un segundo correo en el buzón ─
+log "Reenviando el mensaje original desde el historial"
+RID=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'destino@example.test' ), 'per_page' => 1 ) )['rows'][0]['id'];")
+RES=$(wpc eval "\$r = diluxone_mail_resend( ${RID} ); echo \$r['ok'] ? 'ok' : 'fail:' . \$r['reason'];")
+[ "$RES" = "ok" ] || fail "reenvío: $RES"
+sleep 1
+python3 - "$API" "$SUBJECT" <<'PYEOF'
+import json, sys, urllib.request
+api, subject = sys.argv[1], sys.argv[2]
+msgs = [m for m in json.load(urllib.request.urlopen(f"{api}/messages"))["messages"] if m["Subject"] == subject]
+assert len(msgs) == 2, f"esperaba el original y el reenvío, hay {len(msgs)}"
+headers = json.load(urllib.request.urlopen(f"{api}/message/{msgs[0]['ID']}/headers"))
+assert any(k.lower() == "x-diluxone-mail-resend-of" for k in headers), list(headers)
+print("   reenvío en el buzón, con la cabecera X-DiluxOne-Mail-Resend-Of")
+PYEOF
+ok "el reenvío llegó y apunta al original"
+
+# ── 10. Bcc también deja su fila ─────────────────────────────────────
+log "Enviando con Bcc"
+wpc eval "wp_mail( 'to@example.test', 'Bcc ${STAMP}', 'x', array( 'Bcc: oculto@example.test' ) );" >/dev/null
+N=$(wpc diluxone-mail log list --format=json --email=oculto@example.test --limit=1 | python3 -c "import json,sys; r=json.load(sys.stdin); print(len(r), r[0]['status'] if r else '')")
+[ "$N" = "1 sent" ] || fail "la fila del Bcc: $N"
+ok "el destinatario oculto tiene su fila"
+
+# ── 11. Modo observador de verdad: otro plugin toma phpmailer_init ───
+log "Instalando un mu-plugin que gestiona el correo (como haría WP Mail SMTP)"
+mu_plugin otro-mailer.php '<?php
+/* Plugin Name: Otro Mailer */
+add_action( "phpmailer_init", function ( $m ) { $m->isSMTP(); $m->Host = "diluxone-mailpit"; $m->Port = 1025; $m->SMTPAuth = false; $m->SMTPAutoTLS = false; } );
+/* En observador no se toca el remitente: eso es del otro plugin, como en la vida real. */
+add_filter( "wp_mail_from", function () { return "otro@example.test"; } );
+'
+wpc option update diluxone_mail_mode auto >/dev/null
+MODE=$(wpc diluxone-mail status --format=json | python3 -c "import json,sys; r={x['key']:x['value'] for x in json.load(sys.stdin)}; print(r['mode'], '|', r['other mailers'])")
+[ "$MODE" = "auto (observing) | otro-mailer.php" ] || fail "observador: $MODE"
+wpc eval "wp_mail( 'obs@example.test', 'Observado ${STAMP}', 'x' );" >/dev/null
+ROW=$(wpc eval "\$r = diluxone_mail_log_query( array( 'emails' => array( 'obs@example.test' ), 'per_page' => 1 ) )['rows'][0]; echo \$r['status'], '|', \$r['provider'];")
+[ "$ROW" = "sent|observer" ] || fail "fila en observador: $ROW"
+ok "detectado, sin tocar el envío, y el correo igual llegó por el otro plugin: $MODE"
+
+# ── 12. La trampa de pre_wp_mail: un interceptor que corta el envío ──
+log "Instalando un mu-plugin que corta en pre_wp_mail con una closure (como el de Azure App Service)"
+npx wp-env run tests-cli sh -c "rm -f ${MU}/otro-mailer.php" >/dev/null 2>&1
+mu_plugin interceptor.php '<?php
+/* Plugin Name: Interceptor */
+add_filter( "pre_wp_mail", function ( $pre ) { return false; }, 10, 1 );
+'
+wpc option update diluxone_mail_mode transport >/dev/null
+wpc eval "wp_mail( 'cortado@example.test', 'Cortado ${STAMP}', 'x' );" >/dev/null
+ROW=$(wpc eval "\$r = diluxone_mail_log_query( array( 'emails' => array( 'cortado@example.test' ), 'per_page' => 1 ) )['rows'][0]; echo \$r['status'], '|', \$r['response'];")
+case "$ROW" in "intercepted|interceptor.php"*) ;; *) fail "interceptado: $ROW" ;; esac
+ok "el corte quedó registrado con el culpable: $ROW"
+
+log "Desenganchando al interceptor (la casilla apagada por defecto)"
+wpc option update diluxone_mail_unhook_pre_wp_mail 1 >/dev/null
+wpc eval "wp_mail( 'liberado@example.test', 'Liberado ${STAMP}', 'x' );" >/dev/null
+ROW=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'liberado@example.test' ), 'per_page' => 1 ) )['rows'][0]['status'];")
+[ "$ROW" = "sent" ] || fail "tras desenganchar: $ROW"
+npx wp-env run tests-cli sh -c "rm -f ${MU}/interceptor.php" >/dev/null 2>&1
+wpc option update diluxone_mail_unhook_pre_wp_mail 0 >/dev/null
+ok "con el interceptor desenganchado el correo sale"
+
+# ── 13. Privacidad: exportar y borrar a una persona ──────────────────
+log "Exportador y borrador de datos personales"
+EXP=$(wpc eval "\$e = diluxone_mail_export_personal_data( 'destino@example.test' ); echo count( \$e['data'] );")
+[ "$EXP" -ge 2 ] || fail "exportación: $EXP filas"
+wpc eval "diluxone_mail_erase_personal_data( 'destino@example.test' );" >/dev/null
+LEFT=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'destino@example.test' ) ) )['total'];")
+[ "$LEFT" = "0" ] || fail "quedaron $LEFT filas tras borrar"
+ok "exportó $EXP filas y las borró"
+
+# ── 14. La purga por cron ────────────────────────────────────────────
+log "Purga por cron"
+wpc eval "global \$wpdb; \$wpdb->query( \$wpdb->prepare( 'UPDATE %i SET sent_at = %s WHERE email = %s', diluxone_mail_log_table(), '2000-01-01 00:00:00', 'copia@example.test' ) );" >/dev/null
+wpc eval "diluxone_mail_run_purge();" >/dev/null
+LEFT=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'copia@example.test' ) ) )['total'];")
+[ "$LEFT" = "0" ] || fail "la purga no borró lo vencido ($LEFT)"
+ok "lo vencido se fue, lo demás se queda"
+
+# ── 15. El diagnóstico corre contra un dominio real (sólo lectura) ───
 log "wp diluxone-mail dns pablodiloreto.com"
 wpc diluxone-mail dns pablodiloreto.com --fresh --format=json | python3 -c "
 import json,sys

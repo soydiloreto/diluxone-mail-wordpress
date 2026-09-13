@@ -18,7 +18,9 @@ class ConfigTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$GLOBALS['_test_wp_options'] = array();
+		$GLOBALS['_test_wp_options']      = array();
+		$GLOBALS['_test_wp_site_options'] = array();
+		$GLOBALS['_test_multisite']       = false;
 
 		foreach ( \diluxone_mail_config_fields() as $sufijo ) {
 			putenv( 'DILUXONE_MAIL_' . $sufijo );

@@ -130,7 +130,7 @@ test-all: env-reset test-unit test-integration test-e2e test-multisite ## Every 
 # Neither composer:2 nor php:8.3-cli ship a coverage driver. A tiny image
 # with pcov is built once (tools/coverage.Dockerfile) and cached. The gate
 # is a ratchet: set just under what the unit suite covers, only ever raised.
-COVERAGE_MIN ?= 74
+COVERAGE_MIN ?= 94
 COVERAGE_IMAGE := diluxone-mail-coverage
 
 .PHONY: coverage
@@ -178,6 +178,8 @@ env-reset: ## Reset the wp-env tests site to a fresh single-site install (undoes
 	-npx wp-env run tests-cli wp config delete BLOG_ID_CURRENT_SITE >/dev/null 2>&1
 	-npx wp-env run tests-cli wp config delete WP_ALLOW_MULTISITE >/dev/null 2>&1
 	npx wp-env clean tests
+	# wp-env 11 resetea la base pero no siempre vuelve a instalar WordPress.
+	npx wp-env run tests-cli wp core is-installed >/dev/null 2>&1 || npx wp-env run tests-cli wp core install --url=http://localhost:8891 --title=Tests --admin_user=admin --admin_password=password --admin_email=admin@example.test --skip-email
 
 # -- Deploy / release --------------------------------------------------
 # The plugin is developed here and tried on a real site. `make deploy-test`

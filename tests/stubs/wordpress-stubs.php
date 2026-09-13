@@ -227,7 +227,10 @@ if (!function_exists('wp_generate_password')) {
 }
 
 if (!function_exists('add_query_arg')) {
-	function add_query_arg(array $args, string $url): string {
+	function add_query_arg(...$a): string {
+		// Las dos firmas de WordPress: (array $args, $url) y ($key, $value, $url).
+		$args = is_array($a[0]) ? $a[0] : [(string) $a[0] => $a[1] ?? ''];
+		$url  = (string) (is_array($a[0]) ? ($a[1] ?? '') : ($a[2] ?? ''));
 		return $url . (str_contains($url, '?') ? '&' : '?') . http_build_query($args);
 	}
 }
@@ -431,11 +434,6 @@ if (!function_exists('trailingslashit')) {
 	}
 }
 
-if (!function_exists('add_query_arg')) {
-	function add_query_arg(...$args) {
-		return is_array($args[0]) ? ($args[1] ?? '') . '?' . http_build_query($args[0]) : (string) ($args[2] ?? '');
-	}
-}
 
 if (!function_exists('wp_remote_get')) {
 	function wp_remote_get($url, array $args = []) {
@@ -569,10 +567,8 @@ if (!function_exists('wp_specialchars_decode')) { function wp_specialchars_decod
 if (!function_exists('get_current_user_id')) { function get_current_user_id(): int { return (int) ($GLOBALS['_test_user_id'] ?? 1); } }
 if (!function_exists('wp_get_current_user')) { function wp_get_current_user(): object { return (object) ['ID' => get_current_user_id(), 'user_email' => 'admin@example.test']; } }
 if (!function_exists('current_user_can')) { function current_user_can(string $cap, ...$a): bool { return (bool) ($GLOBALS['_test_can'] ?? true); } }
-if (!function_exists('get_current_screen')) { function get_current_screen() { return null; } }
 if (!function_exists('is_network_admin')) { function is_network_admin(): bool { return false; } }
 if (!function_exists('is_super_admin')) { function is_super_admin(): bool { return true; } }
-if (!function_exists('get_site')) { function get_site(int $id) { return null; } }
 if (!function_exists('human_time_diff')) { function human_time_diff(int $a, int $b = 0): string { return 'un rato'; } }
 if (!function_exists('get_date_from_gmt')) { function get_date_from_gmt(string $s, string $f = 'Y-m-d H:i:s'): string { return $s; } }
 if (!function_exists('gmdate_i18n')) { function gmdate_i18n(string $f): string { return gmdate($f); } }

@@ -130,7 +130,7 @@ Cuatro suites, cada una atrapa lo que las otras no: **unitarios** (SPF, DKIM,
 DMARC, perfiles, precedencia), **integración** contra WordPress y MySQL reales,
 **E2E** —un `wp_mail()` de verdad hasta un buzón de Mailpit, verificado por su
 API, más el fallo a propósito y el diagnóstico contra un dominio real— y
-**multisitio** contra el sitio convertido a red. Todo corre en CI en cada push.
+**multisitio** contra el sitio convertido a red. Todo corre en CI en cada push. Los unitarios cubren más del 95 % de `includes/`, con un umbral que sólo sube.
 
 Todo corre adentro de Docker por defecto; `DOCKER=0` usa los binarios locales.
 Detalle en [`docs/development.md`](docs/development.md) y
