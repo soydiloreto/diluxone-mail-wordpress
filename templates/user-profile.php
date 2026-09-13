@@ -24,9 +24,6 @@ defined( 'ABSPATH' ) || exit;
 		'<code>' . esc_html( implode( '</code>, <code>', array_map( 'esc_html', $data['emails'] ) ) ) . '</code>'
 	);
 	?>
-	<?php if ( ! $data['log_body'] ) : ?>
-		<?php esc_html_e( 'Bodies are not stored, so messages cannot be resent from here; turn on body storage in the settings to change that for future messages.', 'diluxone-mail' ); ?>
-	<?php endif; ?>
 </p>
 
 <?php if ( array() === $data['rows'] ) : ?>
@@ -42,7 +39,6 @@ defined( 'ABSPATH' ) || exit;
 				if ( $data['multisite'] ) :
 					?>
 					<th><?php esc_html_e( 'Site', 'diluxone-mail' ); ?></th><?php endif; ?>
-				<th></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -61,11 +57,6 @@ defined( 'ABSPATH' ) || exit;
 						<?php $diluxone_mail_site = get_site( (int) $diluxone_mail_row['site_id'] ); ?>
 						<td><?php echo esc_html( $diluxone_mail_site instanceof WP_Site ? (string) $diluxone_mail_site->blogname : (string) $diluxone_mail_row['site_id'] ); ?></td>
 					<?php endif; ?>
-					<td>
-						<?php if ( $data['log_body'] ) : ?>
-							<a class="button button-small" href="<?php echo esc_url( diluxone_mail_resend_url( (int) $diluxone_mail_row['id'] ) ); ?>"><?php esc_html_e( 'Resend', 'diluxone-mail' ); ?></a>
-						<?php endif; ?>
-					</td>
 				</tr>
 			<?php endforeach; ?>
 		</tbody>

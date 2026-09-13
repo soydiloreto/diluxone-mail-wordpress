@@ -103,9 +103,8 @@ class LogHooksTest extends TestCase {
 		$this->assertCount( 1, $GLOBALS['_test_wp_mail_calls'] );
 	}
 
-	public function test_extended_stores_headers_and_the_dialogue_and_the_body_when_asked(): void {
+	public function test_extended_stores_headers_and_the_dialogue_but_never_the_body(): void {
 		\update_option( 'diluxone_mail_log_extended', 1 );
-		\update_option( 'diluxone_mail_log_body', 1 );
 
 		\wp_mail( 'a@x.test', 'Hello', 'Body', array( 'X-Test: 1' ), array( '/tmp/attachment.pdf' ) );
 
@@ -113,9 +112,10 @@ class LogHooksTest extends TestCase {
 		$this->assertStringContainsString( 'X-Test', $i['headers'] );
 		$this->assertStringContainsString( 'attachment.pdf', $i['attachments'] );
 
-		$replaces = $this->db->of( 'replace' );
-		$this->assertSame( 'Body', $replaces[0]['args']['body'] );
-		$this->assertCount( 2, $replaces );
+		foreach ( $this->db->of( 'replace' ) as $replace ) {
+			$this->assertArrayNotHasKey( 'body', $replace['args'] );
+			$this->assertNotContains( 'Body', $replace['args'] );
+		}
 	}
 
 	public function test_with_no_valid_recipients_nothing_is_recorded(): void {

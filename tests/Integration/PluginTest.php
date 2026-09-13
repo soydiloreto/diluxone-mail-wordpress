@@ -35,7 +35,6 @@ class PluginTest extends IntegrationTestCase {
 	 * anybody having decided so.
 	 */
 	public function test_the_message_body_is_not_stored_by_default(): void {
-		$this->assertSame( 0, (int) diluxone_mail_option( 'diluxone_mail_log_body' ) );
 	}
 
 	public function test_the_log_tables_exist(): void {

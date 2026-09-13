@@ -36,7 +36,7 @@ class HandlersTest extends AdminTestCase {
 		$this->assertStringContainsString( 'tab=logging', $url );
 		$this->assertSame( 1, \get_option( 'diluxone_mail_log_enabled' ) );
 		// Checkboxes of this tab that did not travel end up at 0.
-		$this->assertSame( 0, \get_option( 'diluxone_mail_log_body' ) );
+		$this->assertSame( 0, \get_option( 'diluxone_mail_log_extended' ) );
 		$this->assertSame( 0, \get_option( 'diluxone_mail_privacy_erase' ) );
 		// A setting of another tab is not touched, neither by the value it
 		// carried nor by being absent.
@@ -211,54 +211,5 @@ class HandlersTest extends AdminTestCase {
 		$GLOBALS['_test_can'] = false;
 		$this->expectException( \DiluxOne_Test_Die::class );
 		\diluxone_mail_revalidate();
-	}
-
-	public function test_resending_from_the_log(): void {
-		$_GET['id']         = '7';
-		$this->db->next_row = $this->row( array( 'body' => 'cuerpo', 'body_type' => 'text/html', 'transcript' => '' ) );
-		\update_option( 'diluxone_mail_mode', 'transport' );
-
-		$url = $this->redirect_of( 'diluxone_mail_resend_action' );
-
-		$this->assertStringContainsString( 'diluxone_mail_done=resent', $url );
-		$call = $GLOBALS['_test_wp_mail_calls'][0];
-		$this->assertSame( 'ana@x.test', $call['to'] );
-		$this->assertContains( 'X-DiluxOne-Mail-Resend-Of: uuid-7', $call['headers'] );
-		$this->assertContains( 'From: hello@x.test', $call['headers'] );
-	}
-
-	public function test_resending_without_a_body_or_a_missing_row_says_so(): void {
-		$_GET['id']             = '7';
-		$this->db->next_row     = $this->row();
-		$GLOBALS['_test_referer'] = 'https://example.test/wp-admin/user-edit.php?user_id=3';
-
-		// detail_get returns the same row (with no body) → no body.
-		$this->db->next_row = $this->row( array( 'body' => '', 'body_type' => 'text/plain', 'transcript' => '' ) );
-		$this->assertStringContainsString( 'user-edit.php', $this->redirect_of( 'diluxone_mail_resend_action' ) );
-		$this->assertStringContainsString( 'no-body', $this->redirect_of( 'diluxone_mail_resend_action' ) );
-
-		$this->db->next_row = null;
-		$this->assertStringContainsString( 'resend-failed', $this->redirect_of( 'diluxone_mail_resend_action' ) );
-	}
-
-	public function test_whoever_can_edit_that_person_can_resend(): void {
-		$_GET['id']              = '7';
-		$this->db->next_row      = $this->row( array( 'body' => 'cuerpo', 'body_type' => 'text/plain', 'transcript' => '' ) );
-		$GLOBALS['_test_users'][] = $this->user( 3, 'ana@x.test' );
-
-		// current_user_can() answers true for everything unless it is turned off
-		// entirely; with manage_options false and edit_user true the stub cannot
-		// tell them apart, so the denial path is the one covered here.
-		$GLOBALS['_test_can'] = false;
-		$this->expectException( \DiluxOne_Test_Die::class );
-		\diluxone_mail_resend_action();
-	}
-
-	public function test_resending_fails_if_wp_mail_fails(): void {
-		$_GET['id']                     = '7';
-		$this->db->next_row             = $this->row( array( 'body' => 'cuerpo', 'body_type' => 'text/plain', 'transcript' => '' ) );
-		$GLOBALS['_test_wp_mail_fails'] = 'boom';
-
-		$this->assertStringContainsString( 'resend-failed', $this->redirect_of( 'diluxone_mail_resend_action' ) );
 	}
 }

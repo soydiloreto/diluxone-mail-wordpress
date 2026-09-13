@@ -26,8 +26,8 @@ exists.
 
 Every competitor shows one global list of sent messages. None of them lets you
 open a user in the dashboard and see what was sent to *that person*: date,
-subject, status, and a resend button. When somebody writes "I never got the
-email", the answer is on their profile, not in a list of ten thousand rows.
+subject and status. When somebody writes "I never got the email", the answer is
+on their profile, not in a list of ten thousand rows.
 
 The log is indexed by email address rather than by user ID, on purpose: sites
 send mail to addresses that belong to no user, and people change their address.
@@ -56,9 +56,10 @@ DNS-over-HTTPS automatically. Results are cached, with a revalidate button.
   provider, and which plugin sent it. This is what the user profile shows.
 * **Extended log** (off): also the headers, attachment names and the full SMTP
   conversation with the provider — what you need when arguing with their support.
-* **Message body** (off, on purpose): the body is personal data. It is also
-  the only way to resend a message, so the resend button works only for
-  messages logged while this is on.
+* **The content of the messages is never stored**, and there is no setting to
+  turn that on. A log that kept bodies would be keeping every password-reset
+  link the site has ever sent, and a reset link is not a record of what
+  happened: it is a key to the account, valid for whoever reads the table next.
 
 = Multisite =
 
@@ -86,9 +87,15 @@ production without editing settings on every deploy.
 
 = Does it store the content of my emails? =
 
-Not by default. The body of a message is personal data, and storing it is what
-turns a technical log into a legal problem. It is a separate checkbox, off,
-with its own shorter retention period.
+No, and there is no option to. What is kept is who was written to, when, about
+what, and how it went — never the message itself.
+
+The reason is not only that a body is personal data. The mail WordPress sends
+most often is the password reset, and that link is a key to the account for as
+long as it is valid: anybody who can read the database, restore a backup or log
+in as an administrator would be able to take over accounts without knowing a
+single password. An earlier version of this plugin could be told to store
+bodies; updating removes the column and everything that was in it.
 
 = Do I have to uninstall my current SMTP plugin? =
 
@@ -101,10 +108,10 @@ No, and it never will. It connects to the provider you already have.
 
 == Screenshots ==
 
-1. Every message sent to one person, on their own user profile, with a resend button.
+1. Every message sent to one person, on their own user profile.
 2. The deliverability diagnosis in prose: SPF lookup count, DKIM selectors and DMARC policy, each with what it means.
 3. The mail log: one row per recipient, filterable by status, with the real SMTP error on a failure.
-4. One message in full — recipients, headers, body and the SMTP conversation that delivered it.
+4. One message in full — recipients, headers and the SMTP conversation that delivered it.
 5. Provider settings. Picking a profile fills in host, port and encryption; values the environment sets are read-only.
 6. Status: who sends the mail, where each value comes from, and what happened on the last send.
 

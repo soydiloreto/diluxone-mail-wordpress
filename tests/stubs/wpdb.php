@@ -23,7 +23,7 @@ class DiluxOne_Test_WPDB {
 	public $next_row = null;
 	public int $rows_affected = 1;
 
-	public function reset(): void { $this->calls = []; $this->next_var = 0; $this->next_results = []; $this->next_row = null; }
+	public function reset(): void { $this->calls = []; $this->next_var = 0; $this->next_results = []; $this->next_row = null; $this->next_col = []; }
 	public function get_charset_collate(): string { return 'DEFAULT CHARSET=utf8mb4'; }
 	public function esc_like(string $s): string { return addcslashes($s, '_%\\'); }
 	public function prepare(string $sql, ...$args): string {
@@ -37,7 +37,8 @@ class DiluxOne_Test_WPDB {
 	public function get_var(string $sql) { $this->calls[] = ['method' => 'get_var', 'sql' => $sql, 'args' => null]; return $this->next_var; }
 	public function get_results(string $sql, $out = OBJECT) { $this->calls[] = ['method' => 'get_results', 'sql' => $sql, 'args' => null]; return $this->next_results; }
 	public function get_row(string $sql, $out = OBJECT) { $this->calls[] = ['method' => 'get_row', 'sql' => $sql, 'args' => null]; return $this->next_row; }
-	public function get_col(string $sql) { $this->calls[] = ['method' => 'get_col', 'sql' => $sql, 'args' => null]; return []; }
+	public array $next_col = [];
+	public function get_col(string $sql) { $this->calls[] = ['method' => 'get_col', 'sql' => $sql, 'args' => null]; return $this->next_col; }
 	public function query(string $sql) { $this->calls[] = ['method' => 'query', 'sql' => $sql, 'args' => null]; return $this->rows_affected; }
 	public function insert(string $t, array $d, $f = null) { $this->calls[] = ['method' => 'insert', 'sql' => $t, 'args' => $d]; return 1; }
 	public function update(string $t, array $d, array $w, $f = null, $wf = null) { $this->calls[] = ['method' => 'update', 'sql' => $t, 'args' => ['data' => $d, 'where' => $w]]; return 1; }

@@ -32,7 +32,7 @@ function diluxone_mail_settings_fields(): array {
 		'transport' => array( 'diluxone_mail_host', 'diluxone_mail_port', 'diluxone_mail_encryption', 'diluxone_mail_auth', 'diluxone_mail_user', 'diluxone_mail_pass', 'diluxone_mail_timeout' ),
 		'from'      => array( 'diluxone_mail_from', 'diluxone_mail_from_name', 'diluxone_mail_force_from' ),
 		'mode'      => array( 'diluxone_mail_mode', 'diluxone_mail_unhook_pre_wp_mail' ),
-		'log'       => array( 'diluxone_mail_log_enabled', 'diluxone_mail_log_retention_days', 'diluxone_mail_log_extended', 'diluxone_mail_log_body', 'diluxone_mail_log_detail_retention_days' ),
+		'log'       => array( 'diluxone_mail_log_enabled', 'diluxone_mail_log_retention_days', 'diluxone_mail_log_extended', 'diluxone_mail_log_detail_retention_days' ),
 		'dns'       => array( 'diluxone_mail_dns_domain', 'diluxone_mail_dns_selectors', 'diluxone_mail_dns_resolver', 'diluxone_mail_dns_doh_endpoint', 'diluxone_mail_dns_cache_hours' ),
 		'privacy'   => array( 'diluxone_mail_privacy_export', 'diluxone_mail_privacy_erase' ),
 	);

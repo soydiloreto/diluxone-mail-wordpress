@@ -74,7 +74,6 @@ function diluxone_mail_screen_log_detail( int $id ): void {
 			'headers'     => is_array( $headers ) ? array_map( 'strval', $headers ) : array(),
 			'attachments' => is_array( $attachments ) ? array_map( 'strval', $attachments ) : array(),
 			'statuses'    => diluxone_mail_log_statuses(),
-			'resend_url'  => diluxone_mail_resend_url( $id ),
 			'back_url'    => diluxone_mail_admin_url( 'diluxone-mail-log' ),
 		)
 	);

@@ -125,8 +125,6 @@ abstract class AdminTestCase extends TestCase {
 				'attachments' => '["a.pdf"]',
 				'message_id'  => 'uuid-7',
 				// The fake $wpdb returns the same row for the detail.
-				'body'        => '',
-				'body_type'   => 'text/plain',
 				'transcript'  => '',
 			),
 			$extra

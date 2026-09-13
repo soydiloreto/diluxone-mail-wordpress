@@ -138,8 +138,7 @@ class DiluxOne_Mail_Log_Table extends WP_List_Table {
 	protected function column_subject( $item ): string {
 		$id      = (int) $item['id'];
 		$actions = array(
-			'view'   => sprintf( '<a href="%s">%s</a>', esc_url( diluxone_mail_admin_url( 'diluxone-mail-log', array( 'view' => $id ) ) ), esc_html__( 'Details', 'diluxone-mail' ) ),
-			'resend' => sprintf( '<a href="%s">%s</a>', esc_url( diluxone_mail_resend_url( $id ) ), esc_html__( 'Resend', 'diluxone-mail' ) ),
+			'view' => sprintf( '<a href="%s">%s</a>', esc_url( diluxone_mail_admin_url( 'diluxone-mail-log', array( 'view' => $id ) ) ), esc_html__( 'Details', 'diluxone-mail' ) ),
 		);
 
 		$subject = (string) $item['subject'];

@@ -30,7 +30,6 @@ class LogTest extends IntegrationTestCase {
 		// too.
 		update_option( 'diluxone_mail_mode', 'observe' );
 		update_option( 'diluxone_mail_log_enabled', 1 );
-		update_option( 'diluxone_mail_log_body', 0 );
 		update_option( 'diluxone_mail_log_extended', 0 );
 	}
 
@@ -97,22 +96,24 @@ class LogTest extends IntegrationTestCase {
 		$this->assertSame( '[Brand] Hello', diluxone_mail_log_query( array( 'emails' => array( 'brand@example.test' ) ) )['rows'][0]['subject'] );
 	}
 
-	public function test_the_body_is_not_stored_unless_asked_for(): void {
+	public function test_the_body_is_never_stored_and_the_column_is_not_there(): void {
+		global $wpdb;
+
 		$fn = $this->interceptar();
 
 		wp_mail( 'sin@example.test', 'Sin cuerpo', 'Secreto' );
 
-		update_option( 'diluxone_mail_log_body', 1 );
-
-		wp_mail( 'con@example.test', 'Con cuerpo', 'Guardado' );
-
 		remove_filter( 'pre_wp_mail', $fn, 10 );
 
 		$sin = diluxone_mail_log_query( array( 'emails' => array( 'sin@example.test' ) ) )['rows'][0];
-		$con = diluxone_mail_log_query( array( 'emails' => array( 'con@example.test' ) ) )['rows'][0];
 
 		$this->assertNull( diluxone_mail_detail_get( (string) $sin['message_id'] ) );
-		$this->assertSame( 'Guardado', diluxone_mail_detail_get( (string) $con['message_id'] )['body'] );
+
+		// Nothing writes it because there is nowhere to write it to: this is
+		// the assertion that fails if the schema ever grows the column back.
+		$columns = (array) $wpdb->get_col( 'SHOW COLUMNS FROM ' . diluxone_mail_detail_table() );
+		$this->assertNotContains( 'body', $columns );
+		$this->assertNotContains( 'body_type', $columns );
 	}
 
 	public function test_the_extended_log_stores_the_headers(): void {

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-13T23:07:23+00:00\n"
+"POT-Creation-Date: 2026-09-13T23:26:50+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -52,7 +52,6 @@ msgstr "Entregabilidad"
 
 #: includes/admin-dns.php:42 includes/admin-log.php:62
 #: includes/admin-settings.php:147 includes/observer.php:300
-#: includes/user-profile.php:141
 msgid "You are not allowed to do this."
 msgstr "No tenés permiso para hacer esto."
 
@@ -83,9 +82,9 @@ msgstr "Resumen"
 msgid "Settings"
 msgstr "Ajustes"
 
-#: includes/admin-status.php:60 includes/admin.php:70
+#: includes/admin-status.php:59 includes/admin.php:70
 #: includes/log-list-table.php:47 includes/privacy.php:90
-#: templates/user-profile.php:40
+#: templates/user-profile.php:37
 msgid "Status"
 msgstr "Estado"
 
@@ -173,31 +172,15 @@ msgid "DiluxOne Mail is now handling this site's outgoing mail."
 msgstr "DiluxOne Mail ahora gestiona el correo saliente de este sitio."
 
 #: includes/admin.php:158
-msgid "Message resent."
-msgstr "Mensaje reenviado."
-
-#: includes/admin.php:159
-msgid "The message could not be resent. Check the mail log for the error."
-msgstr "No se pudo reenviar el mensaje. Mirá el error en el historial."
-
-#: includes/admin.php:160
-msgid ""
-"This message cannot be resent: its body was not stored. Turn on body storage"
-" in the settings to make future messages resendable."
-msgstr ""
-"Este mensaje no se puede reenviar: no se guardó su cuerpo. Prendé el "
-"guardado del cuerpo en los ajustes para que los próximos se puedan reenviar."
-
-#: includes/admin.php:161
 msgid "DNS cache cleared and the diagnosis run again."
 msgstr "Caché de DNS vaciado y diagnóstico vuelto a correr."
 
-#: includes/admin.php:162
+#: includes/admin.php:159
 msgid "The server answered and the credentials work. They are saved."
 msgstr ""
 "El servidor contestó y las credenciales funcionan. Quedaron guardadas."
 
-#: includes/admin.php:163
+#: includes/admin.php:160
 msgid ""
 "The server did not accept the connection, so nothing was saved. What went "
 "wrong is below."
@@ -205,40 +188,40 @@ msgstr ""
 "El servidor no aceptó la conexión, así que no se guardó nada. Abajo está qué"
 " falló."
 
-#: includes/admin.php:164
+#: includes/admin.php:161
 msgid "Test message sent."
 msgstr "Mensaje de prueba enviado."
 
-#: includes/admin.php:165
+#: includes/admin.php:162
 msgid ""
 "This site's settings are fixed by the network and cannot be changed here."
 msgstr "Los ajustes de este sitio los fija la red y no se pueden cambiar acá."
 
 #. translators: %s: name of the constant
-#: includes/admin.php:184
+#: includes/admin.php:181
 #, php-format
 msgid "defined by the environment — PHP constant %s"
 msgstr "definido por el entorno — constante de PHP %s"
 
 #. translators: %s: name of the variable
-#: includes/admin.php:187
+#: includes/admin.php:184
 #, php-format
 msgid "defined by the environment — variable %s"
 msgstr "definido por el entorno — variable %s"
 
-#: includes/admin.php:189
+#: includes/admin.php:186
 msgid "set by the network"
 msgstr "fijado por la red"
 
-#: includes/admin.php:191
+#: includes/admin.php:188
 msgid "set on this site"
 msgstr "fijado en este sitio"
 
-#: includes/admin.php:193
+#: includes/admin.php:190
 msgid "default value"
 msgstr "valor por defecto"
 
-#: includes/admin.php:238
+#: includes/admin.php:235
 msgid ""
 "This site fixes this from code: whatever is chosen here, it stays as it is."
 msgstr ""
@@ -686,7 +669,7 @@ msgstr ""
 "resolver de DNS-over-HTTPS no contestó."
 
 #: includes/log-list-table.php:44 includes/privacy.php:78
-#: templates/admin-log-detail.php:19 templates/user-profile.php:38
+#: templates/admin-log-detail.php:19 templates/user-profile.php:35
 msgid "Date"
 msgstr "Fecha"
 
@@ -695,7 +678,7 @@ msgid "To"
 msgstr "Para"
 
 #: includes/log-list-table.php:46 includes/privacy.php:82
-#: templates/admin-log-detail.php:18 templates/user-profile.php:39
+#: templates/admin-log-detail.php:18 templates/user-profile.php:36
 msgid "Subject"
 msgstr "Asunto"
 
@@ -703,7 +686,7 @@ msgstr "Asunto"
 msgid "Sent by"
 msgstr "Enviado por"
 
-#: includes/log-list-table.php:53 templates/user-profile.php:44
+#: includes/log-list-table.php:53 templates/user-profile.php:41
 msgid "Site"
 msgstr "Sitio"
 
@@ -715,59 +698,55 @@ msgstr "otro plugin"
 msgid "Details"
 msgstr "Detalle"
 
-#: includes/log-list-table.php:142 templates/user-profile.php:66
-msgid "Resend"
-msgstr "Reenviar"
-
-#: includes/log-list-table.php:150 templates/user-profile.php:53
+#: includes/log-list-table.php:149 templates/user-profile.php:49
 msgid "(no subject)"
 msgstr "(sin asunto)"
 
-#: includes/log-list-table.php:182
+#: includes/log-list-table.php:181
 msgid "Filter by status"
 msgstr "Filtrar por estado"
 
-#: includes/log-list-table.php:184
+#: includes/log-list-table.php:183
 msgid "All statuses"
 msgstr "Todos los estados"
 
-#: includes/log-list-table.php:190
+#: includes/log-list-table.php:189
 msgid "All sites"
 msgstr "Todos los sitios"
 
-#: includes/log-list-table.php:192
+#: includes/log-list-table.php:191
 msgid "Filter"
 msgstr "Filtrar"
 
-#: includes/log-list-table.php:199
+#: includes/log-list-table.php:198
 msgid "No messages logged yet."
 msgstr "Todavía no hay mensajes registrados."
 
-#: includes/log.php:75 templates/admin-overview.php:89
+#: includes/log.php:80 templates/admin-overview.php:89
 msgid "Sending"
 msgstr "Enviando"
 
-#: includes/log.php:76
+#: includes/log.php:81
 msgid "Sent"
 msgstr "Enviado"
 
-#: includes/log.php:77 templates/admin-status.php:89
+#: includes/log.php:82 templates/admin-status.php:89
 msgid "Failed"
 msgstr "Falló"
 
-#: includes/log.php:78
+#: includes/log.php:83
 msgid "Handed to another plugin"
 msgstr "Entregado a otro plugin"
 
-#: includes/log.php:79
+#: includes/log.php:84
 msgid "Not sent (suppressed)"
 msgstr "No enviado (suprimido)"
 
-#: includes/log.php:83
+#: includes/log.php:88
 msgid "Bounced"
 msgstr "Rebotado"
 
-#: includes/log.php:84
+#: includes/log.php:89
 msgid "Marked as spam"
 msgstr "Marcado como spam"
 
@@ -1220,26 +1199,16 @@ msgid "Attachments"
 msgstr "Adjuntos"
 
 #: templates/admin-log-detail.php:49
-msgid "Body"
-msgstr "Cuerpo"
-
-#: templates/admin-log-detail.php:52 templates/settings-logging.php:47
-msgid "Message body"
-msgstr "Cuerpo del mensaje"
-
-#: templates/admin-log-detail.php:56
-msgid "Resend to this recipient"
-msgstr "Reenviar a este destinatario"
-
-#: templates/admin-log-detail.php:58
 msgid ""
-"The body was not stored — body storage is off in the settings — so this "
-"message cannot be resent."
+"The content of the message is not stored. What a mail log would keep is "
+"every password-reset link the site has ever sent, which is a key to an "
+"account rather than a record of one."
 msgstr ""
-"El cuerpo no se guardó —el guardado del cuerpo está apagado en los ajustes—,"
-" así que este mensaje no se puede reenviar."
+"El contenido del mensaje no se guarda. Lo que un registro de correo estaría "
+"guardando es cada link de recuperación de contraseña que el sitio mandó "
+"alguna vez, que es una llave de la cuenta y no un registro de lo que pasó."
 
-#: templates/admin-log-detail.php:62 templates/settings-server.php:39
+#: templates/admin-log-detail.php:52 templates/settings-server.php:39
 #: templates/settings-test.php:39
 msgid "SMTP conversation"
 msgstr "Diálogo SMTP"
@@ -1526,35 +1495,27 @@ msgstr "Historial extendido prendido."
 msgid "Basic log."
 msgstr "Historial común."
 
-#: templates/admin-status.php:109
-msgid "Bodies are stored."
-msgstr "Los cuerpos se guardan."
-
-#: templates/admin-status.php:109
-msgid "Bodies are not stored."
-msgstr "Los cuerpos no se guardan."
-
 #. translators: %s: time
-#: templates/admin-status.php:114
+#: templates/admin-status.php:113
 #, php-format
 msgid "Next purge in %s."
 msgstr "Próxima purga en %s."
 
-#: templates/admin-status.php:124
+#: templates/admin-status.php:123
 msgid "DNS"
 msgstr "DNS"
 
 #. translators: %s: domain
-#: templates/admin-status.php:129
+#: templates/admin-status.php:128
 #, php-format
 msgid "Diagnosing %s."
 msgstr "Diagnosticando %s."
 
-#: templates/admin-status.php:133
+#: templates/admin-status.php:132
 msgid "dns_get_record() is available."
 msgstr "dns_get_record() está disponible."
 
-#: templates/admin-status.php:133
+#: templates/admin-status.php:132
 msgid ""
 "dns_get_record() is unavailable on this host; queries go over DNS-over-"
 "HTTPS."
@@ -1562,23 +1523,23 @@ msgstr ""
 "dns_get_record() no está disponible en este hosting; las consultas van por "
 "DNS-over-HTTPS."
 
-#: templates/admin-status.php:138
+#: templates/admin-status.php:137
 msgid "Network"
 msgstr "Red"
 
-#: templates/admin-status.php:139
+#: templates/admin-status.php:138
 msgid "Sites may override the network settings."
 msgstr "Los sitios pueden pisar los ajustes de la red."
 
-#: templates/admin-status.php:139
+#: templates/admin-status.php:138
 msgid "Settings are fixed by the network for every site."
 msgstr "Los ajustes los fija la red para todos los sitios."
 
-#: templates/admin-status.php:143
+#: templates/admin-status.php:142
 msgid "Version"
 msgstr "Versión"
 
-#: templates/admin-status.php:144
+#: templates/admin-status.php:143
 msgid "schema"
 msgstr "esquema"
 
@@ -1602,7 +1563,7 @@ msgstr "Esto es lo que aparece en la ficha de cada usuario."
 msgid "Keep for"
 msgstr "Conservar durante"
 
-#: templates/settings-logging.php:36 templates/settings-logging.php:56
+#: templates/settings-logging.php:36 templates/settings-logging.php:49
 msgid "days"
 msgstr "días"
 
@@ -1626,49 +1587,47 @@ msgstr ""
 "Sirve para discutir con el soporte del proveedor. Cuesta capturar el diálogo"
 " SMTP en cada envío."
 
-#: templates/settings-logging.php:49
-msgid "Store the body of each message"
-msgstr "Guardar el cuerpo de cada mensaje"
+#: templates/settings-logging.php:47
+msgid "Keep transcripts for"
+msgstr "Guardar los diálogos por"
 
-#: templates/settings-logging.php:50
-msgid "Off by default on purpose."
-msgstr "Apagado por defecto a propósito."
+#: templates/settings-logging.php:55
+msgid "The content of the messages is never stored."
+msgstr "El contenido de los mensajes no se guarda nunca."
 
-#: templates/settings-logging.php:50
+#: templates/settings-logging.php:56
 msgid ""
-"The body is personal data — names, orders, sometimes a temporary password — "
-"and storing it is what turns a technical log into a legal liability. It is "
-"also the only way to resend a message, so the resend button only works for "
-"messages logged while this is on."
+"There is no setting for it. A log that kept bodies would be keeping every "
+"password-reset link the site has ever sent — and a reset link is not a "
+"record of what happened, it is a key to the account, valid for whoever reads"
+" the table next. What is kept is who was written to, when, about what, and "
+"how it went."
 msgstr ""
-"El cuerpo es dato personal —nombres, pedidos, a veces una contraseña "
-"temporal— y guardarlo es lo que convierte un registro técnico en un problema"
-" legal. También es la única forma de reenviar un mensaje, así que el botón "
-"de reenviar sólo funciona para los mensajes registrados con esto prendido."
+"No hay opción para activarlo. Un registro que guardara los cuerpos estaría "
+"guardando cada link de recuperación de contraseña que el sitio mandó alguna "
+"vez, y un link de recuperación no es el registro de lo que pasó: es una "
+"llave de la cuenta, válida para quien lea la tabla después. Lo que sí se "
+"guarda es a quién se le escribió, cuándo, sobre qué, y cómo salió."
 
-#: templates/settings-logging.php:54
-msgid "Keep bodies and transcripts for"
-msgstr "Conservar cuerpos y diálogos durante"
-
-#: templates/settings-logging.php:61
+#: templates/settings-logging.php:59
 msgid "Privacy"
 msgstr "Privacidad"
 
-#: templates/settings-logging.php:64
+#: templates/settings-logging.php:62
 msgid "Personal data requests"
 msgstr "Pedidos de datos personales"
 
-#: templates/settings-logging.php:66
+#: templates/settings-logging.php:64
 msgid "Include a person's mail history in their data export"
 msgstr ""
 "Incluir el historial de correo de una persona en su exportación de datos"
 
-#: templates/settings-logging.php:67
+#: templates/settings-logging.php:65
 msgid "Delete a person's mail history when they ask to be erased"
 msgstr ""
 "Borrar el historial de correo de una persona cuando pide que la borren"
 
-#: templates/settings-logging.php:73 templates/settings-sending.php:54
+#: templates/settings-logging.php:71 templates/settings-sending.php:54
 #: templates/settings-sites.php:29
 msgid "Save"
 msgstr "Guardar"
@@ -1982,22 +1941,79 @@ msgid_plural "%1$d messages to %2$s."
 msgstr[0] "%1$d mensaje a %2$s."
 msgstr[1] "%1$d mensajes a %2$s."
 
-#: templates/user-profile.php:28
-msgid ""
-"Bodies are not stored, so messages cannot be resent from here; turn on body "
-"storage in the settings to change that for future messages."
-msgstr ""
-"Los cuerpos no se guardan, así que desde acá no se puede reenviar; prendé el"
-" guardado del cuerpo en los ajustes para cambiarlo para los próximos "
-"mensajes."
-
-#: templates/user-profile.php:33
+#: templates/user-profile.php:30
 msgid "Nothing yet."
 msgstr "Todavía nada."
 
-#: templates/user-profile.php:74
+#: templates/user-profile.php:65
 msgid "See all in the mail log"
 msgstr "Ver todo en el historial de correo"
+
+#~ msgid "Message resent."
+#~ msgstr "Mensaje reenviado."
+
+#~ msgid "The message could not be resent. Check the mail log for the error."
+#~ msgstr "No se pudo reenviar el mensaje. Mirá el error en el historial."
+
+#~ msgid ""
+#~ "This message cannot be resent: its body was not stored. Turn on body storage"
+#~ " in the settings to make future messages resendable."
+#~ msgstr ""
+#~ "Este mensaje no se puede reenviar: no se guardó su cuerpo. Prendé el "
+#~ "guardado del cuerpo en los ajustes para que los próximos se puedan reenviar."
+
+#~ msgid "Resend"
+#~ msgstr "Reenviar"
+
+#~ msgid "Body"
+#~ msgstr "Cuerpo"
+
+#~ msgid "Message body"
+#~ msgstr "Cuerpo del mensaje"
+
+#~ msgid "Resend to this recipient"
+#~ msgstr "Reenviar a este destinatario"
+
+#~ msgid ""
+#~ "The body was not stored — body storage is off in the settings — so this "
+#~ "message cannot be resent."
+#~ msgstr ""
+#~ "El cuerpo no se guardó —el guardado del cuerpo está apagado en los ajustes—,"
+#~ " así que este mensaje no se puede reenviar."
+
+#~ msgid "Bodies are stored."
+#~ msgstr "Los cuerpos se guardan."
+
+#~ msgid "Bodies are not stored."
+#~ msgstr "Los cuerpos no se guardan."
+
+#~ msgid "Store the body of each message"
+#~ msgstr "Guardar el cuerpo de cada mensaje"
+
+#~ msgid "Off by default on purpose."
+#~ msgstr "Apagado por defecto a propósito."
+
+#~ msgid ""
+#~ "The body is personal data — names, orders, sometimes a temporary password — "
+#~ "and storing it is what turns a technical log into a legal liability. It is "
+#~ "also the only way to resend a message, so the resend button only works for "
+#~ "messages logged while this is on."
+#~ msgstr ""
+#~ "El cuerpo es dato personal —nombres, pedidos, a veces una contraseña "
+#~ "temporal— y guardarlo es lo que convierte un registro técnico en un problema"
+#~ " legal. También es la única forma de reenviar un mensaje, así que el botón "
+#~ "de reenviar sólo funciona para los mensajes registrados con esto prendido."
+
+#~ msgid "Keep bodies and transcripts for"
+#~ msgstr "Conservar cuerpos y diálogos durante"
+
+#~ msgid ""
+#~ "Bodies are not stored, so messages cannot be resent from here; turn on body "
+#~ "storage in the settings to change that for future messages."
+#~ msgstr ""
+#~ "Los cuerpos no se guardan, así que desde acá no se puede reenviar; prendé el"
+#~ " guardado del cuerpo en los ajustes para cambiarlo para los próximos "
+#~ "mensajes."
 
 #~ msgid "no host yet"
 #~ msgstr "todavía sin servidor"

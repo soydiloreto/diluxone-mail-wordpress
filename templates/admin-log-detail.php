@@ -46,17 +46,7 @@ $diluxone_mail_detail = $data['detail'];
 	</tbody>
 </table>
 
-<h2><?php esc_html_e( 'Body', 'diluxone-mail' ); ?></h2>
-<?php if ( is_array( $diluxone_mail_detail ) && '' !== $diluxone_mail_detail['body'] ) : ?>
-	<?php if ( 'text/html' === $diluxone_mail_detail['body_type'] ) : ?>
-		<iframe class="diluxone-mail-body" sandbox="" srcdoc="<?php echo esc_attr( $diluxone_mail_detail['body'] ); ?>" title="<?php esc_attr_e( 'Message body', 'diluxone-mail' ); ?>"></iframe>
-	<?php else : ?>
-		<pre class="diluxone-mail-body"><?php echo esc_html( $diluxone_mail_detail['body'] ); ?></pre>
-	<?php endif; ?>
-	<p><a class="button" href="<?php echo esc_url( $data['resend_url'] ); ?>"><?php esc_html_e( 'Resend to this recipient', 'diluxone-mail' ); ?></a></p>
-<?php else : ?>
-	<p class="description"><?php esc_html_e( 'The body was not stored — body storage is off in the settings — so this message cannot be resent.', 'diluxone-mail' ); ?></p>
-<?php endif; ?>
+<p class="description"><?php esc_html_e( 'The content of the message is not stored. What a mail log would keep is every password-reset link the site has ever sent, which is a key to an account rather than a record of one.', 'diluxone-mail' ); ?></p>
 
 <?php if ( is_array( $diluxone_mail_detail ) && '' !== $diluxone_mail_detail['transcript'] ) : ?>
 	<h2><?php esc_html_e( 'SMTP conversation', 'diluxone-mail' ); ?></h2>

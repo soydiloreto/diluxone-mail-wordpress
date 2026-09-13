@@ -23,12 +23,17 @@
  *     webhooks arrive, marking the right row will be an UPDATE by address and
  *     not a correction of the data model.
  *
- * The second stores each message's detail — the body, if the site turned it
- * on, and the SMTP dialogue with the provider, if it turned the extended log
- * on — one row per message. It is separate for three reasons: it has its own
- * retention, shorter, because it is the heaviest and most sensitive thing
- * stored; it is not duplicated on a bulk send; and turning it off is
- * emptying a table rather than migrating a column.
+ * The second stores each message's detail — the SMTP dialogue with the
+ * provider, if the site turned the extended log on — one row per message. It
+ * is separate for three reasons: it has its own retention, shorter, because it
+ * is the heaviest thing stored; it is not duplicated on a bulk send; and
+ * turning it off is emptying a table rather than migrating a column.
+ *
+ * What the plugin never stores is the content of the messages. A log that
+ * keeps bodies keeps password-reset links, and a reset link is not a record of
+ * what happened: it is a key to the account, valid for whoever reads the table
+ * next — the administrator, a backup, an exported database. There is no
+ * setting for it, because the safe answer does not improve by being optional.
  *
  * The index is on the EMAIL ADDRESS and not on a user ID, on purpose: mail
  * goes to addresses that belong to no user — a contact form, a notice to a
@@ -63,7 +68,7 @@ defined( 'ABSPATH' ) || exit;
  * update over FTP or through git — which never fires activation — create the
  * new column anyway.
  */
-const DILUXONE_MAIL_DB_VERSION = 2;
+const DILUXONE_MAIL_DB_VERSION = 3;
 
 /**
  * The states a row can be in, with their human-readable names.
@@ -148,8 +153,6 @@ function diluxone_mail_install(): void {
 	$sql_detail = "CREATE TABLE {$detail} (
 		message_id varchar(191) NOT NULL,
 		created_at datetime NOT NULL,
-		body longtext NOT NULL,
-		body_type varchar(20) NOT NULL DEFAULT 'text/plain',
 		transcript longtext NOT NULL,
 		PRIMARY KEY  (message_id),
 		KEY created_at (created_at)
@@ -157,10 +160,42 @@ function diluxone_mail_install(): void {
 
 	dbDelta( $sql );
 	dbDelta( $sql_detail );
+	diluxone_mail_drop_bodies();
 
 	// The version goes on the network when there is one: the tables belong to
 	// the network.
 	update_site_option( 'diluxone_mail_db_version', DILUXONE_MAIL_DB_VERSION );
+}
+
+/**
+ * Removes the message bodies a previous version stored.
+ *
+ * Until version 3 of the schema the plugin could be told to keep the body of
+ * every message. It no longer can, and dbDelta() does not drop columns: an
+ * upgrade would leave the bodies sitting in the table for as long as the site
+ * lives, which is precisely what the decision to stop storing them was about.
+ * So the columns go, and with them everything that was in them.
+ *
+ * Detail rows that were only there to hold a body are deleted too. What is
+ * left of them after the drop is an SMTP dialogue that is empty, which is not
+ * a record of anything.
+ */
+function diluxone_mail_drop_bodies(): void {
+	global $wpdb;
+
+	$detail  = diluxone_mail_detail_table();
+	$columns = (array) $wpdb->get_col( $wpdb->prepare( 'SHOW COLUMNS FROM %i LIKE %s', $detail, 'body%' ) );
+
+	if ( array() !== $columns ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- A one-off migration of our own table; there is nothing to cache and dropping a column is the point.
+		$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i DROP COLUMN body, DROP COLUMN body_type', $detail ) );
+	}
+
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- Same table, same migration.
+	$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE transcript = %s', $detail, '' ) );
+
+	delete_option( 'diluxone_mail_log_body' );
+	delete_site_option( 'diluxone_mail_log_body' );
 }
 
 /**
@@ -382,11 +417,12 @@ function diluxone_mail_log_totals( ?int $site_id ): array {
 /**
  * Stores or completes a message's detail.
  *
- * It is written at two moments — the body when the send is recorded, the SMTP
- * dialogue when it finishes — so whatever arrives is merged with what was
- * already there.
+ * Only the SMTP dialogue with the provider lives here. The content of the
+ * message does not: a mail log that keeps bodies keeps password-reset links,
+ * which are not a record of what happened but a key to the account, sitting
+ * in the database for whoever reads it next.
  *
- * @param array{body?: string, body_type?: string, transcript?: string} $fields
+ * @param array{transcript?: string} $fields
  */
 function diluxone_mail_detail_save( string $message_id, array $fields ): void {
 	global $wpdb;
@@ -402,31 +438,27 @@ function diluxone_mail_detail_save( string $message_id, array $fields ): void {
 		array(
 			'message_id' => $message_id,
 			'created_at' => current_time( 'mysql', true ),
-			'body'       => (string) ( $fields['body'] ?? $current['body'] ?? '' ),
-			'body_type'  => (string) ( $fields['body_type'] ?? $current['body_type'] ?? 'text/plain' ),
 			'transcript' => diluxone_mail_redact( (string) ( $fields['transcript'] ?? $current['transcript'] ?? '' ) ),
 		),
-		array( '%s', '%s', '%s', '%s', '%s' )
+		array( '%s', '%s', '%s' )
 	);
 }
 
 /**
  * A message's detail, if anything was stored.
  *
- * @return array{body: string, body_type: string, transcript: string}|null
+ * @return array{transcript: string}|null
  */
 function diluxone_mail_detail_get( string $message_id ): ?array {
 	global $wpdb;
 
-	$row = $wpdb->get_row( $wpdb->prepare( 'SELECT body, body_type, transcript FROM %i WHERE message_id = %s', diluxone_mail_detail_table(), $message_id ), ARRAY_A );
+	$row = $wpdb->get_row( $wpdb->prepare( 'SELECT transcript FROM %i WHERE message_id = %s', diluxone_mail_detail_table(), $message_id ), ARRAY_A );
 
 	if ( ! is_array( $row ) ) {
 		return null;
 	}
 
 	return array(
-		'body'       => (string) $row['body'],
-		'body_type'  => (string) $row['body_type'],
 		'transcript' => (string) $row['transcript'],
 	);
 }
@@ -435,9 +467,9 @@ function diluxone_mail_detail_get( string $message_id ): ?array {
  * Deletes what has expired, according to the configured retention.
  *
  * The detail first and with its own, shorter date. And if nothing justifies
- * keeping it — neither the body nor the extended log is on — the whole table
- * is emptied: a body stored while the checkbox was on has no business
- * surviving somebody turning it off.
+ * keeping it — the extended log is off — the whole table is emptied: a
+ * dialogue captured while the checkbox was on has no business surviving
+ * somebody turning it off.
  *
  * @return array{log: int, details: int}
  */
@@ -448,7 +480,7 @@ function diluxone_mail_log_purge(): array {
 	$detail_days = max( 1, (int) diluxone_mail_option( 'diluxone_mail_log_detail_retention_days' ) );
 	$log         = diluxone_mail_log_table();
 	$detail      = diluxone_mail_detail_table();
-	$keeps_any   = (bool) diluxone_mail_option( 'diluxone_mail_log_body' ) || (bool) diluxone_mail_option( 'diluxone_mail_log_extended' );
+	$keeps_any   = (bool) diluxone_mail_option( 'diluxone_mail_log_extended' );
 
 	$details = $keeps_any
 		? (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s', $detail, gmdate( 'Y-m-d H:i:s', time() - $detail_days * DAY_IN_SECONDS ) ) )

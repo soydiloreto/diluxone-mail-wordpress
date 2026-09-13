@@ -80,13 +80,11 @@ class AdminFlowTest extends IntegrationTestCase {
 			'diluxone_mail_host'     => 'smtp.propio.test',
 			'diluxone_mail_pass'     => 'clave nueva',
 			'diluxone_mail_from'     => 'hello@propio.test',
-			'diluxone_mail_log_body' => '1',
 		);
 
 		$this->assertStringContainsString( 'saved', $this->redirect_of( 'diluxone_mail_save_settings' ) );
 		$this->assertSame( 'smtp.propio.test', get_option( 'diluxone_mail_host' ) );
 		$this->assertSame( 'clave nueva', get_option( 'diluxone_mail_pass' ) );
-		$this->assertSame( 1, (int) get_option( 'diluxone_mail_log_body' ) );
 		$this->assertSame( 0, (int) get_option( 'diluxone_mail_log_extended' ) );
 	}
 
@@ -122,42 +120,6 @@ class AdminFlowTest extends IntegrationTestCase {
 		$this->nonce( 'diluxone_mail_revalidate' );
 		$this->assertStringContainsString( 'revalidated', $this->redirect_of( 'diluxone_mail_revalidate' ) );
 		$this->assertIsArray( get_site_transient( 'diluxone_mail_diagnosis_' . md5( 'example.org' ) ) );
-	}
-
-	public function test_a_real_resend_with_the_stored_body(): void {
-		update_option( 'diluxone_mail_mode', 'observe' );
-		update_option( 'diluxone_mail_log_body', 1 );
-
-		$fn = $this->interceptar();
-		wp_mail( 'ana@example.test', 'Original', '<p>Body</p>', array( 'Content-Type: text/html' ) );
-
-		$row = diluxone_mail_log_query( array( 'emails' => array( 'ana@example.test' ) ) )['rows'][0];
-
-		$_GET['id'] = (string) $row['id'];
-		$this->nonce( 'diluxone_mail_resend_' . (int) $row['id'] );
-
-		$url = $this->redirect_of( 'diluxone_mail_resend_action' );
-		remove_filter( 'pre_wp_mail', $fn, 10 );
-
-		$this->assertStringContainsString( 'diluxone_mail_done=resent', $url );
-		$this->assertSame( 2, diluxone_mail_log_query( array( 'emails' => array( 'ana@example.test' ) ) )['total'] );
-
-		$resend = diluxone_mail_log_query( array( 'emails' => array( 'ana@example.test' ) ) )['rows'][0];
-		$this->assertSame( 'Original', $resend['subject'] );
-		$this->assertSame( '<p>Body</p>', diluxone_mail_detail_get( (string) $resend['message_id'] )['body'] );
-	}
-
-	public function test_a_resend_without_a_body_says_so(): void {
-		update_option( 'diluxone_mail_mode', 'observe' );
-		$fn = $this->interceptar();
-		wp_mail( 'sin@example.test', 'Sin cuerpo', 'x' );
-		remove_filter( 'pre_wp_mail', $fn, 10 );
-
-		$row       = diluxone_mail_log_query( array( 'emails' => array( 'sin@example.test' ) ) )['rows'][0];
-		$_GET['id'] = (string) $row['id'];
-		$this->nonce( 'diluxone_mail_resend_' . (int) $row['id'] );
-
-		$this->assertStringContainsString( 'no-body', $this->redirect_of( 'diluxone_mail_resend_action' ) );
 	}
 
 	public function test_a_persons_profile_paints_their_own(): void {

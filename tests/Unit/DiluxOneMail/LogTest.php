@@ -55,6 +55,29 @@ class LogTest extends TestCase {
 		$this->assertSame( array(), $GLOBALS['_test_dbdelta'] );
 	}
 
+	public function test_installing_takes_the_old_bodies_with_it(): void {
+		// A site coming from schema 2, where the columns existed.
+		$this->db->next_col = array( 'body', 'body_type' );
+		\update_option( 'diluxone_mail_log_body', 1 );
+
+		\diluxone_mail_install();
+
+		$queries = array_column( $this->db->of( 'query' ), 'sql' );
+
+		$this->assertStringContainsString( 'DROP COLUMN body, DROP COLUMN body_type', $queries[0] );
+		$this->assertStringContainsString( 'WHERE transcript =', $queries[1] );
+		// The setting that used to turn it on goes as well: nothing reads it
+		// any more and leaving it behind suggests it still does something.
+		$this->assertFalse( \get_option( 'diluxone_mail_log_body' ) );
+
+		// A site that never had the columns is not asked to drop them.
+		$this->db->reset();
+		$this->db->next_col = array();
+		\diluxone_mail_install();
+		$queries = array_column( $this->db->of( 'query' ), 'sql' );
+		$this->assertStringNotContainsString( 'DROP COLUMN', implode( ' ', $queries ) );
+	}
+
 	public function test_one_row_per_recipient_with_its_defaults(): void {
 		\diluxone_mail_log_insert(
 			array(
@@ -148,21 +171,21 @@ class LogTest extends TestCase {
 		$this->assertStringNotContainsString( 'WHERE', $this->db->of( 'get_results' )[1]['sql'] );
 	}
 
-	public function test_the_detail_is_merged_into_what_was_there(): void {
+	public function test_the_detail_keeps_the_dialogue_with_the_password_out_of_it(): void {
 		\update_option( 'diluxone_mail_pass', 'secreto' );
-		$this->db->next_row = array( 'body' => 'cuerpo', 'body_type' => 'text/html', 'transcript' => '' );
+		$this->db->next_row = array( 'transcript' => '' );
 
 		\diluxone_mail_detail_save( 'uuid-1', array( 'transcript' => 'AUTH secreto' ) );
 
 		$r = $this->db->of( 'replace' )[0]['args'];
 
-		$this->assertSame( 'cuerpo', $r['body'] );
-		$this->assertSame( 'text/html', $r['body_type'] );
 		$this->assertSame( 'AUTH ***', $r['transcript'] );
+		// The content of the message has nowhere to go: there is no column.
+		$this->assertArrayNotHasKey( 'body', $r );
 
 		$this->db->next_row = null;
 		$this->assertNull( \diluxone_mail_detail_get( 'nothing' ) );
-		\diluxone_mail_detail_save( '', array( 'body' => 'x' ) );
+		\diluxone_mail_detail_save( '', array( 'transcript' => 'x' ) );
 		$this->assertCount( 1, $this->db->of( 'replace' ) );
 	}
 
@@ -179,7 +202,7 @@ class LogTest extends TestCase {
 		$this->assertSame( array( 'log' => 4, 'details' => 4 ), $r );
 
 		$this->db->reset();
-		\update_option( 'diluxone_mail_log_body', 1 );
+		\update_option( 'diluxone_mail_log_extended', 1 );
 		\diluxone_mail_log_purge();
 		$this->assertStringContainsString( 'WHERE created_at <', $this->db->of( 'query' )[0]['sql'] );
 	}

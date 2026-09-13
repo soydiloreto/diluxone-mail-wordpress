@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-13T23:07:25+00:00\n"
+"POT-Creation-Date: 2026-09-13T23:26:54+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: diluxone-mail\n"
@@ -47,7 +47,6 @@ msgstr ""
 #: includes/admin-log.php:62
 #: includes/admin-settings.php:147
 #: includes/observer.php:300
-#: includes/user-profile.php:141
 msgid "You are not allowed to do this."
 msgstr ""
 
@@ -83,11 +82,11 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: includes/admin-status.php:60
+#: includes/admin-status.php:59
 #: includes/admin.php:70
 #: includes/log-list-table.php:47
 #: includes/privacy.php:90
-#: templates/user-profile.php:40
+#: templates/user-profile.php:37
 msgid "Status"
 msgstr ""
 
@@ -169,62 +168,50 @@ msgid "DiluxOne Mail is now handling this site's outgoing mail."
 msgstr ""
 
 #: includes/admin.php:158
-msgid "Message resent."
-msgstr ""
-
-#: includes/admin.php:159
-msgid "The message could not be resent. Check the mail log for the error."
-msgstr ""
-
-#: includes/admin.php:160
-msgid "This message cannot be resent: its body was not stored. Turn on body storage in the settings to make future messages resendable."
-msgstr ""
-
-#: includes/admin.php:161
 msgid "DNS cache cleared and the diagnosis run again."
 msgstr ""
 
-#: includes/admin.php:162
+#: includes/admin.php:159
 msgid "The server answered and the credentials work. They are saved."
 msgstr ""
 
-#: includes/admin.php:163
+#: includes/admin.php:160
 msgid "The server did not accept the connection, so nothing was saved. What went wrong is below."
 msgstr ""
 
-#: includes/admin.php:164
+#: includes/admin.php:161
 msgid "Test message sent."
 msgstr ""
 
-#: includes/admin.php:165
+#: includes/admin.php:162
 msgid "This site's settings are fixed by the network and cannot be changed here."
 msgstr ""
 
 #. translators: %s: name of the constant
-#: includes/admin.php:184
+#: includes/admin.php:181
 #, php-format
 msgid "defined by the environment — PHP constant %s"
 msgstr ""
 
 #. translators: %s: name of the variable
-#: includes/admin.php:187
+#: includes/admin.php:184
 #, php-format
 msgid "defined by the environment — variable %s"
 msgstr ""
 
-#: includes/admin.php:189
+#: includes/admin.php:186
 msgid "set by the network"
 msgstr ""
 
-#: includes/admin.php:191
+#: includes/admin.php:188
 msgid "set on this site"
 msgstr ""
 
-#: includes/admin.php:193
+#: includes/admin.php:190
 msgid "default value"
 msgstr ""
 
-#: includes/admin.php:238
+#: includes/admin.php:235
 msgid "This site fixes this from code: whatever is chosen here, it stays as it is."
 msgstr ""
 
@@ -519,7 +506,7 @@ msgstr ""
 #: includes/log-list-table.php:44
 #: includes/privacy.php:78
 #: templates/admin-log-detail.php:19
-#: templates/user-profile.php:38
+#: templates/user-profile.php:35
 msgid "Date"
 msgstr ""
 
@@ -530,7 +517,7 @@ msgstr ""
 #: includes/log-list-table.php:46
 #: includes/privacy.php:82
 #: templates/admin-log-detail.php:18
-#: templates/user-profile.php:39
+#: templates/user-profile.php:36
 msgid "Subject"
 msgstr ""
 
@@ -540,7 +527,7 @@ msgid "Sent by"
 msgstr ""
 
 #: includes/log-list-table.php:53
-#: templates/user-profile.php:44
+#: templates/user-profile.php:41
 msgid "Site"
 msgstr ""
 
@@ -554,63 +541,58 @@ msgstr ""
 msgid "Details"
 msgstr ""
 
-#: includes/log-list-table.php:142
-#: templates/user-profile.php:66
-msgid "Resend"
-msgstr ""
-
-#: includes/log-list-table.php:150
-#: templates/user-profile.php:53
+#: includes/log-list-table.php:149
+#: templates/user-profile.php:49
 msgid "(no subject)"
 msgstr ""
 
-#: includes/log-list-table.php:182
+#: includes/log-list-table.php:181
 msgid "Filter by status"
 msgstr ""
 
-#: includes/log-list-table.php:184
+#: includes/log-list-table.php:183
 msgid "All statuses"
 msgstr ""
 
-#: includes/log-list-table.php:190
+#: includes/log-list-table.php:189
 msgid "All sites"
 msgstr ""
 
-#: includes/log-list-table.php:192
+#: includes/log-list-table.php:191
 msgid "Filter"
 msgstr ""
 
-#: includes/log-list-table.php:199
+#: includes/log-list-table.php:198
 msgid "No messages logged yet."
 msgstr ""
 
-#: includes/log.php:75
+#: includes/log.php:80
 #: templates/admin-overview.php:89
 msgid "Sending"
 msgstr ""
 
-#: includes/log.php:76
+#: includes/log.php:81
 msgid "Sent"
 msgstr ""
 
-#: includes/log.php:77
+#: includes/log.php:82
 #: templates/admin-status.php:89
 msgid "Failed"
 msgstr ""
 
-#: includes/log.php:78
+#: includes/log.php:83
 msgid "Handed to another plugin"
 msgstr ""
 
-#: includes/log.php:79
+#: includes/log.php:84
 msgid "Not sent (suppressed)"
 msgstr ""
 
-#: includes/log.php:83
+#: includes/log.php:88
 msgid "Bounced"
 msgstr ""
 
-#: includes/log.php:84
+#: includes/log.php:89
 msgid "Marked as spam"
 msgstr ""
 
@@ -1011,23 +993,10 @@ msgid "Attachments"
 msgstr ""
 
 #: templates/admin-log-detail.php:49
-msgid "Body"
+msgid "The content of the message is not stored. What a mail log would keep is every password-reset link the site has ever sent, which is a key to an account rather than a record of one."
 msgstr ""
 
 #: templates/admin-log-detail.php:52
-#: templates/settings-logging.php:47
-msgid "Message body"
-msgstr ""
-
-#: templates/admin-log-detail.php:56
-msgid "Resend to this recipient"
-msgstr ""
-
-#: templates/admin-log-detail.php:58
-msgid "The body was not stored — body storage is off in the settings — so this message cannot be resent."
-msgstr ""
-
-#: templates/admin-log-detail.php:62
 #: templates/settings-server.php:39
 #: templates/settings-test.php:39
 msgid "SMTP conversation"
@@ -1286,55 +1255,47 @@ msgstr ""
 msgid "Basic log."
 msgstr ""
 
-#: templates/admin-status.php:109
-msgid "Bodies are stored."
-msgstr ""
-
-#: templates/admin-status.php:109
-msgid "Bodies are not stored."
-msgstr ""
-
 #. translators: %s: time
-#: templates/admin-status.php:114
+#: templates/admin-status.php:113
 #, php-format
 msgid "Next purge in %s."
 msgstr ""
 
-#: templates/admin-status.php:124
+#: templates/admin-status.php:123
 msgid "DNS"
 msgstr ""
 
 #. translators: %s: domain
-#: templates/admin-status.php:129
+#: templates/admin-status.php:128
 #, php-format
 msgid "Diagnosing %s."
 msgstr ""
 
-#: templates/admin-status.php:133
+#: templates/admin-status.php:132
 msgid "dns_get_record() is available."
 msgstr ""
 
-#: templates/admin-status.php:133
+#: templates/admin-status.php:132
 msgid "dns_get_record() is unavailable on this host; queries go over DNS-over-HTTPS."
 msgstr ""
 
-#: templates/admin-status.php:138
+#: templates/admin-status.php:137
 msgid "Network"
 msgstr ""
 
-#: templates/admin-status.php:139
+#: templates/admin-status.php:138
 msgid "Sites may override the network settings."
 msgstr ""
 
-#: templates/admin-status.php:139
+#: templates/admin-status.php:138
 msgid "Settings are fixed by the network for every site."
 msgstr ""
 
-#: templates/admin-status.php:143
+#: templates/admin-status.php:142
 msgid "Version"
 msgstr ""
 
-#: templates/admin-status.php:144
+#: templates/admin-status.php:143
 msgid "schema"
 msgstr ""
 
@@ -1355,7 +1316,7 @@ msgid "Keep for"
 msgstr ""
 
 #: templates/settings-logging.php:36
-#: templates/settings-logging.php:56
+#: templates/settings-logging.php:49
 msgid "days"
 msgstr ""
 
@@ -1371,39 +1332,35 @@ msgstr ""
 msgid "Useful when arguing with the provider's support. Costs capturing the SMTP dialogue on every send."
 msgstr ""
 
-#: templates/settings-logging.php:49
-msgid "Store the body of each message"
+#: templates/settings-logging.php:47
+msgid "Keep transcripts for"
 msgstr ""
 
-#: templates/settings-logging.php:50
-msgid "Off by default on purpose."
+#: templates/settings-logging.php:55
+msgid "The content of the messages is never stored."
 msgstr ""
 
-#: templates/settings-logging.php:50
-msgid "The body is personal data — names, orders, sometimes a temporary password — and storing it is what turns a technical log into a legal liability. It is also the only way to resend a message, so the resend button only works for messages logged while this is on."
+#: templates/settings-logging.php:56
+msgid "There is no setting for it. A log that kept bodies would be keeping every password-reset link the site has ever sent — and a reset link is not a record of what happened, it is a key to the account, valid for whoever reads the table next. What is kept is who was written to, when, about what, and how it went."
 msgstr ""
 
-#: templates/settings-logging.php:54
-msgid "Keep bodies and transcripts for"
-msgstr ""
-
-#: templates/settings-logging.php:61
+#: templates/settings-logging.php:59
 msgid "Privacy"
 msgstr ""
 
-#: templates/settings-logging.php:64
+#: templates/settings-logging.php:62
 msgid "Personal data requests"
 msgstr ""
 
-#: templates/settings-logging.php:66
+#: templates/settings-logging.php:64
 msgid "Include a person's mail history in their data export"
 msgstr ""
 
-#: templates/settings-logging.php:67
+#: templates/settings-logging.php:65
 msgid "Delete a person's mail history when they ask to be erased"
 msgstr ""
 
-#: templates/settings-logging.php:73
+#: templates/settings-logging.php:71
 #: templates/settings-sending.php:54
 #: templates/settings-sites.php:29
 msgid "Save"
@@ -1619,14 +1576,10 @@ msgid_plural "%1$d messages to %2$s."
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/user-profile.php:28
-msgid "Bodies are not stored, so messages cannot be resent from here; turn on body storage in the settings to change that for future messages."
-msgstr ""
-
-#: templates/user-profile.php:33
+#: templates/user-profile.php:30
 msgid "Nothing yet."
 msgstr ""
 
-#: templates/user-profile.php:74
+#: templates/user-profile.php:65
 msgid "See all in the mail log"
 msgstr ""

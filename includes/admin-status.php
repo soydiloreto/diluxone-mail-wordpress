@@ -46,7 +46,6 @@ function diluxone_mail_status(): array {
 		'totals'        => diluxone_mail_log_totals( is_network_admin() ? null : get_current_blog_id() ),
 		'log_enabled'   => (bool) diluxone_mail_option( 'diluxone_mail_log_enabled' ),
 		'log_extended'  => (bool) diluxone_mail_option( 'diluxone_mail_log_extended' ),
-		'log_body'      => (bool) diluxone_mail_option( 'diluxone_mail_log_body' ),
 		'dns_system'    => diluxone_mail_dns_system_available(),
 		'dns_domain'    => diluxone_mail_dns_domain(),
 		'multisite'     => is_multisite(),

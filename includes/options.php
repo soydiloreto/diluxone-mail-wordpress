@@ -100,7 +100,6 @@ function diluxone_mail_option_defaults(): array {
 		// turns a technical log into a legal problem. Whoever turns it on
 		// knows what they are doing. Without the body a message cannot be
 		// resent, and the person's profile says so.
-		'diluxone_mail_log_body'                  => 0,
 		// The body and the SMTP dialogue are deleted before the rest of the
 		// row: a few days are enough to diagnose "I did not get yesterday's",
 		// and they are the heaviest and most sensitive thing stored.

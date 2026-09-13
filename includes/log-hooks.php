@@ -257,16 +257,6 @@ function diluxone_mail_capture( array $atts ): array {
 
 	diluxone_mail_log_insert( $rows );
 
-	if ( (bool) diluxone_mail_option( 'diluxone_mail_log_body' ) ) {
-		diluxone_mail_detail_save(
-			$uuid,
-			array(
-				'body'      => (string) ( $atts['message'] ?? '' ),
-				'body_type' => $meta['type'],
-			)
-		);
-	}
-
 	// The extended log stores the whole SMTP dialogue, and for that PHPMailer
 	// has to be asked to narrate it from before it connects.
 	if ( $extended ) {

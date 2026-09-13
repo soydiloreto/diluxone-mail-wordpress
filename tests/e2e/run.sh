@@ -84,7 +84,6 @@ wpc option update diluxone_mail_mode transport >/dev/null
 wpc option update diluxone_mail_from e2e@example.test >/dev/null
 wpc option update diluxone_mail_from_name "E2E" >/dev/null
 wpc option update diluxone_mail_log_enabled 1 >/dev/null
-wpc option update diluxone_mail_log_body 1 >/dev/null
 wpc option update diluxone_mail_log_extended 1 >/dev/null
 wpc option delete diluxone_mail_last_result >/dev/null 2>&1 || true
 ok "configured"
@@ -143,11 +142,11 @@ HAS=$(wpc eval "echo count( diluxone_mail_log_recipients_of( '${UUID}' ) );")
 [ "$HAS" = "2" ] || fail "Message-ID ${MID} does not match the log (rows: ${HAS})"
 ok "Message-ID ${MID} → 2 log rows"
 
-# ── 4. The detail stored the body and the SMTP dialogue ──────────────
-log "Checking the stored body and SMTP dialogue"
-DET=$(wpc eval "\$d = diluxone_mail_detail_get( '${UUID}' ); echo ( false !== strpos( \$d['body'], 'e2e body' ) ? 'body-ok ' : 'body-NO ' ) . ( false !== strpos( \$d['transcript'], '250' ) ? 'transcript-ok' : 'transcript-NO' );")
-[ "$DET" = "body-ok transcript-ok" ] || fail "detail: $DET"
-ok "body and SMTP dialogue in the detail table"
+# ── 4. The detail stored the SMTP dialogue, and not the body ─────────
+log "Checking the stored SMTP dialogue, and that the body is not there"
+DET=$(wpc eval "\$d = diluxone_mail_detail_get( '${UUID}' ); echo ( false !== strpos( \$d['transcript'], '250' ) ? 'transcript-ok ' : 'transcript-NO ' ) . ( isset( \$d['body'] ) ? 'body-LEAKED' : 'no-body-ok' );")
+[ "$DET" = "transcript-ok no-body-ok" ] || fail "detail: $DET"
+ok "SMTP dialogue in the detail table, no message content anywhere"
 
 # ── 5. The person's profile sees it ──────────────────────────────────
 log "Checking the lookup by a person's address"
@@ -189,49 +188,44 @@ print('   mode:', rows['mode'], '| host:', rows['host'])
 "
 ok "status is consistent"
 
-# ── 9. Resending from the log leaves a second message in the mailbox ─
-log "Resending the original message from the log"
-RID=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'to@example.test' ), 'per_page' => 1 ) )['rows'][0]['id'];")
-RES=$(wpc eval "\$r = diluxone_mail_resend( ${RID} ); echo \$r['ok'] ? 'ok' : 'fail:' . \$r['reason'];")
-[ "$RES" = "ok" ] || fail "resend: $RES"
-sleep 1
-python3 - "$API" "$SUBJECT" <<'PYEOF'
-import json, sys, urllib.request
-api, subject = sys.argv[1], sys.argv[2]
-msgs = [m for m in json.load(urllib.request.urlopen(f"{api}/messages"))["messages"] if m["Subject"] == subject]
-assert len(msgs) == 2, f"expected the original and the resend, found {len(msgs)}"
-headers = json.load(urllib.request.urlopen(f"{api}/message/{msgs[0]['ID']}/headers"))
-assert any(k.lower() == "x-diluxone-mail-resend-of" for k in headers), list(headers)
-print("   resend in the mailbox, with the X-DiluxOne-Mail-Resend-Of header")
-PYEOF
-ok "the resend arrived and points back at the original"
-
-# ── 10. A Bcc leaves its row too ─────────────────────────────────────
+# ── 9. A Bcc leaves its row too ─────────────────────────────────────
 log "Sending with a Bcc"
 wpc eval "wp_mail( 'to@example.test', 'Bcc ${STAMP}', 'x', array( 'Bcc: hidden@example.test' ) );" >/dev/null
 N=$(wpc diluxone-mail log list --format=json --email=hidden@example.test --limit=1 | python3 -c "import json,sys; r=json.load(sys.stdin); print(len(r), r[0]['status'] if r else '')")
 [ "$N" = "1 sent" ] || fail "the Bcc row: $N"
 ok "the hidden recipient has its row"
 
-# ── 11. Real observer mode: another plugin takes phpmailer_init ──────
-log "Installing a mu-plugin that handles the mail (the way WP Mail SMTP would)"
+# ── 10. Somebody else on phpmailer_init does not take the mail away ──
+log "Installing a mu-plugin that configures PHPMailer, the way a snippet does"
 mu_plugin other-mailer.php '<?php
 /* Plugin Name: Another Mailer */
 add_action( "phpmailer_init", function ( $m ) { $m->isSMTP(); $m->Host = "diluxone-mailpit"; $m->Port = 1025; $m->SMTPAuth = false; $m->SMTPAutoTLS = false; } );
-/* In observer mode the sender is left alone: it belongs to the other plugin, as in real life. */
 add_filter( "wp_mail_from", function () { return "other@example.test"; } );
 '
 wpc option update diluxone_mail_mode auto >/dev/null
+wpc option update diluxone_mail_force_from 1 >/dev/null
 MODE=$(wpc diluxone-mail status --format=json | python3 -c "import json,sys; r={x['key']:x['value'] for x in json.load(sys.stdin)}; print(r['mode'], '|', r['other mailers'])")
-[ "$MODE" = "auto (observing) | other-mailer.php" ] || fail "observer: $MODE"
+[ "$MODE" = "auto (sending) | other-mailer.php" ] || fail "phpmailer_init should not demote us: $MODE"
 wpc eval "wp_mail( 'obs@example.test', 'Observed ${STAMP}', 'x' );" >/dev/null
-ROW=$(wpc eval "\$r = diluxone_mail_log_query( array( 'emails' => array( 'obs@example.test' ), 'per_page' => 1 ) )['rows'][0]; echo \$r['status'], '|', \$r['provider'];")
-[ "$ROW" = "sent|observer" ] || fail "row in observer mode: $ROW"
-ok "detected, the send untouched, and the message still arrived through the other plugin: $MODE"
+ROW=$(wpc eval "\$r = diluxone_mail_log_query( array( 'emails' => array( 'obs@example.test' ), 'per_page' => 1 ) )['rows'][0]; echo \$r['status'], '|', \$r['from_email'];")
+[ "$ROW" = "sent|e2e@example.test" ] || fail "the sender should still be ours: $ROW"
+wpc option update diluxone_mail_force_from 0 >/dev/null
+ok "seen but not obeyed: this plugin stays the transport and keeps its sender"
+
+# ── 11. Real observer mode: another plugin owns wp_mail() ────────────
+log "Installing a mu-plugin that answers pre_wp_mail, which does end the send"
+npx wp-env run tests-cli sh -c "rm -f ${MU}/other-mailer.php" >/dev/null 2>&1
+mu_plugin owner.php '<?php
+/* Plugin Name: The Owner */
+add_filter( "pre_wp_mail", function ( $pre ) { return true; }, 10, 1 );
+'
+MODE=$(wpc diluxone-mail status --format=json | python3 -c "import json,sys; r={x['key']:x['value'] for x in json.load(sys.stdin)}; print(r['mode'], '|', r['other mailers'])")
+[ "$MODE" = "auto (observing) | owner.php" ] || fail "observer: $MODE"
+npx wp-env run tests-cli sh -c "rm -f ${MU}/owner.php" >/dev/null 2>&1
+ok "the one that ends the send does demote us: $MODE"
 
 # ── 12. The pre_wp_mail trap: an interceptor that cuts the send off ──
 log "Installing a mu-plugin that short-circuits pre_wp_mail with a closure (like Azure App Service's)"
-npx wp-env run tests-cli sh -c "rm -f ${MU}/other-mailer.php" >/dev/null 2>&1
 mu_plugin interceptor.php '<?php
 /* Plugin Name: Interceptor */
 add_filter( "pre_wp_mail", function ( $pre ) { return false; }, 10, 1 );

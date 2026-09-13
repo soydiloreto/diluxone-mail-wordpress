@@ -7,7 +7,7 @@ namespace Tests\Unit\DiluxOneMail;
 
 class UserProfileTest extends AdminTestCase {
 
-	public function test_the_profile_shows_their_own_with_the_resend_button(): void {
+	public function test_the_profile_shows_their_own(): void {
 		$user                   = $this->user( 3, 'Ana@X.test' );
 		$this->db->next_var     = 30;
 		$this->db->next_results = array( $this->row(), $this->row( array( 'status' => 'failed', 'error' => 'boom' ) ) );
@@ -19,19 +19,17 @@ class UserProfileTest extends AdminTestCase {
 		$this->assertStringContainsString( 'ana@x.test', $html );
 		$this->assertStringContainsString( '30 messages', $html );
 		$this->assertStringContainsString( 'boom', $html );
-		$this->assertStringContainsString( 'diluxone_mail_resend', $html );
+		$this->assertStringNotContainsString( 'Resend', $html );
 		$this->assertStringContainsString( 'See all in the mail log', $html );
 		$this->assertStringContainsString( "email IN ('ana@x.test')", $this->db->of( 'get_results' )[0]['sql'] );
 	}
 
-	public function test_with_no_body_there_is_no_button_and_with_nothing_it_says_so(): void {
+	public function test_with_nothing_sent_it_says_so(): void {
 		$user = $this->user( 3, 'ana@x.test' );
 
 		$html = $this->render( static fn() => \diluxone_mail_user_profile_section( $user ) );
 
 		$this->assertStringContainsString( 'Nothing yet', $html );
-		$this->assertStringNotContainsString( 'diluxone_mail_resend', $html );
-		$this->assertStringContainsString( 'cannot be resent', $html );
 	}
 
 	public function test_with_the_log_off_or_without_permission(): void {

@@ -165,18 +165,17 @@ class ScreensTest extends AdminTestCase {
 		$this->assertStringContainsString( 'X-Test', $html );
 		$this->assertStringContainsString( 'a.pdf', $html );
 		$this->assertStringContainsString( 'b@x.test', $html );
-		$this->assertStringContainsString( 'body storage is off', $html );
+		$this->assertStringContainsString( 'content of the message is not stored', $html );
 	}
 
-	public function test_the_detail_with_an_html_body_and_a_dialogue(): void {
+	public function test_the_detail_with_a_dialogue(): void {
 		$_GET['view']       = '7';
-		$this->db->next_row = $this->row( array( 'error' => 'x', 'body' => '<p>hola</p>', 'body_type' => 'text/html', 'transcript' => 'EHLO' ) );
+		$this->db->next_row = $this->row( array( 'error' => 'x', 'transcript' => 'EHLO' ) );
 
 		$html = $this->render( 'diluxone_mail_screen_log' );
 
-		$this->assertStringContainsString( 'srcdoc', $html );
 		$this->assertStringContainsString( 'EHLO', $html );
-		$this->assertStringContainsString( 'Resend to this recipient', $html );
+		$this->assertStringNotContainsString( 'Resend', $html );
 	}
 
 	public function test_the_detail_of_a_message_that_does_not_exist_or_belongs_to_another_site(): void {
@@ -217,8 +216,8 @@ class ScreensTest extends AdminTestCase {
 		$this->assertSame( 'DiluxOne Mail | Settings — Sitio', \diluxone_mail_admin_title( 'Settings — Sitio', 'Settings' ) );
 
 		$GLOBALS['_test_screen'] = new \WP_Screen( 'profile' );
-		$_GET['diluxone_mail_done'] = 'resent';
-		$this->assertStringContainsString( 'Message resent', $this->render( 'diluxone_mail_profile_notices' ) );
+		$_GET['diluxone_mail_done'] = 'saved';
+		$this->assertStringContainsString( 'Settings saved', $this->render( 'diluxone_mail_profile_notices' ) );
 
 		$GLOBALS['_test_screen'] = new \WP_Screen( 'edit-post' );
 		$this->assertSame( '', $this->render( 'diluxone_mail_profile_notices' ) );

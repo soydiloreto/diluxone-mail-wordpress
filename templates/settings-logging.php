@@ -44,19 +44,17 @@ $diluxone_mail_f = $data['fields'];
 			</td>
 		</tr>
 		<tr>
-			<th scope="row"><?php esc_html_e( 'Message body', 'diluxone-mail' ); ?></th>
-			<td>
-				<label><input type="checkbox" name="diluxone_mail_log_body" value="1" <?php checked( (int) $diluxone_mail_f['diluxone_mail_log_body']['value'], 1 ); ?> <?php disabled( $diluxone_mail_f['diluxone_mail_log_body']['readonly'] ); ?>> <?php esc_html_e( 'Store the body of each message', 'diluxone-mail' ); ?></label>
-				<p class="description"><strong><?php esc_html_e( 'Off by default on purpose.', 'diluxone-mail' ); ?></strong> <?php esc_html_e( 'The body is personal data — names, orders, sometimes a temporary password — and storing it is what turns a technical log into a legal liability. It is also the only way to resend a message, so the resend button only works for messages logged while this is on.', 'diluxone-mail' ); ?></p>
-			</td>
-		</tr>
-		<tr>
-			<th scope="row"><label for="diluxone_mail_log_detail_retention_days"><?php esc_html_e( 'Keep bodies and transcripts for', 'diluxone-mail' ); ?></label></th>
+			<th scope="row"><label for="diluxone_mail_log_detail_retention_days"><?php esc_html_e( 'Keep transcripts for', 'diluxone-mail' ); ?></label></th>
 			<td>
 				<input type="number" min="1" max="365" class="small-text" id="diluxone_mail_log_detail_retention_days" name="diluxone_mail_log_detail_retention_days" value="<?php echo esc_attr( (string) $diluxone_mail_f['diluxone_mail_log_detail_retention_days']['value'] ); ?>" <?php wp_readonly( $diluxone_mail_f['diluxone_mail_log_detail_retention_days']['readonly'] ); ?>> <?php esc_html_e( 'days', 'diluxone-mail' ); ?>
 			</td>
 		</tr>
 	</table>
+
+	<p class="description diluxone-mail-privacy-note">
+		<strong><?php esc_html_e( 'The content of the messages is never stored.', 'diluxone-mail' ); ?></strong>
+		<?php esc_html_e( 'There is no setting for it. A log that kept bodies would be keeping every password-reset link the site has ever sent — and a reset link is not a record of what happened, it is a key to the account, valid for whoever reads the table next. What is kept is who was written to, when, about what, and how it went.', 'diluxone-mail' ); ?>
+	</p>
 
 	<h2><?php esc_html_e( 'Privacy', 'diluxone-mail' ); ?></h2>
 	<table class="form-table" role="presentation">

@@ -106,7 +106,6 @@ $diluxone_mail_statuses = diluxone_mail_log_statuses();
 					<?php endif; ?>
 					<p class="description">
 						<?php echo $data['log_extended'] ? esc_html__( 'Extended log on.', 'diluxone-mail' ) : esc_html__( 'Basic log.', 'diluxone-mail' ); ?>
-						<?php echo $data['log_body'] ? esc_html__( 'Bodies are stored.', 'diluxone-mail' ) : esc_html__( 'Bodies are not stored.', 'diluxone-mail' ); ?>
 						<?php if ( $data['next_purge'] > 0 ) : ?>
 							<?php
 							printf(
