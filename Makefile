@@ -217,7 +217,10 @@ deploy-test: ## Copy the working tree into a real site for manual smoke-testing.
 	  exit 1; \
 	fi
 	@mkdir -p "$(SITE_PLUGIN)"
-	rsync -a --delete \
+	# --delete-excluded as well as --delete: without it rsync protects the
+	# excluded paths at the destination too, so anything that stopped shipping
+	# — or that .distignore learned to exclude later — stays behind forever.
+	rsync -a --delete --delete-excluded \
 	  --exclude-from=.distignore \
 	  --exclude='.git' \
 	  ./ "$(SITE_PLUGIN)/"

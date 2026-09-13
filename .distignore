@@ -62,6 +62,10 @@ coverage
 coverage.xml
 clover.xml
 
+# Where `make coverage` writes the Clover report and `make plugin-check`
+# assembles the shipped folder. Neither belongs in the zip.
+build
+
 # Build / dev tooling
 Makefile
 tools
