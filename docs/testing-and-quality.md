@@ -62,8 +62,8 @@ make lint-fix       # auto-fix what PHPCBF can
 
 Two project-specific points:
 
-- `diluxone_mail_settings_authorize()` is declared as a nonce-verification function, because it checks the capability for the right scope (site or network) *and* the nonce. Without that, WPCS sees the `$_POST` and not the `check_admin_referer()` inside the helper.
-- `includes/log.php` disables the direct-database-query sniffs for the whole file, in the file docblock, with the reason. Every `phpcs:enable` below names the sniff it re-enables — a bare `phpcs:enable` would re-enable those too.
+- Every `admin_post` handler calls `check_admin_referer()` on its first line, in plain sight, and only then `diluxone_mail_settings_authorize()` for the capability. The wp.org Plugin Check runs its own PHPCS without this repo's configuration and does not follow calls into helpers, so the nonce check has to be where the sniff can see it.
+- Table names go through the `%i` identifier placeholder of `$wpdb->prepare()` (WordPress 6.2+), so no query interpolates a table name. `includes/log.php` still disables the direct-database-query sniffs for the whole file, in the file docblock, with the reason; every `phpcs:enable` below names the sniff it re-enables, because a bare `phpcs:enable` would re-enable those too.
 
 ## PHPStan
 
