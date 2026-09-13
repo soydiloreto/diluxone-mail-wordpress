@@ -52,6 +52,7 @@ phpunit.xml
 phpunit.xml.dist
 phpunit-integration.xml
 phpunit-integration.xml.dist
+phpunit-multisite.xml
 tests
 .phpunit.result.cache
 .phpunit.cache

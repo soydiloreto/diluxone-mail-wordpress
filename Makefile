@@ -124,7 +124,7 @@ test-multisite: ## Convert the wp-env tests site to a network and run the multis
 	tests/e2e/multisite.sh
 
 .PHONY: test-all
-test-all: test-unit test-integration test-e2e test-multisite ## Every suite, in the order that leaves the tests site usable for the next.
+test-all: env-reset test-unit test-integration test-e2e test-multisite ## Every suite, on a fresh tests site, in the order that leaves it usable for the next.
 
 # -- Coverage ----------------------------------------------------------
 # Neither composer:2 nor php:8.3-cli ship a coverage driver. A tiny image
@@ -162,6 +162,22 @@ env-down: ## Stop the local wp-env Docker stack.
 .PHONY: env-clean
 env-clean: ## Destroy the local wp-env Docker stack and its volumes.
 	npx wp-env destroy
+
+# The multisite suite converts the tests site into a network by editing its
+# wp-config.php, and `wp-env clean` resets the database but not that file:
+# the next single-site run then fails with "Site not found". This puts the
+# tests site back to a fresh single-site install. It touches only the tests
+# site; the dev site at :8888 is left alone.
+.PHONY: env-reset
+env-reset: ## Reset the wp-env tests site to a fresh single-site install (undoes the multisite conversion).
+	-npx wp-env run tests-cli wp config delete MULTISITE >/dev/null 2>&1
+	-npx wp-env run tests-cli wp config delete SUBDOMAIN_INSTALL >/dev/null 2>&1
+	-npx wp-env run tests-cli wp config delete DOMAIN_CURRENT_SITE >/dev/null 2>&1
+	-npx wp-env run tests-cli wp config delete PATH_CURRENT_SITE >/dev/null 2>&1
+	-npx wp-env run tests-cli wp config delete SITE_ID_CURRENT_SITE >/dev/null 2>&1
+	-npx wp-env run tests-cli wp config delete BLOG_ID_CURRENT_SITE >/dev/null 2>&1
+	-npx wp-env run tests-cli wp config delete WP_ALLOW_MULTISITE >/dev/null 2>&1
+	npx wp-env clean tests
 
 # -- Deploy / release --------------------------------------------------
 # The plugin is developed here and tried on a real site. `make deploy-test`

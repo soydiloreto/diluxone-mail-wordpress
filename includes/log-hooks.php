@@ -360,7 +360,7 @@ add_filter( 'pre_wp_mail', 'diluxone_mail_watch_pre_wp_mail', PHP_INT_MAX, 2 );
  * transporte: es una cabecera del mensaje, y es la que los proveedores
  * devuelven cuando avisan de un rebote.
  *
- * @param PHPMailer\PHPMailer\PHPMailer $phpmailer
+ * @param mixed $phpmailer Lo que traiga el hook; se comprueba el tipo adentro.
  */
 function diluxone_mail_stamp_message_id( $phpmailer ): void {
 	$actual = diluxone_mail_current();

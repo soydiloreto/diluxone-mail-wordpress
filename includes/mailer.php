@@ -65,7 +65,7 @@ function diluxone_mail_debug_enabled( ?bool $set = null ): bool {
 /**
  * Configura PHPMailer.
  *
- * @param PHPMailer\PHPMailer\PHPMailer $phpmailer
+ * @param mixed $phpmailer Lo que traiga el hook; se comprueba el tipo adentro.
  */
 function diluxone_mail_phpmailer_init( $phpmailer ): void {
 	if ( ! $phpmailer instanceof PHPMailer\PHPMailer\PHPMailer ) {

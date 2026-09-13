@@ -6,119 +6,93 @@ What every quality gate enforces, why, and how to run each one locally.
 
 | Layer | Tool | Catches | CI workflow | Make target |
 | --- | --- | --- | --- | --- |
-| Unit tests | PHPUnit + brain/monkey + mockery | Logic regressions in pure-PHP units. | `pr-checks.yml` | `make test` |
-| Integration tests | PHPUnit + wp-env | Behaviour against a real WordPress runtime + DB. | `pr-checks.yml` | `make test-integration` |
-| Coding style | PHP_CodeSniffer + WordPress Coding Standards | Style, naming, escaping, sanitisation, prepared statements, deprecated APIs. | `pr-checks.yml` | `make lint` |
-| Static analysis | PHPStan level 8 + szepeviktor/phpstan-wordpress | Type safety, unreachable code, undefined methods/properties, missing return types. **No baseline.** | `tests-stan.yml` | `make stan` |
-| Security taint analysis | Psalm + humanmade/psalm-plugin-wordpress (taint-only mode) | XSS, SQL injection, command injection, file-system traversal — user input flowing into dangerous sinks. | `psalm-taint.yml` | `make psalm` |
-| i18n | `wp i18n make-pot` | Missing translator comments on placeholders, dynamic text domains, conflicting translator hints, concat'd translatable strings. | `i18n-validate.yml` | `make i18n` |
-| Plugin Check (wp.org) | wordpress/plugin-check | The same checks the wp.org plugin team runs at submission/review time. | `pr-checks.yml` | (no Make target — runs on PR) |
-| Security supply chain | CodeQL (JS) | Common JS vulnerability patterns. | `codeql.yml` | (no Make target — runs on PR) |
+| Unit tests | PHPUnit, WordPress stubs | Logic regressions: SPF lookup counting, DKIM/DMARC parsing, provider profiles, address parsing, environment/network precedence, password redaction. | `tests-unit.yml` | `make test-unit` |
+| Coverage gate | PHPUnit + pcov | The unit suite covering less than it did. A ratchet, not a target. | `tests-unit.yml` (coverage job) | `make coverage` |
+| Integration tests | PHPUnit inside wp-env | Behaviour against a real WordPress + MySQL: the log tables, one row per recipient, interception, suppression, body storage, privacy export/erase, purge. | `tests-integration.yml` | `make test-integration` |
+| End-to-end | Bash + Mailpit + WP-CLI | A real `wp_mail()` through the plugin into a real mailbox, verified through Mailpit's API; the failure path with the real SMTP error; the per-user history; the CLI; the DNS diagnosis against a live domain. | `tests-e2e.yml` | `make test-e2e` |
+| Multisite | PHPUnit + WP-CLI on the tests site converted to a network | Shared tables with `site_id`, the per-person history across sites, network-over-site precedence with real options. | `tests-e2e.yml` | `make test-multisite` |
+| Coding style | PHP_CodeSniffer + WordPress Coding Standards | Style, naming, escaping, sanitisation, prepared statements, nonces. | `tests-style.yml` | `make lint` |
+| Static analysis | PHPStan level 8 + szepeviktor/phpstan-wordpress | Type safety, unreachable code, undefined functions. **No baseline.** | `tests-stan.yml` | `make stan` |
+| Security taint analysis | Psalm + humanmade/psalm-plugin-wordpress (taint-only mode) | User input reaching a dangerous sink without an escaper. | `psalm-taint.yml` | `make psalm` |
+| i18n | `wp i18n make-pot` | Missing translator comments, dynamic text domains, concatenated strings. | `i18n-validate.yml` | `make i18n` |
+| Plugin Check (wp.org) | wordpress/plugin-check | What the wp.org plugin team checks at review time. | `pr-checks.yml` | — |
+| CodeQL | CodeQL (JS) | Common JS vulnerability patterns, once there is JavaScript to scan. | `codeql.yml` | — |
 
-Every layer must pass before a PR can land on `main` (branch protection enforces it).
+Every layer must pass before a PR can land on `main`.
 
-## Unit tests
+## The four test suites, and why there are four
 
-Located in [`tests/Unit/`](../tests/Unit/). They run in pure PHP without WordPress — `brain/monkey` stubs out `__()`, `apply_filters`, etc., so a unit test can exercise a class method without booting WordPress.
+Each suite catches a class of bug the others cannot.
 
-```bash
-make test           # default target → unit tests only
-make test-unit      # explicit
-```
+**Unit** (`tests/Unit/`) runs in plain PHP against stubs in `tests/stubs/wordpress-stubs.php`. It is where the logic lives: the SPF tree walker, the DKIM key-size estimate, the DMARC parser, the precedence chain. DNS is never queried in a unit test — it is *seeded*: each answer is written into the stubbed site-transient cache under the key the plugin would use, then the real analysis function runs. `tests/Unit/DiluxOneMail/DnsTestCase.php` has the helper.
 
-When you add a new unit test:
+**Integration** (`tests/Integration/`) runs inside the wp-env *tests* container against a real WordPress and database. No SMTP server: sends are short-circuited on `pre_wp_mail` the way an API-based mail plugin would, which exercises that path too. Every test starts with all plugin options deleted — site and network — so nothing leaks between tests.
 
-- Mirror the source path: a class at `includes/Foo/Bar.php` is tested by `tests/Unit/Foo/BarTest.php`.
-- Extend the project's base unit test class, not PHPUnit's directly — it sets up the brain/monkey lifecycle.
-- Don't touch `$_GET`, `$_POST`, the database, the filesystem, or `define()` plugin constants. Move that to integration tests instead.
+**End-to-end** (`tests/e2e/run.sh`) is the only suite that walks the whole chain — config → `phpmailer_init` → SMTP → mailbox. It starts Mailpit on the wp-env Docker network, points the plugin at it with the local profile, sends a real `wp_mail()` with a Cc from WP-CLI, and checks through Mailpit's HTTP API that the message arrived with the right From, To, Cc and body, that the log has one row per recipient in `sent`, that the message's `Message-ID` header is the log's id, that body and SMTP transcript were stored, that a user's profile finds their mail, that `wp diluxone-mail test` works, that a deliberately wrong port leaves a `failed` row with the actual SMTP error, that `status` tells the truth, and that `dns` diagnoses a live domain. It found a real bug on its first run — the From override was applied too late for sites on `localhost` — that no other suite could have seen.
 
-## Integration tests
-
-Located in [`tests/Integration/`](../tests/Integration/). They run inside the `wp-env` Docker stack, against a real WordPress + MySQL.
+**Multisite** (`tests/e2e/multisite.sh` + `tests/Multisite/`) converts the tests site into a network, creates a second site and network-activates the plugin, then runs a PHPUnit suite and a few WP-CLI checks from the second site. It goes last because converting the site is destructive for the suites before it.
 
 ```bash
-make env                # boot wp-env first
-make test-integration   # run the integration suite
+make env-up              # once
+make test-unit
+make test-integration
+make test-e2e
+make test-multisite      # last: converts the tests site to a network
+make test-all            # all four, in that order
 ```
 
-Use these for code paths that genuinely depend on WordPress core: hooks, options, transients, custom tables, AJAX handlers, REST routes. Anything that boils down to "I need `wpdb`" or "I need `apply_filters` to actually apply".
+## Coverage
 
-CI runs the same suite (`pr-checks.yml`, the **Integration tests (wp-env)** job) so a pure-Docker contributor can develop against the exact same environment.
+```bash
+make coverage            # unit-suite line coverage + threshold
+```
+
+Neither `composer:2` nor `php:8.3-cli` ship a coverage driver, so `make coverage` builds a small image with pcov once (`tools/coverage.Dockerfile`) and caches it. CI uses `setup-php` with `coverage: pcov`.
+
+The threshold (`COVERAGE_MIN` in the Makefile, the same number in `tests-unit.yml`) is a **ratchet**: it sits just under what the unit suite actually covers and is only ever raised. It measures line coverage of `includes/` by the unit suite alone — admin screens, templates and WP-CLI are exercised by the integration, E2E and multisite suites, which are not part of that number. An invented high number would measure nothing; a real one that cannot go down does.
 
 ## PHPCS / WordPress Coding Standards
 
 Configuration: [`phpcs.xml.dist`](../phpcs.xml.dist).
 
 ```bash
-make lint           # report violations
-make lint-fix       # auto-fix what can be auto-fixed (PHPCBF)
+make lint           # report
+make lint-fix       # auto-fix what PHPCBF can
 ```
 
-The ruleset enforces the WordPress Coding Standards plus a small project-specific overlay:
+Two project-specific points:
 
-- **DTOs and Enums** (`includes/DTOs/`, `includes/Enums/`) use modern PSR-12 / PascalCase, not WPCS naming. The rules that conflict with that style are excluded for those paths only.
-- **Yoda conditions**, **trailing-comma-in-array**, **base64 encoding** (legitimate for crypto), and a few comment-formatting nits are globally relaxed; everything else is on.
-- The version-alignment script tolerates `-dev` / `-alpha` / `-beta` / `-rc` pre-release suffixes by stripping them before comparing the PHP `Version:` header to the readme `Stable tag:` (see [`release.md`](release.md)).
-
-When PHPCS reports a violation, the rule code is in the right column. Search for it in the config or in [WPCS docs](https://github.com/WordPress/WordPress-Coding-Standards/wiki) before suppressing — most warnings are real bugs (missing escaping, missing nonce, missing prepare).
+- `diluxone_mail_settings_authorize()` is declared as a nonce-verification function, because it checks the capability for the right scope (site or network) *and* the nonce. Without that, WPCS sees the `$_POST` and not the `check_admin_referer()` inside the helper.
+- `includes/log.php` disables the direct-database-query sniffs for the whole file, in the file docblock, with the reason. Every `phpcs:enable` below names the sniff it re-enables — a bare `phpcs:enable` would re-enable those too.
 
 ## PHPStan
-
-Configuration: [`phpstan.neon`](../phpstan.neon). Bootstrap stubs: [`phpstan-bootstrap.php`](../phpstan-bootstrap.php).
 
 ```bash
 make stan
 ```
 
-We run **level 8 (max strictness) with no baseline.** Every type error must be fixed in code, not suppressed. The `szepeviktor/phpstan-wordpress` extension teaches PHPStan about the WordPress API surface so e.g. `wp_remote_get()` returns `array|WP_Error` and `$wpdb->update()` returns `int|false`.
-
-A couple of constants are declared `dynamicConstantNames` (`WP_DEBUG`, `COOKIEHASH`) so PHPStan does not collapse `if ( WP_DEBUG )` into "always false" on the bootstrap stub default. Their runtime values come from `wp-config.php` and change per install.
-
-If you find a real type error PHPStan can't see (e.g. PHP extension stubs are missing in CI), use `// @phpstan-ignore-next-line <identifier>` with a comment explaining why. Don't add to a baseline — the project deliberately doesn't have one.
+Level 8, no baseline. The WordPress extension teaches PHPStan the core API. `phpstan-bootstrap.php` defines the plugin constants the analysis would otherwise not see.
 
 ## Psalm taint analysis
-
-Configuration: [`psalm.xml`](../psalm.xml).
 
 ```bash
 make psalm
 ```
 
-Psalm here runs in **taint-analysis mode only**. The `humanmade/psalm-plugin-wordpress` plugin teaches it that `esc_html()`, `esc_attr()`, `esc_url()`, `wpdb->prepare()`, `sanitize_*()` are sanitisation barriers, so user-controlled values from `$_GET` / `$_POST` / `$_REQUEST` / `$_COOKIE` / `$_FILES` / `$_SERVER` only become findings if they reach a dangerous sink (`echo`, `eval`, `exec`, `$wpdb->query()`, `file_put_contents`, `header`, …) without passing through one.
+Taint-only mode. Every value from `$_GET` / `$_POST` must pass through an escaper or sanitiser before reaching an output or a query. The templates in `templates/` are the usual place a finding shows up.
 
-General static type-checking is suppressed in `psalm.xml` — that's PHPStan's job. Running both as type-checkers would just duplicate failures and obscure real taint findings.
-
-If Psalm flags a path you believe is safe, the right fix is almost always to pipe the value through the appropriate WordPress escaper. Suppressing should be a last resort and must be justified inline.
-
-## i18n validation
-
-Configuration: [`.github/workflows/i18n-validate.yml`](../.github/workflows/i18n-validate.yml).
+## i18n
 
 ```bash
-make i18n
+make i18n           # languages/diluxone-mail.pot + compile languages/*.po to .mo
 ```
 
-The Makefile target runs `wp i18n make-pot` and writes the result to `build/diluxone-mail.pot`. The CI workflow does the same and additionally fails the build if any `Warning:` / `Error:` line appears in the output (WP-CLI prints them to stderr but exits 0 even when present, so we capture the output and grep ourselves).
-
-The workflow catches three real classes of bug:
-
-- **Missing translator comments** on `sprintf()` placeholders. WordPress requires a `/* translators: %s: ... */` comment **on the line immediately preceding** the translation function call — separating it with a blank line silently makes it invisible to gettext. We learned this the hard way fixing six of these on the first run.
-- **Conflicting translator comments** on the same msgid. If `Paused (%s)` appears in three places, all three must agree on what the placeholder means; gettext merges identical msgids.
-- **Concat of translatable strings** like `__('Hello ') . __(' world')`, **dynamic text domains** like `__($string, $variable)`, and other hard-to-translate patterns.
-
-Plugin Check (the wp.org-side validator) catches a partly overlapping but distinct subset, so both run on every PR.
-
-## Plugin Check
-
-CI step in [`pr-checks.yml`](../.github/workflows/pr-checks.yml#L60). Runs the [official WordPress Plugin Check](https://github.com/WordPress/plugin-check-action) action with all categories enabled (`plugin_repo`, `security`, `performance`, `accessibility`, `general`) plus experimental checks. Some codes are explicitly ignored (`hidden_files`, `github_directory`, `unexpected_markdown_file`, `stable_tag_mismatch`) because they false-positive on the GitHub-flat repo layout or on the `-dev` suffix workflow.
-
-If you ever submit a new version of the plugin to wp.org, the same checks run there. CI catches them earlier so a wp.org reviewer never has to.
+Strings in code are English; translations ship with the plugin in `languages/`. The Spanish (`es_AR`) translation is maintained by hand and is what makes the DNS diagnosis read as prose in Spanish. CI fails on any warning from `make-pot` — a translator comment separated from its `sprintf()` by a blank line is invisible to gettext, and that is the most common one.
 
 ## Running everything at once
 
 ```bash
-make check     # lint + stan + psalm + tests
+make check     # lint + stan + psalm + unit tests + coverage gate
+make test-all  # the four test suites against wp-env
 make release   # make check + version-alignment dry-run
 ```
-
-`make release` is what you should run before pushing a release tag — it's the closest you can get to "what CI will say" without actually pushing.
