@@ -66,7 +66,7 @@ ordering assumption.
 | Admin screens | `admin*.php` |
 | Privacy exporters and erasers | `privacy.php` |
 | WP-CLI | `cli.php` |
-| Schema migrations | `upgrade.php` |
+| Schema version and `dbDelta()` | `log.php` (`DILUXONE_MAIL_DB_VERSION`) |
 
 ---
 
