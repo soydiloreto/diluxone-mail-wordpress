@@ -111,8 +111,8 @@ function diluxone_mail_settings_progress(): array {
 /**
  * Why a tab is closed, in the words of what to do about it.
  *
- * The tab that is missing something is never the tab being explained: it is
- * the one before it. So the sentence names the step to go back to.
+ * Keyed by the step that comes after the missing one, so the sentence names
+ * what to go back and do rather than where you are standing.
  */
 function diluxone_mail_tab_blocked_reason( string $tab ): string {
 	switch ( $tab ) {
@@ -128,11 +128,37 @@ function diluxone_mail_tab_blocked_reason( string $tab ): string {
 }
 
 /**
+ * The first step of the chain that is not done yet.
+ *
+ * Not the one immediately before: a step opens when everything before it is
+ * done, not when its neighbour is. Asking only the neighbour let the last step
+ * open over an unverified server, because "there is a From address" was still
+ * true from an earlier configuration — the screen offered to send a test
+ * message through a server that had never answered.
+ *
+ * @param array<string, bool> $progress
+ */
+function diluxone_mail_first_unfinished_step( int $before, array $progress, string $scope = 'site' ): string {
+	foreach ( diluxone_mail_settings_tabs( $scope ) as $slug => $tab ) {
+		if ( 0 === $tab['step'] || $tab['step'] >= $before ) {
+			continue;
+		}
+
+		if ( ! ( $progress[ $slug ] ?? false ) ) {
+			return $slug;
+		}
+	}
+
+	return '';
+}
+
+/**
  * Is this tab open?
  *
- * A tab with no prerequisite is always open. One with a prerequisite opens
- * when that step is done — and stays open from then on, because coming back
- * to correct something already configured is the normal case, not an escape.
+ * A tab that is not part of the chain is always open. One that is opens when
+ * every step before it is done — and stays open from then on, because coming
+ * back to correct something already configured is the normal case, not an
+ * escape.
  *
  * @param array<string, bool> $progress
  */
@@ -143,9 +169,11 @@ function diluxone_mail_tab_open( string $tab, array $progress, string $scope = '
 		return false;
 	}
 
-	$needs = $tabs[ $tab ]['needs'];
+	if ( 0 === $tabs[ $tab ]['step'] ) {
+		return true;
+	}
 
-	return '' === $needs ? true : (bool) ( $progress[ $needs ] ?? false );
+	return '' === diluxone_mail_first_unfinished_step( $tabs[ $tab ]['step'], $progress, $scope );
 }
 
 /**
@@ -233,10 +261,16 @@ function diluxone_mail_tabs_nav( string $current, string $scope ): void {
 		}
 
 		if ( ! $open ) {
+			// The reason belongs to the step that is missing, which on a tab
+			// further down the chain is not the one right before it.
+			$missing = diluxone_mail_first_unfinished_step( $tab['step'], $progress, $scope );
+			$after   = array_keys( $tabs );
+			$after   = (string) ( $after[ (int) array_search( $missing, $after, true ) + 1 ] ?? $slug );
+
 			printf(
 				'<span class="%1$s" aria-disabled="true" title="%2$s">%3$s</span>',
 				esc_attr( $classes ),
-				esc_attr( diluxone_mail_tab_blocked_reason( $slug ) ),
+				esc_attr( diluxone_mail_tab_blocked_reason( $after ) ),
 				esc_html( $label ) . ' <span aria-hidden="true">&#128274;</span>'
 			);
 

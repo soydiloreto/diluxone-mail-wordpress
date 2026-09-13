@@ -98,7 +98,7 @@ $diluxone_mail_c = $data['connection'];
 		<tr>
 			<th scope="row"><?php esc_html_e( 'Authentication', 'diluxone-mail' ); ?></th>
 			<td>
-				<label><input type="checkbox" name="diluxone_mail_auth" value="1" <?php checked( (int) $diluxone_mail_f['diluxone_mail_auth']['value'], 1 ); ?> <?php disabled( $diluxone_mail_f['diluxone_mail_auth']['readonly'] || (bool) $data['profile']['local'] ); ?>> <?php esc_html_e( 'The server requires a username and password', 'diluxone-mail' ); ?></label>
+				<label><input type="checkbox" id="diluxone_mail_auth" name="diluxone_mail_auth" value="1" <?php checked( (int) $diluxone_mail_f['diluxone_mail_auth']['value'], 1 ); ?> <?php disabled( $diluxone_mail_f['diluxone_mail_auth']['readonly'] || (bool) $data['profile']['local'] ); ?>> <?php esc_html_e( 'The server requires a username and password', 'diluxone-mail' ); ?></label>
 				<?php if ( (bool) $data['profile']['local'] ) : ?>
 					<p class="description"><?php esc_html_e( 'Local profiles never authenticate and never try to upgrade to TLS, whatever the server offers. That is what makes Mailpit and MailHog work out of the box.', 'diluxone-mail' ); ?></p>
 				<?php endif; ?>

@@ -275,3 +275,9 @@ iframe.diluxone-mail-body {
 .diluxone-mail-done-note {
 	max-width: 640px;
 }
+
+/* A field the checkbox above it has just turned off. */
+.diluxone-mail-row-off th,
+.diluxone-mail-row-off td {
+	opacity: .55;
+}

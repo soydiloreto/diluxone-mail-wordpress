@@ -29,7 +29,17 @@ defined( 'ABSPATH' ) || exit;
  * @param array<string, mixed>|null $config Defaults to the effective configuration.
  */
 function diluxone_mail_connection_fingerprint( ?array $config = null ): string {
-	$config = null === $config ? diluxone_mail_config() : $config;
+	if ( null === $config ) {
+		// diluxone_mail_config() carries the fields that can come from a
+		// constant or the environment, and `auth` and `timeout` are not among
+		// them: they are plain options. Reading them off that array gave an
+		// absent key, which cast to 0 and never changed — so turning
+		// authentication off left the connection looking verified when it was
+		// exactly the thing that had changed.
+		$config            = diluxone_mail_config();
+		$config['auth']    = (int) diluxone_mail_option( 'diluxone_mail_auth' );
+		$config['timeout'] = (int) diluxone_mail_option( 'diluxone_mail_timeout' );
+	}
 
 	return hash(
 		'sha256',
@@ -40,6 +50,7 @@ function diluxone_mail_connection_fingerprint( ?array $config = null ): string {
 				(string) (int) ( $config['port'] ?? 0 ),
 				(string) ( $config['encryption'] ?? '' ),
 				(string) (int) ( $config['auth'] ?? 0 ),
+				(string) (int) ( $config['timeout'] ?? 0 ),
 				(string) ( $config['user'] ?? '' ),
 				'' === (string) ( $config['pass'] ?? '' ) ? '' : hash( 'sha256', (string) $config['pass'] ),
 			)

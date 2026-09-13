@@ -286,5 +286,21 @@ function diluxone_mail_admin_styles( string $hook ): void {
 		array(),
 		file_exists( $css ) ? (string) filemtime( $css ) : DILUXONE_MAIL_VERSION
 	);
+
+	// Only where there is a form to help: the log, the status and somebody's
+	// profile have nothing for it to do.
+	if ( false === strpos( $hook, DILUXONE_MAIL_SETTINGS ) && false === strpos( $hook, 'diluxone-mail-network' ) ) {
+		return;
+	}
+
+	$js = DILUXONE_MAIL_DIR . 'assets/js/diluxone-mail-admin.js';
+
+	wp_enqueue_script(
+		'diluxone-mail-admin',
+		DILUXONE_MAIL_URL . 'assets/js/diluxone-mail-admin.js',
+		array(),
+		file_exists( $js ) ? (string) filemtime( $js ) : DILUXONE_MAIL_VERSION,
+		true
+	);
 }
 add_action( 'admin_enqueue_scripts', 'diluxone_mail_admin_styles' );

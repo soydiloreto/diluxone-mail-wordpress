@@ -39,6 +39,31 @@ class TabsTest extends AdminTestCase {
 		$this->assertSame( 'profile', \diluxone_mail_current_tab() );
 	}
 
+	public function test_a_later_step_stays_closed_over_an_earlier_gap(): void {
+		// The From address survives from an earlier configuration while the
+		// server it would send through has never answered. Asking only the
+		// neighbouring step let the last one open here, and offered to send a
+		// test message through a server that was never verified.
+		\update_option( 'diluxone_mail_provider', 'mailjet' );
+		\update_option( 'diluxone_mail_from', 'hello@x.test' );
+
+		$progress = \diluxone_mail_settings_progress();
+
+		$this->assertTrue( $progress['sender'] );
+		$this->assertFalse( $progress['server'] );
+		$this->assertFalse( \diluxone_mail_tab_open( 'test', $progress ) );
+		$this->assertFalse( \diluxone_mail_tab_open( 'sender', $progress ) );
+
+		// And the reason names the gap, not the neighbour.
+		\ob_start();
+		\diluxone_mail_tabs_nav( 'profile', 'site' );
+		$html = (string) \ob_get_clean();
+		$this->assertStringContainsString( 'Test the connection on the previous tab', $html );
+
+		\diluxone_mail_verified( 'connection' );
+		$this->assertTrue( \diluxone_mail_tab_open( 'test', \diluxone_mail_settings_progress() ) );
+	}
+
 	public function test_a_closed_tab_cannot_be_reached_by_asking_for_it(): void {
 		$_GET['tab'] = 'test';
 
