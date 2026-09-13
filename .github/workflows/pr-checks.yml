@@ -43,10 +43,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      # Plugin Check toma el slug del nombre de la carpeta, y la carpeta del
+      # checkout es diluxone-mail-wordpress: el plugin es diluxone-mail. Así
+      # que se arma en build/diluxone-mail exactamente lo que viaja a wp.org
+      # —lo que .distignore deja pasar— y se analiza eso. De paso, es lo que
+      # el equipo de wp.org va a revisar de verdad, y no el árbol del repo.
+      #
+      # El .wp-env.json del repo monta el árbol entero para los tests de
+      # integración; para este trabajo se reemplaza por uno que monte la
+      # carpeta armada, que es lo que la acción espera cuando le damos
+      # build-dir.
+      - name: Build the plugin as it ships
+        run: |
+          mkdir -p build/diluxone-mail
+          rsync -a --delete --exclude-from=.distignore --exclude=.git --exclude=build ./ build/diluxone-mail/
+          printf '{ "core": null, "plugins": [ "./build/diluxone-mail" ] }\n' > .wp-env.json
+
       - name: Run WordPress Plugin Check
         uses: wordpress/plugin-check-action@v1
         with:
-          build-dir: ./
+          build-dir: ./build/diluxone-mail
           # Run all categories Plugin Check supports, including experimental
           # checks. Strict mode — we want to be more rigorous than wp.org
           # itself, so issues are caught here before they ever land on
