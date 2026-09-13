@@ -335,3 +335,173 @@ if (!function_exists('wp_unslash')) {
 		return is_array($value) ? array_map('wp_unslash', $value) : stripslashes((string) $value);
 	}
 }
+
+// ── Red (multisitio) en memoria ──────────────────────────────────
+//
+// is_multisite() contesta lo que diga el test, y las options de la red
+// viven en su propio arreglo. Alcanza para ejercitar la precedencia
+// sitio/red sin una red de verdad.
+
+if (!function_exists('is_multisite')) {
+	function is_multisite(): bool {
+		return (bool) ($GLOBALS['_test_multisite'] ?? false);
+	}
+}
+
+if (!function_exists('get_current_blog_id')) {
+	function get_current_blog_id(): int {
+		return (int) ($GLOBALS['_test_blog_id'] ?? 1);
+	}
+}
+
+if (!function_exists('get_site_option')) {
+	function get_site_option(string $option, $default = false) {
+		$store = $GLOBALS['_test_wp_site_options'] ?? [];
+		return array_key_exists($option, $store) ? $store[$option] : $default;
+	}
+}
+
+if (!function_exists('update_site_option')) {
+	function update_site_option(string $option, $value): bool {
+		$GLOBALS['_test_wp_site_options'][$option] = $value;
+		return true;
+	}
+}
+
+if (!function_exists('delete_site_option')) {
+	function delete_site_option(string $option): bool {
+		unset($GLOBALS['_test_wp_site_options'][$option]);
+		return true;
+	}
+}
+
+if (!function_exists('get_site_transient')) {
+	function get_site_transient(string $transient) {
+		$store = $GLOBALS['_test_wp_site_transients'] ?? [];
+		return array_key_exists($transient, $store) ? $store[$transient] : false;
+	}
+}
+
+if (!function_exists('set_site_transient')) {
+	function set_site_transient(string $transient, $value, int $expiration = 0): bool {
+		$GLOBALS['_test_wp_site_transients'][$transient] = $value;
+		return true;
+	}
+}
+
+if (!function_exists('delete_site_transient')) {
+	function delete_site_transient(string $transient): bool {
+		unset($GLOBALS['_test_wp_site_transients'][$transient]);
+		return true;
+	}
+}
+
+if (!function_exists('is_email')) {
+	function is_email($email) {
+		return filter_var((string) $email, FILTER_VALIDATE_EMAIL) !== false ? (string) $email : false;
+	}
+}
+
+if (!function_exists('sanitize_email')) {
+	function sanitize_email(string $email): string {
+		return is_email(trim($email)) ? trim($email) : '';
+	}
+}
+
+if (!function_exists('wp_generate_uuid4')) {
+	function wp_generate_uuid4(): string {
+		return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x', mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000, mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
+	}
+}
+
+if (!function_exists('wp_normalize_path')) {
+	function wp_normalize_path(string $path): string {
+		return str_replace('\\', '/', $path);
+	}
+}
+
+if (!function_exists('trailingslashit')) {
+	function trailingslashit(string $value): string {
+		return rtrim($value, '/\\') . '/';
+	}
+}
+
+if (!function_exists('add_query_arg')) {
+	function add_query_arg(...$args) {
+		return is_array($args[0]) ? ($args[1] ?? '') . '?' . http_build_query($args[0]) : (string) ($args[2] ?? '');
+	}
+}
+
+if (!function_exists('wp_remote_get')) {
+	function wp_remote_get($url, array $args = []) {
+		return $GLOBALS['_test_wp_remote_get'] ?? new \WP_Error('http', 'no network in tests');
+	}
+}
+
+if (!function_exists('wp_remote_retrieve_response_code')) {
+	function wp_remote_retrieve_response_code($response) {
+		return is_array($response) ? (int) ($response['response']['code'] ?? 0) : 0;
+	}
+}
+
+if (!function_exists('wp_remote_retrieve_body')) {
+	function wp_remote_retrieve_body($response): string {
+		return is_array($response) ? (string) ($response['body'] ?? '') : '';
+	}
+}
+
+if (!function_exists('is_wp_error')) {
+	function is_wp_error($thing): bool {
+		return $thing instanceof \WP_Error;
+	}
+}
+
+if (!class_exists('WP_Error')) {
+	class WP_Error {
+		public function __construct(public string $code = '', public string $message = '') {}
+		public function get_error_message(): string { return $this->message; }
+	}
+}
+
+if (!defined('WP_PLUGIN_DIR')) {
+	define('WP_PLUGIN_DIR', dirname(__DIR__, 2) . '/..');
+}
+
+// ── Hooks: registrar no hace nada en un test unitario ─────────────
+//
+// Los archivos de includes/ registran hooks al cargarse. Acá se aceptan y
+// se olvidan: lo que se prueba son las funciones, no el sistema de hooks.
+
+if (!function_exists('add_filter')) {
+	function add_filter(string $hook, $callback, int $priority = 10, int $args = 1): bool { return true; }
+}
+if (!function_exists('add_action')) {
+	function add_action(string $hook, $callback, int $priority = 10, int $args = 1): bool { return true; }
+}
+if (!function_exists('remove_filter')) {
+	function remove_filter(string $hook, $callback, int $priority = 10): bool { return true; }
+}
+if (!function_exists('remove_action')) {
+	function remove_action(string $hook, $callback, int $priority = 10): bool { return true; }
+}
+if (!function_exists('do_action')) {
+	function do_action(string $hook, ...$args): void {}
+}
+if (!function_exists('get_theme_root')) {
+	function get_theme_root(): string { return '/tmp/themes'; }
+}
+if (!function_exists('home_url')) {
+	function home_url(string $path = ''): string { return 'https://example.test' . $path; }
+}
+if (!function_exists('wp_parse_url')) {
+	function wp_parse_url(string $url, int $component = -1) { return parse_url($url, $component); }
+}
+if (!function_exists('current_time')) {
+	function current_time(string $type, $gmt = 0): string { return gmdate('Y-m-d H:i:s'); }
+}
+
+if (!function_exists('sanitize_textarea_field')) {
+	function sanitize_textarea_field(string $str): string {
+		return trim(strip_tags($str));
+	}
+}

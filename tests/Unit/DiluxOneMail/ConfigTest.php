@@ -38,7 +38,7 @@ class ConfigTest extends TestCase {
 		$host = \diluxone_mail_config_value( 'host' );
 
 		$this->assertSame( 'smtp.guardado.test', $host['value'] );
-		$this->assertSame( 'option', $host['source'] );
+		$this->assertSame( 'site', $host['source'] );
 		$this->assertSame( 'diluxone_mail_host', $host['origin'] );
 	}
 
@@ -64,7 +64,7 @@ class ConfigTest extends TestCase {
 		\update_option( 'diluxone_mail_host', 'smtp.guardado.test' );
 		putenv( 'DILUXONE_MAIL_HOST=' );
 
-		$this->assertSame( 'option', \diluxone_mail_config_value( 'host' )['source'] );
+		$this->assertSame( 'site', \diluxone_mail_config_value( 'host' )['source'] );
 	}
 
 	/**

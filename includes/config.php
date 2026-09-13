@@ -7,11 +7,12 @@
  * mismo código sirve para la máquina local y para producción sin que nadie
  * entre al admin a cambiar nada en cada despliegue.
  *
- * Por eso hay tres capas, de mayor a menor:
+ * Por eso hay estas capas, de mayor a menor:
  *
  *   1. Una constante de PHP definida en wp-config.php     DILUXONE_MAIL_HOST
  *   2. Una variable de entorno con el mismo nombre        DILUXONE_MAIL_HOST
- *   3. La option de la base, editable desde el admin      diluxone_mail_host
+ *   3. La option del sitio, editable desde el admin       diluxone_mail_host
+ *   4. En una red, la option de la red                    diluxone_mail_host
  *
  * Y por eso cada lectura devuelve además de dónde salió el valor: el
  * formulario necesita saberlo para mostrar el control de sólo lectura con la
@@ -51,7 +52,7 @@ function diluxone_mail_config_fields(): array {
  *
  * @param string $campo Una clave de diluxone_mail_config_fields().
  * @return array{value: string, source: string, origin: string}
- *         source: 'constant', 'env', 'option' o 'default'.
+ *         source: 'constant', 'env', 'site', 'network' o 'default'.
  *         origin: el nombre concreto de la constante, la variable o la option.
  */
 function diluxone_mail_config_value( string $campo ): array {
@@ -91,12 +92,12 @@ function diluxone_mail_config_value( string $campo ): array {
 		);
 	}
 
-	$guardado = get_option( $option, null );
+	$guardado = diluxone_mail_option_stored( $option );
 
-	if ( null !== $guardado && '' !== (string) $guardado ) {
+	if ( 'default' !== $guardado['scope'] && '' !== (string) $guardado['value'] ) {
 		return array(
-			'value'  => (string) $guardado,
-			'source' => 'option',
+			'value'  => (string) $guardado['value'],
+			'source' => $guardado['scope'],
 			'origin' => $option,
 		);
 	}
@@ -137,8 +138,8 @@ function diluxone_mail_config(): array {
  * del campo porque es lo que tiene a mano cuando recorre el POST.
  */
 function diluxone_mail_option_from_environment( string $option_key ): bool {
-	foreach ( array_keys( diluxone_mail_config_fields() ) as $campo ) {
-		if ( 'diluxone_mail_' . strtolower( diluxone_mail_config_fields()[ $campo ] ) !== $option_key ) {
+	foreach ( diluxone_mail_config_fields() as $campo => $sufijo ) {
+		if ( 'diluxone_mail_' . strtolower( $sufijo ) !== $option_key ) {
 			continue;
 		}
 
@@ -160,7 +161,8 @@ function diluxone_mail_option_from_environment( string $option_key ): bool {
  * importa de verdad: el diálogo SMTP no manda la contraseña en claro, manda
  * `AUTH LOGIN` y después el usuario y la contraseña codificados. Tapar sólo
  * el literal deja la credencial entera a la vista en el volcado, en una línea
- * que cualquiera decodifica en un segundo.
+ * que cualquiera decodifica en un segundo. Lo mismo con AUTH PLAIN, que
+ * codifica usuario y contraseña juntos en una sola línea.
  */
 function diluxone_mail_redact( string $texto ): string {
 	$pass = diluxone_mail_config_value( 'pass' )['value'];
@@ -169,9 +171,15 @@ function diluxone_mail_redact( string $texto ): string {
 		return $texto;
 	}
 
-	return str_replace(
-		array( $pass, base64_encode( $pass ) ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- No se está ofuscando nada: es el mismo formato en el que la contraseña aparece en el diálogo SMTP, y hay que encontrarla para taparla.
-		'***',
-		$texto
+	$user = diluxone_mail_config_value( 'user' )['value'];
+
+	// phpcs:disable WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- No se está ofuscando nada: es el formato en el que la contraseña aparece en el diálogo SMTP, y hay que reproducirlo para encontrarla y taparla.
+	$formas = array(
+		$pass,
+		base64_encode( $pass ),
+		base64_encode( "\0" . $user . "\0" . $pass ),
 	);
+	// phpcs:enable
+
+	return str_replace( $formas, '***', $texto );
 }

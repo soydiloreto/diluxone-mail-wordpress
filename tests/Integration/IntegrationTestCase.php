@@ -2,8 +2,11 @@
 /**
  * Base de los tests que necesitan un WordPress de verdad cargado.
  *
- * El plugin no tiene tablas propias —sus datos son options y user meta— así
- * que lo único que hay que aislar entre tests son esas dos cosas.
+ * Entre test y test se borran todas las options del plugin —las del sitio y
+ * las de la red— para que cada uno arranque como un plugin recién instalado.
+ * La lista sale de los valores por defecto y no de una lista escrita acá:
+ * una option nueva queda cubierta sola, y no hay forma de que un test vea lo
+ * que dejó el anterior y pase —o falle— por el motivo equivocado.
  */
 
 namespace Tests\Integration;
@@ -12,30 +15,15 @@ use PHPUnit\Framework\TestCase;
 
 class IntegrationTestCase extends TestCase {
 
-	/**
-	 * Las options del plugin que se limpian entre tests.
-	 *
-	 * Si mañana se agrega una, va acá: si no, un test ve lo que dejó el
-	 * anterior y pasa —o falla— por el motivo equivocado.
-	 *
-	 * @var array<int, string>
-	 */
-	protected static array $options = array(
-		'diluxone_mail_fields',
-		'diluxone_mail_account_sections',
-		'diluxone_mail_sso',
-		'diluxone_mail_mail_last',
-		'diluxone_mail_login_method',
-		'diluxone_mail_2fa_mode',
-		'diluxone_mail_passkey_enabled',
-	);
-
 	protected function setUp(): void {
 		parent::setUp();
 
-		foreach ( self::$options as $option ) {
+		foreach ( array_keys( diluxone_mail_option_defaults() ) as $option ) {
 			delete_option( $option );
+			delete_site_option( $option );
 		}
+
+		delete_option( 'diluxone_mail_last_result' );
 	}
 
 	/** Una persona nueva, con el rol que se le pase. */

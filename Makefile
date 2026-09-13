@@ -95,12 +95,12 @@ psalm: ## Psalm taint analysis (XSS / SQLi / RCE).
 	$(PSALM_CMD) --taint-analysis --no-cache --no-progress
 
 .PHONY: i18n
-i18n: ## Generate diluxone-mail.pot via WP-CLI.
-	mkdir -p build
-	$(WP_CLI) i18n make-pot . build/diluxone-mail.pot \
+i18n: ## Generate languages/diluxone-mail.pot via WP-CLI and compile the shipped translations.
+	$(WP_CLI) i18n make-pot . languages/diluxone-mail.pot \
 	    --slug=diluxone-mail \
 	    --domain=diluxone-mail \
-	    --exclude=tests,vendor,node_modules,.wordpress-org,assets,docs,build
+	    --exclude=tests,vendor,node_modules,.wordpress-org,assets,docs,build,tools
+	$(WP_CLI) i18n make-mo languages
 
 # -- Tests -------------------------------------------------------------
 .PHONY: test
@@ -111,12 +111,42 @@ test-unit: ## Run only the unit-test suite (no WordPress runtime).
 	$(VENDOR) ./vendor/bin/phpunit --testsuite unit
 
 .PHONY: test-integration
-test-integration: ## Run integration tests against the wp-env stack (must be `make env` first).
-	$(INTEG) ./vendor/bin/phpunit --testsuite integration
+test-integration: ## Run integration tests inside the wp-env tests container (must be `make env-up` first).
+	npx wp-env run tests-cli wp plugin activate diluxone-mail
+	npx wp-env run tests-cli ./wp-content/plugins/diluxone-mail/vendor/bin/phpunit -c ./wp-content/plugins/diluxone-mail/phpunit-integration.xml
+
+.PHONY: test-e2e
+test-e2e: ## End-to-end: a real wp_mail() through the plugin into a Mailpit mailbox (needs wp-env up).
+	tests/e2e/run.sh
+
+.PHONY: test-multisite
+test-multisite: ## Convert the wp-env tests site to a network and run the multisite suite (destructive for that site).
+	tests/e2e/multisite.sh
+
+.PHONY: test-all
+test-all: test-unit test-integration test-e2e test-multisite ## Every suite, in the order that leaves the tests site usable for the next.
+
+# -- Coverage ----------------------------------------------------------
+# Neither composer:2 nor php:8.3-cli ship a coverage driver. A tiny image
+# with pcov is built once (tools/coverage.Dockerfile) and cached. The gate
+# is a ratchet: set just under what the unit suite covers, only ever raised.
+COVERAGE_MIN ?= 28
+COVERAGE_IMAGE := diluxone-mail-coverage
+
+.PHONY: coverage
+coverage: ## Unit-test line coverage with a minimum threshold (COVERAGE_MIN).
+	mkdir -p build
+ifeq ($(DOCKER),1)
+	docker build -q -t $(COVERAGE_IMAGE) -f tools/coverage.Dockerfile tools >/dev/null
+	$(DOCKER_RUN) $(COVERAGE_IMAGE) ./vendor/bin/phpunit --testsuite unit --coverage-clover build/clover.xml --coverage-text
+else
+	./vendor/bin/phpunit --testsuite unit --coverage-clover build/clover.xml --coverage-text
+endif
+	tests/coverage-gate.sh build/clover.xml $(COVERAGE_MIN)
 
 # -- Aggregate ---------------------------------------------------------
 .PHONY: check
-check: lint stan psalm test ## Run every quality gate CI runs (lint, stan, psalm, unit tests).
+check: lint stan psalm test coverage ## Run every quality gate CI runs (lint, stan, psalm, unit tests, coverage gate).
 	@echo "✔ All checks passed."
 
 # -- Local dev environment (wp-env) ------------------------------------

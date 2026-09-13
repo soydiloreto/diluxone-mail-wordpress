@@ -48,3 +48,34 @@ jobs:
 
       - name: Run unit tests
         run: composer test:unit
+
+  coverage:
+    name: Coverage gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # La cobertura se mide una vez, en la versión de PHP más nueva, y el
+    # umbral es un trinquete: está apenas por debajo de lo que cubre la suite
+    # y sólo se sube. Un número inventado alto no mide nada; uno real que no
+    # puede bajar, sí.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup PHP with pcov
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Unit tests with coverage
+        run: |
+          mkdir -p build
+          ./vendor/bin/phpunit --testsuite unit --coverage-clover build/clover.xml --coverage-text
+
+      - name: Enforce the coverage threshold
+        run: tests/coverage-gate.sh build/clover.xml 28

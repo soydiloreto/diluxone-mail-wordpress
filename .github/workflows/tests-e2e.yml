@@ -1,0 +1,57 @@
+name: End-to-end tests
+
+# Un wp_mail() de verdad, a través del plugin, hasta un buzón de Mailpit en
+# la misma red Docker que el wp-env. Es la única suite que recorre la cadena
+# entera —config → phpmailer_init → SMTP → buzón— y la que vale cuando las
+# demás dicen que sí. Después, el mismo sitio convertido a red para la suite
+# multisitio: va al final porque convertirlo es destructivo.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: E2E (Mailpit) + multisite
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install npm dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Start wp-env
+        run: npx wp-env start
+
+      - name: End-to-end (single site, Mailpit)
+        run: tests/e2e/run.sh
+
+      - name: Multisite
+        run: tests/e2e/multisite.sh
+
+      - name: Stop wp-env
+        if: always()
+        run: npx wp-env stop

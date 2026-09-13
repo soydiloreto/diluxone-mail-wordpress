@@ -1,0 +1,92 @@
+/* DiluxOne Mail — estilos del escritorio. Poco y encima de los de WordPress. */
+
+.diluxone-mail-source {
+	margin-left: 6px;
+}
+
+.diluxone-mail-transcript pre,
+pre.diluxone-mail-transcript,
+pre.diluxone-mail-body {
+	max-height: 420px;
+	overflow: auto;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	padding: 10px;
+	font-size: 12px;
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+iframe.diluxone-mail-body {
+	width: 100%;
+	min-height: 420px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+}
+
+.diluxone-mail-status {
+	display: inline-block;
+	padding: 1px 8px;
+	border-radius: 10px;
+	font-size: 12px;
+	background: #f0f0f1;
+	color: #1d2327;
+}
+
+.diluxone-mail-status--sent { background: #d5f2dd; color: #00450c; }
+.diluxone-mail-status--failed,
+.diluxone-mail-status--bounced,
+.diluxone-mail-status--complained { background: #fbe2e2; color: #6e0000; }
+.diluxone-mail-status--pending { background: #fef3cd; color: #5c3b00; }
+.diluxone-mail-status--intercepted,
+.diluxone-mail-status--suppressed { background: #e5e5ff; color: #1e1e5c; }
+
+.diluxone-mail-status-table th {
+	width: 220px;
+}
+
+.diluxone-mail-findings {
+	margin: 16px 0 24px;
+	max-width: 900px;
+}
+
+.diluxone-mail-finding {
+	border-left: 4px solid #c3c4c7;
+	background: #fff;
+	padding: 10px 14px;
+	margin-bottom: 8px;
+}
+
+.diluxone-mail-finding p {
+	margin: 4px 0 0;
+}
+
+.diluxone-mail-finding__level {
+	display: inline-block;
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: .04em;
+	margin-right: 8px;
+	color: #50575e;
+}
+
+.diluxone-mail-finding--error { border-left-color: #d63638; }
+.diluxone-mail-finding--warning { border-left-color: #dba617; }
+.diluxone-mail-finding--info { border-left-color: #72aee6; }
+.diluxone-mail-finding--ok { border-left-color: #00a32a; }
+
+.diluxone-mail-spf-tree code {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.diluxone-mail-test {
+	margin-top: 24px;
+	padding-top: 16px;
+	border-top: 1px solid #dcdcde;
+}
+
+.diluxone-mail-profile-log th,
+.diluxone-mail-profile-log td {
+	vertical-align: top;
+}

@@ -44,7 +44,7 @@ class PluginTest extends IntegrationTestCase {
 
 		diluxone_mail_install();
 
-		foreach ( array( diluxone_mail_log_table(), diluxone_mail_body_table() ) as $tabla ) {
+		foreach ( array( diluxone_mail_log_table(), diluxone_mail_detail_table() ) as $tabla ) {
 			$existe = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $tabla ) );
 
 			$this->assertSame( $tabla, $existe, "falta la tabla {$tabla}" );

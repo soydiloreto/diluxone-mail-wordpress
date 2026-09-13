@@ -81,6 +81,17 @@
         <severity>0</severity>
     </rule>
 
+    <!-- El nonce de las acciones del admin se verifica en un helper que
+         además chequea el permiso según el alcance (sitio o red). Sin
+         declararlo, WPCS ve el $_POST y no ve el check_admin_referer(). -->
+    <rule ref="WordPress.Security.NonceVerification">
+        <properties>
+            <property name="customNonceVerificationFunctions" type="array">
+                <element value="diluxone_mail_settings_authorize"/>
+            </property>
+        </properties>
+    </rule>
+
     <!-- Text domain check -->
     <rule ref="WordPress.WP.I18n">
         <properties>

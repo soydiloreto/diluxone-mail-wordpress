@@ -90,3 +90,9 @@ foreach ( (array) glob( DILUXONE_MAIL_DIR . 'includes/*.php' ) as $diluxone_mail
  * copias del mismo CREATE TABLE se desincronizan a la primera columna nueva.
  */
 register_activation_hook( __FILE__, 'diluxone_mail_install' );
+
+/**
+ * Al desactivar: se saca la purga del cron. Las tablas se quedan; ver
+ * includes/cron.php.
+ */
+register_deactivation_hook( __FILE__, 'diluxone_mail_deactivate' );
