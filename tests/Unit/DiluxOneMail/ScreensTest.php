@@ -26,41 +26,60 @@ class ScreensTest extends AdminTestCase {
 		\diluxone_mail_network_menu();
 
 		$this->assertCount( 1, $GLOBALS['_test_menu'] );
-		$this->assertCount( 5, $GLOBALS['_test_submenu'] );
+		$this->assertCount( 6, $GLOBALS['_test_submenu'] );
 
 		\diluxone_mail_admin_styles( 'toplevel_page_diluxone-mail' );
 		\diluxone_mail_admin_styles( 'edit.php' );
 		$this->assertCount( 1, $GLOBALS['_test_styles'] );
 	}
 
-	public function test_the_settings_screen_shows_the_profiles_and_the_test(): void {
-		\update_option( 'diluxone_mail_provider', 'mailjet' );
-		\set_transient( 'diluxone_mail_test_1', array( 'ok' => false, 'error' => '535 nope', 'transcript' => 'AUTH LOGIN', 'seconds' => 0.1, 'to' => 'a@x.test' ), 60 );
-
+	public function test_the_first_tab_offers_the_profiles(): void {
 		$html = $this->render( 'diluxone_mail_screen_settings' );
 
 		$this->assertStringContainsString( 'Mailjet', $html );
-		$this->assertStringContainsString( '535 nope', $html );
-		$this->assertStringContainsString( 'AUTH LOGIN', $html );
-		$this->assertStringContainsString( 'diluxone_mail_save_settings', $html );
+		$this->assertStringContainsString( 'diluxone_mail_apply_provider', $html );
+		$this->assertStringContainsString( '1. Provider', $html );
 		$this->assertStringNotContainsString( 'name="diluxone_mail_network_allow_override"', $html );
 	}
 
-	public function test_the_settings_screen_with_the_environment_and_a_successful_test(): void {
+	public function test_the_server_tab_shows_what_a_failed_connection_said(): void {
+		\update_option( 'diluxone_mail_provider', 'mailjet' );
+		\set_transient( 'diluxone_mail_attempt_1', array( 'ok' => false, 'error' => '535 nope', 'transcript' => 'AUTH LOGIN', 'seconds' => 0.1, 'fields' => array( 'diluxone_mail_host' => 'smtp.typo.test' ) ), 60 );
+
+		$html = $this->render( 'diluxone_mail_screen_settings' );
+
+		$this->assertStringContainsString( '535 nope', $html );
+		$this->assertStringContainsString( 'AUTH LOGIN', $html );
+		// What was typed comes back, so the tab does not lose it.
+		$this->assertStringContainsString( 'smtp.typo.test', $html );
+		$this->assertStringContainsString( 'Test connection and save', $html );
+	}
+
+	public function test_the_test_tab_shows_what_the_send_said(): void {
+		$this->configured();
+		$_GET['tab'] = 'test';
+		\set_transient( 'diluxone_mail_test_1', array( 'ok' => true, 'error' => '', 'transcript' => '', 'seconds' => 0.2, 'to' => 'a@x.test' ), 60 );
+
+		$html = $this->render( 'diluxone_mail_screen_settings' );
+
+		$this->assertStringContainsString( 'handed to the server', $html );
+		$this->assertStringContainsString( 'diluxone_mail_test', $html );
+	}
+
+	public function test_the_server_tab_with_the_environment(): void {
 		putenv( 'DILUXONE_MAIL_PASS=secreta' );
 		putenv( 'DILUXONE_MAIL_PROVIDER=ses' );
-		\set_transient( 'diluxone_mail_test_1', array( 'ok' => true, 'error' => '', 'transcript' => '', 'seconds' => 0.2, 'to' => 'a@x.test' ), 60 );
 
 		$html = $this->render( 'diluxone_mail_screen_settings' );
 
 		$this->assertStringContainsString( 'defined by the environment', $html );
 		$this->assertStringContainsString( 'Replace the region', $html );
-		$this->assertStringContainsString( 'handed to the server', $html );
 		$this->assertStringNotContainsString( 'secreta', $html );
 	}
 
 	public function test_the_network_screen(): void {
 		$GLOBALS['_test_multisite'] = true;
+		$_GET['tab']                = 'sites';
 
 		$html = $this->render( 'diluxone_mail_screen_network' );
 

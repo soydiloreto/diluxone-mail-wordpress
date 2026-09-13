@@ -113,8 +113,27 @@ function diluxone_mail_test_action(): void {
 		$to = (string) wp_get_current_user()->user_email;
 	}
 
-	set_transient( 'diluxone_mail_test_' . get_current_user_id(), diluxone_mail_send_test( $to ), 5 * MINUTE_IN_SECONDS );
+	$result = diluxone_mail_send_test( $to );
 
-	diluxone_mail_settings_redirect( $scope, 'tested' );
+	set_transient( 'diluxone_mail_test_' . get_current_user_id(), $result, 5 * MINUTE_IN_SECONDS );
+
+	// A message that went out is the last of the four steps, and it is marked
+	// against the configuration that sent it: change the server or the sender
+	// and the step is open again, because what was proven was proven about
+	// values that are no longer there.
+	if ( $result['ok'] ) {
+		diluxone_mail_verified( 'message' );
+	}
+
+	// The same button lives on the overview, and whoever pressed it there is
+	// asking about the site, not about the settings screen.
+	$from_overview = isset( $_POST['return'] ) && 'overview' === sanitize_key( wp_unslash( $_POST['return'] ) );
+
+	if ( $from_overview ) {
+		wp_safe_redirect( diluxone_mail_admin_url( DILUXONE_MAIL_MENU ) );
+		exit;
+	}
+
+	diluxone_mail_settings_redirect( $scope, 'tested', 'test' );
 }
 add_action( 'admin_post_diluxone_mail_test', 'diluxone_mail_test_action' );

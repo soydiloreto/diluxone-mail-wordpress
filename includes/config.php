@@ -166,13 +166,24 @@ function diluxone_mail_option_from_environment( string $option_key ): bool {
  * PLAIN, which encodes user and password together on a single line.
  */
 function diluxone_mail_redact( string $text ): string {
-	$pass = diluxone_mail_config_value( 'pass' )['value'];
+	return diluxone_mail_redact_secret(
+		$text,
+		(string) diluxone_mail_config_value( 'pass' )['value'],
+		(string) diluxone_mail_config_value( 'user' )['value']
+	);
+}
 
+/**
+ * The same, over a credential that is not the stored one.
+ *
+ * The connection test tries values that have not been saved yet — that is the
+ * point of it — so the password to cover is the one that was typed, not the
+ * one in the database.
+ */
+function diluxone_mail_redact_secret( string $text, string $pass, string $user ): string {
 	if ( '' === $pass ) {
 		return $text;
 	}
-
-	$user = diluxone_mail_config_value( 'user' )['value'];
 
 	// phpcs:disable WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Nothing is being obfuscated: this is the format the password appears in inside the SMTP dialogue, and it has to be reproduced to find it and cover it.
 	$forms = array(

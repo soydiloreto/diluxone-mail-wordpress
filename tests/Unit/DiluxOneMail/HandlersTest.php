@@ -17,53 +17,125 @@ class HandlersTest extends AdminTestCase {
 		$this->assertSame( 'apikey', \get_option( 'diluxone_mail_user' ) );
 	}
 
-	public function test_saving_settings_with_a_new_password_and_selectors(): void {
+	public function test_a_tab_saves_its_own_settings_and_leaves_the_others_alone(): void {
+		\update_option( 'diluxone_mail_mode', 'transport' );
+		\update_option( 'diluxone_mail_privacy_erase', 1 );
+
 		$_POST = array(
-			'scope'                        => 'site',
-			'diluxone_mail_host'           => 'smtp.x.test',
-			'diluxone_mail_port'           => '2525',
-			'diluxone_mail_pass'           => 'p@ss "rara"',
-			'diluxone_mail_log_enabled'    => '1',
-			'diluxone_mail_dns_selectors'  => 'uno, dos  tres',
-			'diluxone_mail_mode'           => 'transport',
+			'scope'                     => 'site',
+			'tab'                       => 'logging',
+			'diluxone_mail_log_enabled' => '1',
+			// Not on this tab: it must survive untouched even though an
+			// unchecked box and an absent one look the same in a POST.
+			'diluxone_mail_mode'        => 'observe',
 		);
 
 		$url = $this->redirect_of( 'diluxone_mail_save_settings' );
 
 		$this->assertStringContainsString( 'diluxone_mail_done=saved', $url );
-		$this->assertSame( 'smtp.x.test', \get_option( 'diluxone_mail_host' ) );
-		$this->assertSame( 2525, \get_option( 'diluxone_mail_port' ) );
-		$this->assertSame( 'p@ss "rara"', \get_option( 'diluxone_mail_pass' ) );
-		$this->assertSame( array( 'uno', 'dos', 'tres' ), \get_option( 'diluxone_mail_dns_selectors' ) );
-		// Checkboxes that do not travel end up at 0.
-		$this->assertSame( 0, \get_option( 'diluxone_mail_log_body' ) );
+		$this->assertStringContainsString( 'tab=logging', $url );
 		$this->assertSame( 1, \get_option( 'diluxone_mail_log_enabled' ) );
+		// Checkboxes of this tab that did not travel end up at 0.
+		$this->assertSame( 0, \get_option( 'diluxone_mail_log_body' ) );
+		$this->assertSame( 0, \get_option( 'diluxone_mail_privacy_erase' ) );
+		// A setting of another tab is not touched, neither by the value it
+		// carried nor by being absent.
+		$this->assertSame( 'transport', \get_option( 'diluxone_mail_mode' ) );
 	}
 
-	public function test_an_empty_password_keeps_the_stored_one_and_the_environments_is_left_alone(): void {
-		\update_option( 'diluxone_mail_pass', 'vieja' );
-		$_POST = array( 'scope' => 'site', 'diluxone_mail_pass' => '' );
+	public function test_the_transport_is_never_written_by_a_plain_save(): void {
+		$_POST = array(
+			'scope'              => 'site',
+			'tab'                => 'server',
+			'diluxone_mail_host' => 'smtp.sneaky.test',
+			'diluxone_mail_pass' => 'p@ss "rara"',
+		);
 
 		$this->redirect_of( 'diluxone_mail_save_settings' );
-		$this->assertSame( 'vieja', \get_option( 'diluxone_mail_pass' ) );
 
-		putenv( 'DILUXONE_MAIL_PASS=del-entorno' );
-		$_POST = array( 'scope' => 'site', 'diluxone_mail_pass' => 'attempt' );
-
-		$this->redirect_of( 'diluxone_mail_save_settings' );
-		$this->assertSame( 'vieja', \get_option( 'diluxone_mail_pass' ) );
+		$this->assertFalse( \get_option( 'diluxone_mail_host' ) );
+		$this->assertFalse( \get_option( 'diluxone_mail_pass' ) );
+		$this->assertFalse( \diluxone_mail_connection_verified() );
 	}
 
 	public function test_saving_on_the_network_includes_the_per_site_permission(): void {
 		$GLOBALS['_test_multisite'] = true;
-		$_POST = array( 'scope' => 'network', 'diluxone_mail_host' => 'smtp.network.test', 'diluxone_mail_network_allow_override' => '1', 'diluxone_mail_pass' => 'secret' );
+		$_POST                      = array( 'scope' => 'network', 'tab' => 'sites', 'diluxone_mail_network_allow_override' => '1' );
 
 		$url = $this->redirect_of( 'diluxone_mail_save_settings' );
 
 		$this->assertStringContainsString( 'network', $url );
-		$this->assertSame( 'smtp.network.test', \get_site_option( 'diluxone_mail_host' ) );
-		$this->assertSame( 'secret', \get_site_option( 'diluxone_mail_pass' ) );
 		$this->assertSame( 1, \get_site_option( 'diluxone_mail_network_allow_override' ) );
+	}
+
+	public function test_the_connection_test_is_what_saves_the_transport(): void {
+		\PHPMailer\PHPMailer\PHPMailer::$connects = true;
+		\update_option( 'diluxone_mail_provider', 'mailjet' );
+
+		$_POST = array(
+			'scope'                    => 'site',
+			'tab'                      => 'server',
+			'diluxone_mail_host'       => 'smtp.x.test',
+			'diluxone_mail_port'       => '2525',
+			'diluxone_mail_encryption' => 'tls',
+			'diluxone_mail_auth'       => '1',
+			'diluxone_mail_user'       => 'apikey',
+			'diluxone_mail_pass'       => 'p@ss "rara"',
+			'diluxone_mail_timeout'    => '30',
+		);
+
+		$url = $this->redirect_of( 'diluxone_mail_connection_action' );
+
+		$this->assertStringContainsString( 'diluxone_mail_done=connected', $url );
+		// It moves on to the next step by itself.
+		$this->assertStringContainsString( 'tab=sender', $url );
+		$this->assertSame( 'smtp.x.test', \get_option( 'diluxone_mail_host' ) );
+		$this->assertSame( 2525, \get_option( 'diluxone_mail_port' ) );
+		// The password is stored as it was typed, quotes and all.
+		$this->assertSame( 'p@ss "rara"', \get_option( 'diluxone_mail_pass' ) );
+		$this->assertTrue( \diluxone_mail_connection_verified() );
+	}
+
+	public function test_a_connection_that_fails_stores_nothing(): void {
+		\PHPMailer\PHPMailer\PHPMailer::$connects = '535 Authentication failed';
+		\update_option( 'diluxone_mail_provider', 'mailjet' );
+
+		$_POST = array(
+			'scope'              => 'site',
+			'tab'                => 'server',
+			'diluxone_mail_host' => 'smtp.x.test',
+			'diluxone_mail_port' => '2525',
+			'diluxone_mail_user' => 'apikey',
+			'diluxone_mail_pass' => 'wrong',
+		);
+
+		$url = $this->redirect_of( 'diluxone_mail_connection_action' );
+
+		$this->assertStringContainsString( 'connection-failed', $url );
+		$this->assertStringContainsString( 'tab=server', $url );
+		$this->assertFalse( \get_option( 'diluxone_mail_host' ) );
+		$this->assertFalse( \get_option( 'diluxone_mail_pass' ) );
+		$this->assertFalse( \diluxone_mail_connection_verified() );
+
+		// What was typed comes back; the password does not travel with it.
+		$attempt = \get_transient( 'diluxone_mail_attempt_1' );
+		$this->assertSame( 'smtp.x.test', $attempt['fields']['diluxone_mail_host'] );
+		$this->assertArrayNotHasKey( 'diluxone_mail_pass', $attempt['fields'] );
+		$this->assertStringContainsString( '535', $attempt['error'] );
+	}
+
+	public function test_an_empty_password_keeps_the_stored_one_and_the_environment_is_left_alone(): void {
+		\PHPMailer\PHPMailer\PHPMailer::$connects = true;
+		\update_option( 'diluxone_mail_pass', 'vieja' );
+
+		$_POST = array( 'scope' => 'site', 'tab' => 'server', 'diluxone_mail_host' => 'smtp.x.test', 'diluxone_mail_pass' => '' );
+		$this->redirect_of( 'diluxone_mail_connection_action' );
+		$this->assertSame( 'vieja', \get_option( 'diluxone_mail_pass' ) );
+
+		putenv( 'DILUXONE_MAIL_PASS=del-entorno' );
+		$_POST = array( 'scope' => 'site', 'tab' => 'server', 'diluxone_mail_host' => 'smtp.x.test', 'diluxone_mail_pass' => 'attempt' );
+		$this->redirect_of( 'diluxone_mail_connection_action' );
+		$this->assertSame( 'vieja', \get_option( 'diluxone_mail_pass' ) );
 	}
 
 	public function test_a_site_without_permission_on_the_network_does_not_save(): void {

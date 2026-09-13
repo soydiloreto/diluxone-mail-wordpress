@@ -15,6 +15,16 @@ defined( 'ABSPATH' ) || exit;
 const DILUXONE_MAIL_MENU = 'diluxone-mail';
 
 /**
+ * The settings screen's slug.
+ *
+ * The menu slug belongs to the first screen of the menu, which is the
+ * overview: WordPress gives the top-level entry to whatever renders first.
+ * So the settings live at a slug of their own, and everything that links to
+ * them uses this rather than spelling it out.
+ */
+const DILUXONE_MAIL_SETTINGS = 'diluxone-mail-settings';
+
+/**
  * The name the plugin introduces itself with in the dashboard.
  *
  * Written once: the menu, every screen title and the browser tab all use it.
@@ -53,10 +63,11 @@ add_filter( 'admin_title', 'diluxone_mail_admin_title', 10, 2 );
  */
 function diluxone_mail_screens(): array {
 	return array(
-		'diluxone-mail'        => __( 'Settings', 'diluxone-mail' ),
-		'diluxone-mail-log'    => __( 'Mail log', 'diluxone-mail' ),
-		'diluxone-mail-dns'    => __( 'Deliverability', 'diluxone-mail' ),
-		'diluxone-mail-status' => __( 'Status', 'diluxone-mail' ),
+		'diluxone-mail'          => __( 'Overview', 'diluxone-mail' ),
+		'diluxone-mail-settings' => __( 'Settings', 'diluxone-mail' ),
+		'diluxone-mail-log'      => __( 'Mail log', 'diluxone-mail' ),
+		'diluxone-mail-dns'      => __( 'Deliverability', 'diluxone-mail' ),
+		'diluxone-mail-status'   => __( 'Status', 'diluxone-mail' ),
 	);
 }
 
@@ -67,16 +78,17 @@ function diluxone_mail_menu(): void {
 		diluxone_mail_plugin_name(),
 		'manage_options',
 		DILUXONE_MAIL_MENU,
-		'diluxone_mail_screen_settings',
+		'diluxone_mail_screen_overview',
 		'dashicons-email-alt',
 		76
 	);
 
 	$callbacks = array(
-		'diluxone-mail'        => 'diluxone_mail_screen_settings',
-		'diluxone-mail-log'    => 'diluxone_mail_screen_log',
-		'diluxone-mail-dns'    => 'diluxone_mail_screen_dns',
-		'diluxone-mail-status' => 'diluxone_mail_screen_status',
+		'diluxone-mail'          => 'diluxone_mail_screen_overview',
+		'diluxone-mail-settings' => 'diluxone_mail_screen_settings',
+		'diluxone-mail-log'      => 'diluxone_mail_screen_log',
+		'diluxone-mail-dns'      => 'diluxone_mail_screen_dns',
+		'diluxone-mail-status'   => 'diluxone_mail_screen_status',
 	);
 
 	foreach ( diluxone_mail_screens() as $slug => $title ) {
@@ -140,14 +152,17 @@ function diluxone_mail_done_notice(): void {
 	}
 
 	$texts = array(
-		'saved'           => array( __( 'Settings saved.', 'diluxone-mail' ), 'success' ),
-		'profile-applied' => array( __( 'Provider profile applied. Paste the credentials and save.', 'diluxone-mail' ), 'success' ),
-		'took-over'       => array( __( 'DiluxOne Mail is now handling this site\'s outgoing mail.', 'diluxone-mail' ), 'success' ),
-		'resent'          => array( __( 'Message resent.', 'diluxone-mail' ), 'success' ),
-		'resend-failed'   => array( __( 'The message could not be resent. Check the mail log for the error.', 'diluxone-mail' ), 'error' ),
-		'no-body'         => array( __( 'This message cannot be resent: its body was not stored. Turn on body storage in the settings to make future messages resendable.', 'diluxone-mail' ), 'warning' ),
-		'revalidated'     => array( __( 'DNS cache cleared and the diagnosis run again.', 'diluxone-mail' ), 'success' ),
-		'not-allowed'     => array( __( 'This site\'s settings are fixed by the network and cannot be changed here.', 'diluxone-mail' ), 'warning' ),
+		'saved'             => array( __( 'Settings saved.', 'diluxone-mail' ), 'success' ),
+		'profile-applied'   => array( __( 'Provider profile applied. Paste the credentials and save.', 'diluxone-mail' ), 'success' ),
+		'took-over'         => array( __( 'DiluxOne Mail is now handling this site\'s outgoing mail.', 'diluxone-mail' ), 'success' ),
+		'resent'            => array( __( 'Message resent.', 'diluxone-mail' ), 'success' ),
+		'resend-failed'     => array( __( 'The message could not be resent. Check the mail log for the error.', 'diluxone-mail' ), 'error' ),
+		'no-body'           => array( __( 'This message cannot be resent: its body was not stored. Turn on body storage in the settings to make future messages resendable.', 'diluxone-mail' ), 'warning' ),
+		'revalidated'       => array( __( 'DNS cache cleared and the diagnosis run again.', 'diluxone-mail' ), 'success' ),
+		'connected'         => array( __( 'The server answered and the credentials work. They are saved.', 'diluxone-mail' ), 'success' ),
+		'connection-failed' => array( __( 'The server did not accept the connection, so nothing was saved. What went wrong is below.', 'diluxone-mail' ), 'error' ),
+		'tested'            => array( __( 'Test message sent.', 'diluxone-mail' ), 'success' ),
+		'not-allowed'       => array( __( 'This site\'s settings are fixed by the network and cannot be changed here.', 'diluxone-mail' ), 'warning' ),
 	);
 
 	if ( isset( $texts[ $done ] ) ) {
@@ -226,6 +241,22 @@ function diluxone_mail_forced_notice( string $key ): void {
 		<?php endif; ?>
 	</p>
 	<?php
+}
+
+/**
+ * The caption that says where a value came from.
+ *
+ * Only for the values that come from somewhere worth naming: one set on this
+ * site, or left at its default, needs no explanation next to the control.
+ *
+ * @param array<string, mixed> $field
+ */
+function diluxone_mail_source_caption( array $field ): void {
+	if ( 'site' === $field['source'] || 'default' === $field['source'] ) {
+		return;
+	}
+
+	printf( ' <span class="description diluxone-mail-source">— %s</span>', esc_html( (string) $field['label'] ) );
 }
 
 /**

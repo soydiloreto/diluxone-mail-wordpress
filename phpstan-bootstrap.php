@@ -28,6 +28,13 @@ if ( ! defined( 'DILUXONE_MAIL_FILE' ) ) {
 	define( 'DILUXONE_MAIL_FILE', __DIR__ . '/diluxone-mail.php' );
 }
 
+// A WordPress constant rather than one of ours: WPINC is defined in
+// wp-settings.php and the stub set PHPStan analyses against does not carry
+// it. The plugin uses it the way core does, to require the PHPMailer classes.
+if ( ! defined( 'WPINC' ) ) {
+	define( 'WPINC', 'wp-includes' );
+}
+
 // Constants WordPress defines at runtime that static analysis never sees
 // because they come from wp-includes/default-constants.php.
 if ( ! defined( 'COOKIEHASH' ) ) {

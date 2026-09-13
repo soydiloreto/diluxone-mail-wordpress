@@ -70,6 +70,22 @@ abstract class AdminTestCase extends TestCase {
 		return $u;
 	}
 
+	/**
+	 * Walks the four steps of the settings screen without going through them.
+	 *
+	 * A screen test that wants to look at the last tab should not have to
+	 * drive the first three, and the marks are the stored ones on purpose:
+	 * this sets exactly what a real run through the wizard would leave.
+	 */
+	protected function configured( string $provider = 'mailjet' ): void {
+		\update_option( 'diluxone_mail_provider', $provider );
+		\update_option( 'diluxone_mail_host', 'smtp.' . $provider . '.test' );
+		\update_option( 'diluxone_mail_port', 587 );
+		\update_option( 'diluxone_mail_from', 'hello@x.test' );
+		\update_option( 'diluxone_mail_from_name', 'X' );
+		\diluxone_mail_verified( 'connection' );
+	}
+
 	/** Runs a handler that ends in a redirect and returns where to. */
 	protected function redirect_of( callable $handler ): string {
 		try {
