@@ -130,7 +130,7 @@ test-all: env-reset test-unit test-integration test-e2e test-multisite ## Every 
 # Neither composer:2 nor php:8.3-cli ship a coverage driver. A tiny image
 # with pcov is built once (tools/coverage.Dockerfile) and cached. The gate
 # is a ratchet: set just under what the unit suite covers, only ever raised.
-COVERAGE_MIN ?= 28
+COVERAGE_MIN ?= 74
 COVERAGE_IMAGE := diluxone-mail-coverage
 
 .PHONY: coverage

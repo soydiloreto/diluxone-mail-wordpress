@@ -78,4 +78,4 @@ jobs:
           ./vendor/bin/phpunit --testsuite unit --coverage-clover build/clover.xml --coverage-text
 
       - name: Enforce the coverage threshold
-        run: tests/coverage-gate.sh build/clover.xml 28
+        run: tests/coverage-gate.sh build/clover.xml 74

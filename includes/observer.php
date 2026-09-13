@@ -145,14 +145,15 @@ function diluxone_mail_hook_origins( string $hook ): array {
  *     en vez de por SMTP.
  *
  * La lista se arma una vez por petición: lo que cuesta es la reflexión, y el
- * resultado no cambia mientras dura la carga.
+ * resultado no cambia mientras dura la carga. $fresh la vuelve a armar, para
+ * después de desenganchar a alguien.
  *
  * @return array<int, array{name: string, plugin: string, how: string}>
  */
-function diluxone_mail_other_mailers(): array {
+function diluxone_mail_other_mailers( bool $fresh = false ): array {
 	static $cache = null;
 
-	if ( null !== $cache ) {
+	if ( null !== $cache && ! $fresh ) {
 		return $cache;
 	}
 

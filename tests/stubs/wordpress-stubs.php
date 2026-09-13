@@ -124,6 +124,11 @@ if (!function_exists('did_action')) {
 
 if (!function_exists('apply_filters')) {
 	function apply_filters(string $hook_name, $value, ...$args) {
+		if (!isset($GLOBALS['wp_filter'][$hook_name])) return $value;
+		$cbs = $GLOBALS['wp_filter'][$hook_name]->callbacks; ksort($cbs);
+		foreach ($cbs as $list) foreach ($list as $cb) {
+			$value = call_user_func_array($cb['function'], array_slice(array_merge([$value], $args), 0, max(1, $cb['accepted_args'])));
+		}
 		return $value;
 	}
 }
@@ -464,29 +469,67 @@ if (!class_exists('WP_Error')) {
 }
 
 if (!defined('WP_PLUGIN_DIR')) {
-	define('WP_PLUGIN_DIR', dirname(__DIR__, 2) . '/..');
+	define('WP_PLUGIN_DIR', sys_get_temp_dir() . '/diluxone-mail-tests/plugins');
+	@mkdir(WP_PLUGIN_DIR, 0777, true);
+}
+if (!defined('WP_CONTENT_DIR')) {
+	define('WP_CONTENT_DIR', dirname(WP_PLUGIN_DIR));
 }
 
-// ── Hooks: registrar no hace nada en un test unitario ─────────────
+// ── Hooks: un sistema mínimo, con la forma de $wp_filter de WordPress ──
 //
-// Los archivos de includes/ registran hooks al cargarse. Acá se aceptan y
-// se olvidan: lo que se prueba son las funciones, no el sistema de hooks.
+// Los callbacks se guardan en $GLOBALS['wp_filter'][$hook]->callbacks igual
+// que en WordPress, así observer.php puede recorrerlos, y apply_filters()
+// los corre de verdad, así los filtros propios del plugin se pueden probar.
+
+if (!class_exists('WP_Hook')) {
+	class WP_Hook { public array $callbacks = []; }
+}
+
+function _test_hook(string $hook): WP_Hook {
+	if (!isset($GLOBALS['wp_filter'][$hook])) { $GLOBALS['wp_filter'][$hook] = new WP_Hook(); }
+	return $GLOBALS['wp_filter'][$hook];
+}
+
+function _test_hook_id($callback): string {
+	if (is_string($callback)) return $callback;
+	if ($callback instanceof \Closure) return spl_object_hash($callback);
+	if (is_array($callback)) return (is_object($callback[0]) ? spl_object_hash($callback[0]) : $callback[0]) . '::' . $callback[1];
+	return spl_object_hash($callback);
+}
 
 if (!function_exists('add_filter')) {
-	function add_filter(string $hook, $callback, int $priority = 10, int $args = 1): bool { return true; }
+	function add_filter(string $hook, $callback, int $priority = 10, int $args = 1): bool {
+		_test_hook($hook)->callbacks[$priority][_test_hook_id($callback)] = ['function' => $callback, 'accepted_args' => $args];
+		return true;
+	}
 }
 if (!function_exists('add_action')) {
-	function add_action(string $hook, $callback, int $priority = 10, int $args = 1): bool { return true; }
+	function add_action(string $hook, $callback, int $priority = 10, int $args = 1): bool { return add_filter($hook, $callback, $priority, $args); }
 }
 if (!function_exists('remove_filter')) {
-	function remove_filter(string $hook, $callback, int $priority = 10): bool { return true; }
+	function remove_filter(string $hook, $callback, int $priority = 10): bool {
+		unset($GLOBALS['wp_filter'][$hook]->callbacks[$priority][_test_hook_id($callback)]);
+		return true;
+	}
 }
 if (!function_exists('remove_action')) {
-	function remove_action(string $hook, $callback, int $priority = 10): bool { return true; }
+	function remove_action(string $hook, $callback, int $priority = 10): bool { return remove_filter($hook, $callback, $priority); }
+}
+if (!function_exists('has_filter')) {
+	function has_filter(string $hook, $callback = false): bool { return isset($GLOBALS['wp_filter'][$hook]) && [] !== array_filter($GLOBALS['wp_filter'][$hook]->callbacks); }
 }
 if (!function_exists('do_action')) {
-	function do_action(string $hook, ...$args): void {}
+	function do_action(string $hook, ...$args): void {
+		if (!isset($GLOBALS['wp_filter'][$hook])) return;
+		$cbs = $GLOBALS['wp_filter'][$hook]->callbacks; ksort($cbs);
+		foreach ($cbs as $list) foreach ($list as $cb) call_user_func_array($cb['function'], array_slice($args, 0, $cb['accepted_args']));
+	}
 }
+if (!function_exists('do_action_ref_array')) {
+	function do_action_ref_array(string $hook, array $args): void { do_action($hook, ...$args); }
+}
+
 if (!function_exists('get_theme_root')) {
 	function get_theme_root(): string { return '/tmp/themes'; }
 }
@@ -505,3 +548,31 @@ if (!function_exists('sanitize_textarea_field')) {
 		return trim(strip_tags($str));
 	}
 }
+
+
+// ── Lo que usan las pantallas y los comandos ──────────────────────
+if (!function_exists('_x')) { function _x(string $t, string $c, string $d = 'default'): string { return $t; } }
+if (!function_exists('_n')) { function _n(string $s, string $p, int $n, string $d = 'default'): string { return 1 === $n ? $s : $p; } }
+if (!function_exists('esc_html__')) { function esc_html__(string $t, string $d = 'default'): string { return esc_html($t); } }
+if (!function_exists('esc_html_e')) { function esc_html_e(string $t, string $d = 'default'): void { echo esc_html($t); } }
+if (!function_exists('esc_attr__')) { function esc_attr__(string $t, string $d = 'default'): string { return esc_attr($t); } }
+if (!function_exists('esc_attr_e')) { function esc_attr_e(string $t, string $d = 'default'): void { echo esc_attr($t); } }
+if (!function_exists('admin_url')) { function admin_url(string $p = ''): string { return 'https://example.test/wp-admin/' . ltrim($p, '/'); } }
+if (!function_exists('network_admin_url')) { function network_admin_url(string $p = ''): string { return 'https://example.test/wp-admin/network/' . ltrim($p, '/'); } }
+if (!function_exists('wp_nonce_url')) { function wp_nonce_url(string $u, $a = -1): string { return $u . (str_contains($u, '?') ? '&' : '?') . '_wpnonce=test'; } }
+if (!function_exists('wp_get_environment_type')) { function wp_get_environment_type(): string { return $GLOBALS['_test_env_type'] ?? 'local'; } }
+if (!function_exists('wp_next_scheduled')) { function wp_next_scheduled(string $h) { return $GLOBALS['_test_cron'][$h] ?? false; } }
+if (!function_exists('wp_schedule_event')) { function wp_schedule_event(int $t, string $r, string $h): bool { $GLOBALS['_test_cron'][$h] = $t; return true; } }
+if (!function_exists('wp_unschedule_event')) { function wp_unschedule_event(int $t, string $h): bool { unset($GLOBALS['_test_cron'][$h]); return true; } }
+if (!function_exists('get_bloginfo')) { function get_bloginfo(string $k = ''): string { return 'Sitio de prueba'; } }
+if (!function_exists('wp_specialchars_decode')) { function wp_specialchars_decode(string $s, $q = ENT_NOQUOTES): string { return html_entity_decode($s, ENT_QUOTES); } }
+if (!function_exists('get_current_user_id')) { function get_current_user_id(): int { return (int) ($GLOBALS['_test_user_id'] ?? 1); } }
+if (!function_exists('wp_get_current_user')) { function wp_get_current_user(): object { return (object) ['ID' => get_current_user_id(), 'user_email' => 'admin@example.test']; } }
+if (!function_exists('current_user_can')) { function current_user_can(string $cap, ...$a): bool { return (bool) ($GLOBALS['_test_can'] ?? true); } }
+if (!function_exists('get_current_screen')) { function get_current_screen() { return null; } }
+if (!function_exists('is_network_admin')) { function is_network_admin(): bool { return false; } }
+if (!function_exists('is_super_admin')) { function is_super_admin(): bool { return true; } }
+if (!function_exists('get_site')) { function get_site(int $id) { return null; } }
+if (!function_exists('human_time_diff')) { function human_time_diff(int $a, int $b = 0): string { return 'un rato'; } }
+if (!function_exists('get_date_from_gmt')) { function get_date_from_gmt(string $s, string $f = 'Y-m-d H:i:s'): string { return $s; } }
+if (!function_exists('gmdate_i18n')) { function gmdate_i18n(string $f): string { return gmdate($f); } }

@@ -31,6 +31,18 @@ abstract class DnsTestCase extends TestCase {
 		$GLOBALS['_test_wp_site_options']    = array();
 		$GLOBALS['_test_wp_site_transients'] = array();
 		$GLOBALS['_test_multisite']          = false;
+		$GLOBALS['wp_filter']                = array();
+
+		// Lo que no esté sembrado no tiene que ir al DNS de verdad: el
+		// resolver es DoH y el wp_remote_get() de los stubs no contesta.
+		\update_option( 'diluxone_mail_dns_resolver', 'doh' );
+	}
+
+	/** Vuelve a armar el informe de un dominio sin tirar las respuestas sembradas. */
+	protected function diagnose( string $domain ): array {
+		\delete_site_transient( 'diluxone_mail_diagnosis_' . md5( $domain ) );
+
+		return \diluxone_mail_diagnose( $domain );
 	}
 
 	/**
