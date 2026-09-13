@@ -156,10 +156,22 @@ function diluxone_mail_posted_scope(): string {
 	return 'network' === $scope && is_multisite() ? 'network' : 'site';
 }
 
-/** The tab the POST came from, narrowed to the ones that exist. */
+/**
+ * The form the POST came from, narrowed to the ones that exist.
+ *
+ * `dns` is not a tab of this screen: the options of the diagnosis live on the
+ * deliverability screen, next to the diagnosis they configure. It saves
+ * through the same handler because it is the same kind of form, and it is the
+ * only form outside the tabs, so it is named here rather than given a
+ * mechanism of its own.
+ */
 function diluxone_mail_posted_tab( string $scope ): string {
-	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- The calling handler already verified the nonce; this only picks which tab to go back to.
+	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- The calling handler already verified the nonce; this only picks which form was submitted.
 	$tab = isset( $_POST['tab'] ) ? sanitize_key( wp_unslash( $_POST['tab'] ) ) : '';
+
+	if ( 'dns' === $tab ) {
+		return 'dns';
+	}
 
 	return isset( diluxone_mail_settings_tabs( $scope )[ $tab ] ) ? $tab : 'profile';
 }
@@ -347,7 +359,7 @@ function diluxone_mail_save_settings(): void {
 		diluxone_mail_settings_redirect( $scope, 'not-allowed', $tab );
 	}
 
-	$groups = diluxone_mail_tab_groups( $tab, $scope );
+	$groups = 'dns' === $tab ? array( 'dns' ) : diluxone_mail_tab_groups( $tab, $scope );
 	$all    = diluxone_mail_settings_fields();
 	$input  = array();
 
@@ -387,6 +399,12 @@ function diluxone_mail_save_settings(): void {
 	}
 
 	diluxone_mail_save_options( $input, $scope );
+
+	if ( 'dns' === $tab ) {
+		wp_safe_redirect( diluxone_mail_admin_url( 'diluxone-mail-dns', array( 'diluxone_mail_done' => 'saved' ) ) );
+		exit;
+	}
+
 	diluxone_mail_settings_redirect( $scope, 'saved', $tab );
 }
 add_action( 'admin_post_diluxone_mail_save_settings', 'diluxone_mail_save_settings' );

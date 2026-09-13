@@ -58,6 +58,21 @@ class HandlersTest extends AdminTestCase {
 		$this->assertFalse( \diluxone_mail_connection_verified() );
 	}
 
+	public function test_the_dns_options_save_from_the_deliverability_screen(): void {
+		$_POST = array(
+			'scope'                       => 'site',
+			'tab'                         => 'dns',
+			'diluxone_mail_dns_selectors' => 'uno, dos  tres',
+			'diluxone_mail_dns_domain'    => 'x.test',
+		);
+
+		$url = $this->redirect_of( 'diluxone_mail_save_settings' );
+
+		$this->assertStringContainsString( 'page=diluxone-mail-dns', $url );
+		$this->assertSame( array( 'uno', 'dos', 'tres' ), \get_option( 'diluxone_mail_dns_selectors' ) );
+		$this->assertSame( 'x.test', \get_option( 'diluxone_mail_dns_domain' ) );
+	}
+
 	public function test_saving_on_the_network_includes_the_per_site_permission(): void {
 		$GLOBALS['_test_multisite'] = true;
 		$_POST                      = array( 'scope' => 'network', 'tab' => 'sites', 'diluxone_mail_network_allow_override' => '1' );

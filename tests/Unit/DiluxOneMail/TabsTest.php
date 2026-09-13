@@ -158,6 +158,18 @@ class TabsTest extends AdminTestCase {
 		$this->assertStringContainsString( 'Nothing to fix', $this->render( 'diluxone_mail_screen_overview' ) );
 	}
 
+	public function test_the_deliverability_screen_carries_the_options_of_the_diagnosis(): void {
+		$this->configured();
+		\update_option( 'diluxone_mail_dns_selectors', array( 'uno', 'dos' ) );
+
+		$html = $this->render( 'diluxone_mail_screen_dns' );
+
+		$this->assertStringContainsString( 'Options of the diagnosis', $html );
+		$this->assertStringContainsString( 'name="diluxone_mail_dns_selectors"', $html );
+		$this->assertStringContainsString( 'uno, dos', $html );
+		$this->assertStringContainsString( 'value="dns"', $html );
+	}
+
 	public function test_a_test_message_marks_the_last_step_and_can_come_back_to_the_overview(): void {
 		$this->configured();
 		$_POST = array( 'scope' => 'site', 'diluxone_mail_test_to' => 'a@x.test' );
