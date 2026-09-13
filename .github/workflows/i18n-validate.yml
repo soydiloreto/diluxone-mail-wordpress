@@ -11,6 +11,11 @@ name: i18n validation
 # enforces a subset of i18n rules at PHPCS time. This workflow adds
 # the WP-CLI i18n linter, which catches a different (and overlapping)
 # set of issues — together they form a fairly tight i18n net.
+#
+# It then compiles the translations that actually ship. That half was
+# missing until a malformed header line in the es_AR .po — a "\n" that
+# had been typed as a real newline — travelled all the way to a green
+# build: `wp i18n make-mo` swallowed it, and only msgfmt objected.
 
 on:
   pull_request:
@@ -91,6 +96,47 @@ jobs:
             echo "::error::POT file extracted no translatable strings."
             exit 1
           fi
+
+      - name: Compile the shipped translations
+        # Every .po in languages/ has to compile, and has to compile clean.
+        # A fuzzy entry is one gettext does not trust: WordPress silently
+        # ignores it and the string comes out in English, which looks exactly
+        # like a missing translation and is far harder to find later.
+        run: |
+          set -e
+          sudo apt-get install -y --no-install-recommends gettext > /dev/null
+
+          shopt -s nullglob
+          PO_FILES=(languages/*.po)
+
+          if [ ${#PO_FILES[@]} -eq 0 ]; then
+            echo "No .po files to compile."
+            exit 0
+          fi
+
+          FAILED=0
+
+          for PO in "${PO_FILES[@]}"; do
+            echo "── $PO"
+
+            if ! msgfmt --check --statistics -o /dev/null "$PO"; then
+              echo "::error file=$PO::does not compile."
+              FAILED=1
+              continue
+            fi
+
+            # msgattrib prints the header entry alongside the matches, so an
+            # empty result is one msgid and a real hit is two or more.
+            FUZZY=$(msgattrib --only-fuzzy --no-obsolete "$PO" | grep -c '^msgid "' || true)
+            FUZZY=$(( FUZZY > 0 ? FUZZY - 1 : 0 ))
+
+            if [ "$FUZZY" -gt 0 ]; then
+              echo "::error file=$PO::has $FUZZY fuzzy entries; WordPress will show those strings untranslated."
+              FAILED=1
+            fi
+          done
+
+          exit "$FAILED"
 
       - name: Upload .pot artefact
         uses: actions/upload-artifact@v4
