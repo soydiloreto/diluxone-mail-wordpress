@@ -42,7 +42,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      # CodeQL aborta —no avisa, falla— cuando el lenguaje que le pediste no
+      # aparece en el repositorio. Pasa en dos momentos normales: mientras el
+      # plugin todavía no tiene JavaScript, y cada lunes, porque el cron corre
+      # aunque el filtro de `paths` no haya visto un cambio. Así que primero se
+      # mira si hay algo que analizar y si no lo hay el trabajo termina bien.
+      - name: Is there any JavaScript to analyse?
+        id: js
+        run: |
+          if compgen -G 'assets/js/*.js' > /dev/null; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "Sin JavaScript en assets/js/ — no hay nada que analizar."
+          fi
+
       - name: Initialize CodeQL
+        if: steps.js.outputs.found == 'true'
         uses: github/codeql-action/init@v3
         with:
           languages: javascript-typescript
@@ -53,6 +69,7 @@ jobs:
           queries: security-extended
 
       - name: Perform CodeQL analysis
+        if: steps.js.outputs.found == 'true'
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:javascript-typescript"
