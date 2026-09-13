@@ -1,0 +1,86 @@
+# Dependabot configuration for diluxone-mail.
+#
+# Why this exists, even though the published plugin has zero production
+# dependencies: the GitHub Actions used in CI/CD (deploy to wp.org SVN,
+# PR checks) are themselves a supply-chain surface. A vulnerable action
+# could potentially read SVN credentials. Dependabot watches them.
+#
+# Also covers npm devDependencies (currently @wordpress/env), which run
+# locally and in CI. None of these dependencies ever ship to wp.org —
+# they are excluded from the deploy via .distignore.
+#
+# Schedule is weekly with grouping enabled — at most 1–2 PRs per week,
+# not one per package. Combined with branch protection (CI must pass
+# before merge), Dependabot PRs that go green can be merged confidently.
+
+version: 2
+updates:
+  # GitHub Actions used in workflows under .github/workflows/.
+  # actions/checkout, shivammathur/setup-php, wordpress/plugin-check-action,
+  # 10up/action-wordpress-plugin-deploy, softprops/action-gh-release.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Argentina/Buenos_Aires"
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # npm dev dependencies — currently only @wordpress/env, more will be
+  # added when test/lint tooling lands. We never ship npm packages, so
+  # all updates are dev-only.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Argentina/Buenos_Aires"
+    open-pull-requests-limit: 3
+    groups:
+      dev-dependencies:
+        dependency-type: "development"
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # Composer dev dependencies — phpunit, brain/monkey, mockery (added in
+  # P2.1, expanded in P2.2 / P3.x with phpstan, psalm, wpcs, etc.). All
+  # are dev-only — composer install --no-dev would skip them — but the
+  # plugin runtime never invokes Composer regardless. None of these
+  # dependencies reach wp.org (the entire vendor/ tree is in .distignore).
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Argentina/Buenos_Aires"
+    open-pull-requests-limit: 3
+    groups:
+      composer-dev:
+        dependency-type: "development"
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "composer"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"

@@ -1,0 +1,20 @@
+{
+  "name": "diluxone-mail",
+  "private": true,
+  "description": "Development tooling for the DiluxOne Mail plugin. Not shipped. Not shipped.",
+  "license": "GPL-2.0-or-later",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "env:start": "wp-env start",
+    "env:stop": "wp-env stop",
+    "env:destroy": "wp-env destroy",
+    "env:reset": "wp-env destroy && wp-env start",
+    "env:cli": "wp-env run cli",
+    "env:logs": "wp-env logs"
+  },
+  "devDependencies": {
+    "@wordpress/env": "^10.0.0"
+  }
+}

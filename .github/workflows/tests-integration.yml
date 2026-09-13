@@ -1,0 +1,72 @@
+name: Integration tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  integration:
+    name: Integration tests (wp-env)
+    runs-on: ubuntu-latest
+    # Container start + plugin activation + tests + container stop.
+    # Worst case observed: ~7 minutes. 15 leaves margin for cold-start
+    # Docker image pulls.
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer:v2
+
+      - name: Determine Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-integration-${{ runner.os }}-${{ hashFiles('composer.json') }}
+          restore-keys: |
+            composer-integration-${{ runner.os }}-
+
+      - name: Install Composer dependencies
+        # The vendor/ tree produced here is then mounted into the wp-env
+        # container as part of the plugin volume — that's how the
+        # container can reach phpunit at /var/www/html/wp-content/plugins/diluxone-mail/vendor/.
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install npm dependencies
+        # No package-lock.json is committed (currently), so use `install`
+        # rather than `ci`.
+        run: npm install --no-audit --no-fund
+
+      - name: Start wp-env
+        # Brings up two WordPress containers — dev (port 8888) and tests
+        # (port 8889) — plus a shared MySQL. Plugin is auto-mounted.
+        run: npx wp-env start
+
+      - name: Activate plugin in tests environment
+        # wp-env mounts but does not auto-activate. Activate explicitly so
+        # bootstrap-integration.php finds DILUXONE_MAIL_DIR defined.
+        run: npx wp-env run tests-cli wp plugin activate diluxone-mail
+
+      - name: Run integration tests
+        run: npx wp-env run tests-cli ./wp-content/plugins/diluxone-mail/vendor/bin/phpunit -c ./wp-content/plugins/diluxone-mail/phpunit-integration.xml
+
+      - name: Stop wp-env
+        if: always()
+        run: npx wp-env stop

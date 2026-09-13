@@ -1,0 +1,158 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  php-lint:
+    name: PHP ${{ matrix.php }} syntax check
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.2', '8.3']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: none
+
+      - name: Lint all PHP files
+        run: |
+          set -e
+          find . -type f -name '*.php' \
+            -not -path './vendor/*' \
+            -not -path './node_modules/*' \
+            -not -path './.wordpress-org/*' \
+            -exec php -l {} \;
+
+  plugin-check:
+    name: WordPress Plugin Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Run WordPress Plugin Check
+        uses: wordpress/plugin-check-action@v1
+        with:
+          build-dir: ./
+          # Run all categories Plugin Check supports, including experimental
+          # checks. Strict mode — we want to be more rigorous than wp.org
+          # itself, so issues are caught here before they ever land on
+          # wp.org's review queue.
+          categories: plugin_repo,security,performance,accessibility,general
+          include-experimental: true
+          # Plugin Check scans the GitHub repo tree, not the zip that gets
+          # deployed to wp.org SVN. The directories and files below all live
+          # in the repo for development and CI purposes, but every one of
+          # them is excluded from the wp.org deploy via .distignore. So
+          # checks that fire on them (test files looking like "applications",
+          # stub files lacking direct-access protection, dev configs with
+          # localhost references, etc.) are false positives for our setup.
+          # Mirror this list with .distignore to keep the two in sync.
+          exclude-directories: tests,vendor,node_modules,docs
+          exclude-files: phpunit.xml.dist,phpunit.xml,phpunit-integration.xml,phpunit-integration.xml.dist,composer.json,composer.lock,package.json,package-lock.json,Makefile,phpcs.xml,phpcs.xml.dist,phpstan.neon,phpstan.neon.dist,phpstan-baseline.neon,phpstan-bootstrap.php,psalm.xml,psalm.xml.dist,psalm-baseline.xml
+          # Codes that flag GitHub-only repo metadata. These are not real
+          # plugin issues — they only fire because Plugin Check scans the
+          # repo tree, not the deployed zip.
+          # - hidden_files: .gitignore, .gitattributes
+          # - github_directory: .github/
+          # - unexpected_markdown_file: CONTRIBUTING.md, SECURITY.md,
+          #   CODE_OF_CONDUCT.md (Plugin Check only expects readme.txt and
+          #   maybe README.md — but it doesn't expect the rest of the
+          #   community profile, all of which is excluded from the deploy)
+          # - stable_tag_mismatch: Plugin Check requires exact equality
+          #   between readme.txt's Stable tag and the plugin file's
+          #   Version: header. We use a `-dev` suffix on `main` between
+          #   releases (Symfony / Laravel / WP-core convention), so during
+          #   PR runs the two diverge by design. Our own readme-validation
+          #   step (below) enforces the relaxed check (Stable tag must
+          #   equal the BASE part of Version, suffix stripped) and the
+          #   deploy workflow re-runs the strict check at tag time. So at
+          #   release time the alignment IS enforced, just not on every
+          #   PR during development.
+          ignore-codes: hidden_files,github_directory,unexpected_markdown_file,stable_tag_mismatch
+
+  readme-validation:
+    name: Validate readme.txt and version alignment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Verify required readme.txt headers are present
+        run: |
+          set -e
+          required_headers=(
+            "Contributors"
+            "Tags"
+            "Requires at least"
+            "Tested up to"
+            "Requires PHP"
+            "Stable tag"
+            "License"
+          )
+          missing=0
+          for header in "${required_headers[@]}"; do
+            if ! grep -qE "^${header}:" readme.txt; then
+              echo "::error file=readme.txt::Missing required header: ${header}"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+          echo "All required readme.txt headers present."
+
+      - name: Verify Stable tag matches PHP Version header (modulo -dev/-alpha/-rc suffix)
+        run: |
+          set -e
+          stable_tag=$(grep -oP '^Stable tag:\s*\K\S+' readme.txt)
+          php_version=$(grep -oP '^\s*\*\s*Version:\s*\K\S+' diluxone-mail.php)
+          define_version=$(grep -oP "DILUXONE_MAIL_VERSION',\s*'\K[^']+" diluxone-mail.php)
+
+          # The PHP `Version:` header may carry a pre-release suffix on `main`
+          # while we work toward the next release (e.g. `1.1.0-dev`). Strip the
+          # suffix to get the base release version, then require Stable tag to
+          # match the base. Tagged releases drop the suffix so this check is
+          # strict at tag time.
+          php_base=$(printf '%s' "${php_version}" | sed -E 's/-(dev|alpha|beta|rc)([.0-9]*)?$//')
+
+          echo "readme.txt Stable tag:       ${stable_tag}"
+          echo "PHP file Version header:     ${php_version}  (base: ${php_base})"
+          echo "PHP file DILUXONE_MAIL_VERSION:   ${define_version}"
+
+          if [ "${stable_tag}" != "${php_base}" ]; then
+            echo "::error::Version mismatch — readme.txt Stable tag (${stable_tag}) does not match the base version of the PHP Version header (${php_version}, base ${php_base}). Either update Stable tag, or drop the -dev/-alpha/-rc suffix from Version when preparing a release."
+            exit 1
+          fi
+
+          # The constant must match the PHP header EXACTLY (including any
+          # pre-release suffix); they are two views of the same thing.
+          if [ "${php_version}" != "${define_version}" ]; then
+            echo "::error file=diluxone-mail.php::Version mismatch — PHP Version header (${php_version}) does not match DILUXONE_MAIL_VERSION constant (${define_version})."
+            exit 1
+          fi
+
+          echo "Versions aligned: Stable tag = ${stable_tag}, PHP Version = ${php_version}."
+
+      - name: Verify Changelog has entry for current version
+        run: |
+          set -e
+          stable_tag=$(grep -oP '^Stable tag:\s*\K\S+' readme.txt)
+          if ! grep -qE "^=\s*${stable_tag}\s*=" readme.txt; then
+            echo "::error file=readme.txt::No changelog entry found for version ${stable_tag}. Add a '= ${stable_tag} =' section under '== Changelog =='."
+            exit 1
+          fi
+          echo "Changelog entry for ${stable_tag} found."
