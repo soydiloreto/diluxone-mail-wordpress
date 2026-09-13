@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-13T23:26:50+00:00\n"
+"POT-Creation-Date: 2026-09-13T23:41:40+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -51,7 +51,7 @@ msgid "Deliverability"
 msgstr "Entregabilidad"
 
 #: includes/admin-dns.php:42 includes/admin-log.php:62
-#: includes/admin-settings.php:147 includes/observer.php:300
+#: includes/admin-settings.php:151 includes/observer.php:300
 msgid "You are not allowed to do this."
 msgstr "No tenés permiso para hacer esto."
 
@@ -77,7 +77,7 @@ msgstr "Ajustes de la red"
 msgid "Overview"
 msgstr "Resumen"
 
-#: includes/admin-settings.php:129 includes/admin.php:67
+#: includes/admin-settings.php:133 includes/admin.php:67
 #: templates/admin-overview.php:56
 msgid "Settings"
 msgstr "Ajustes"
@@ -93,7 +93,7 @@ msgstr "Estado"
 msgid "Provider"
 msgstr "Proveedor"
 
-#: includes/admin-tabs.php:47 templates/settings-server.php:52
+#: includes/admin-tabs.php:47 templates/settings-server.php:61
 msgid "SMTP server"
 msgstr "Servidor SMTP"
 
@@ -182,46 +182,60 @@ msgstr ""
 
 #: includes/admin.php:160
 msgid ""
+"The server answered, but this PHP cannot encrypt the password (openssl with "
+"AES-256-GCM is missing), and it is not stored in the clear. Set it through "
+"the DILUXONE_MAIL_PASS constant in wp-config.php instead."
+msgstr ""
+"El servidor contestó, pero este PHP no puede cifrar la contraseña (falta "
+"openssl con AES-256-GCM) y no se guarda en texto plano. Cargala con la "
+"constante DILUXONE_MAIL_PASS en wp-config.php."
+
+#: includes/admin.php:161
+msgid ""
 "The server did not accept the connection, so nothing was saved. What went "
 "wrong is below."
 msgstr ""
 "El servidor no aceptó la conexión, así que no se guardó nada. Abajo está qué"
 " falló."
 
-#: includes/admin.php:161
+#: includes/admin.php:162
 msgid "Test message sent."
 msgstr "Mensaje de prueba enviado."
 
-#: includes/admin.php:162
+#: includes/admin.php:163
 msgid ""
 "This site's settings are fixed by the network and cannot be changed here."
 msgstr "Los ajustes de este sitio los fija la red y no se pueden cambiar acá."
 
 #. translators: %s: name of the constant
-#: includes/admin.php:181
+#: includes/admin.php:182
 #, php-format
 msgid "defined by the environment — PHP constant %s"
 msgstr "definido por el entorno — constante de PHP %s"
 
 #. translators: %s: name of the variable
-#: includes/admin.php:184
+#: includes/admin.php:185
 #, php-format
 msgid "defined by the environment — variable %s"
 msgstr "definido por el entorno — variable %s"
 
-#: includes/admin.php:186
+#: includes/admin.php:187
+msgid "stored, but it can no longer be decrypted — type it again"
+msgstr "guardada, pero ya no se puede descifrar — escribila de nuevo"
+
+#: includes/admin.php:189
 msgid "set by the network"
 msgstr "fijado por la red"
 
-#: includes/admin.php:188
+#: includes/admin.php:191
 msgid "set on this site"
 msgstr "fijado en este sitio"
 
-#: includes/admin.php:190
+#: includes/admin.php:193
 msgid "default value"
 msgstr "valor por defecto"
 
-#: includes/admin.php:235
+#: includes/admin.php:238
 msgid ""
 "This site fixes this from code: whatever is chosen here, it stays as it is."
 msgstr ""
@@ -1778,7 +1792,23 @@ msgstr "El servidor contestó en %ss y aceptó las credenciales."
 msgid "The server did not accept the connection, so nothing was saved."
 msgstr "El servidor no aceptó la conexión, así que no se guardó nada."
 
-#: templates/settings-server.php:54
+#: templates/settings-server.php:49
+msgid "The stored password can no longer be decrypted."
+msgstr "La contraseña guardada ya no se puede descifrar."
+
+#: templates/settings-server.php:50
+msgid ""
+"It is encrypted with a key derived from this site's WordPress salts, and "
+"those have changed since it was saved — a new wp-config.php, a restored "
+"copy, a rotation. Nothing is broken and nothing leaked: type the password "
+"again and test the connection."
+msgstr ""
+"Está cifrada con una clave derivada de las salts de WordPress de este sitio,"
+" y esas cambiaron desde que se guardó: un wp-config.php nuevo, una copia "
+"restaurada, una rotación. No se rompió nada ni se filtró nada: escribí la "
+"contraseña de nuevo y probá la conexión."
+
+#: templates/settings-server.php:63
 msgid ""
 "These values are saved by testing them. The button opens a session against "
 "the server, upgrades to TLS, authenticates and hangs up — no message is sent"
@@ -1790,16 +1820,16 @@ msgstr ""
 "falta un buzón. Si falla, no se guarda nada y te queda el motivo en las "
 "palabras del propio servidor."
 
-#: templates/settings-server.php:59
+#: templates/settings-server.php:68
 msgid "Host"
 msgstr "Host"
 
-#: templates/settings-server.php:64
+#: templates/settings-server.php:73
 msgid ""
 "Replace the region in the host with the one your SES identity lives in."
 msgstr "Reemplazá la región del host por la de tu identidad de SES."
 
-#: templates/settings-server.php:67
+#: templates/settings-server.php:76
 msgid ""
 "The profile assumes the mailbox runs next to PHP. Under Docker, DDEV, Lando "
 "or wp-env it does not: the host is the name of that service on the compose "
@@ -1811,35 +1841,35 @@ msgstr ""
 "compose —normalmente «mailpit» o «mailhog»— y «localhost» ahí significa este"
 " contenedor, donde no hay nada escuchando."
 
-#: templates/settings-server.php:72
+#: templates/settings-server.php:81
 msgid "Port"
 msgstr "Puerto"
 
-#: templates/settings-server.php:79
+#: templates/settings-server.php:88
 msgid "Encryption"
 msgstr "Cifrado"
 
-#: templates/settings-server.php:82
+#: templates/settings-server.php:91
 msgid "STARTTLS (usually port 587)"
 msgstr "STARTTLS (normalmente puerto 587)"
 
-#: templates/settings-server.php:83
+#: templates/settings-server.php:92
 msgid "SSL/TLS from the start (usually port 465)"
 msgstr "SSL/TLS desde el inicio (normalmente puerto 465)"
 
-#: templates/settings-server.php:84
+#: templates/settings-server.php:93
 msgid "None (local servers only)"
 msgstr "Ninguno (sólo servidores locales)"
 
-#: templates/settings-server.php:90
+#: templates/settings-server.php:99
 msgid "Authentication"
 msgstr "Autenticación"
 
-#: templates/settings-server.php:92
+#: templates/settings-server.php:101
 msgid "The server requires a username and password"
 msgstr "El servidor pide usuario y contraseña"
 
-#: templates/settings-server.php:94
+#: templates/settings-server.php:103
 msgid ""
 "Local profiles never authenticate and never try to upgrade to TLS, whatever "
 "the server offers. That is what makes Mailpit and MailHog work out of the "
@@ -1849,39 +1879,49 @@ msgstr ""
 "que ofrezca el servidor. Es lo que hace que Mailpit y MailHog funcionen de "
 "entrada."
 
-#: templates/settings-server.php:99
+#: templates/settings-server.php:108
 msgid "Username"
 msgstr "Usuario"
 
-#: templates/settings-server.php:109
+#: templates/settings-server.php:118
 msgid "Password"
 msgstr "Contraseña"
 
-#: templates/settings-server.php:115
+#: templates/settings-server.php:124
 msgid "stored — leave empty to keep it"
 msgstr "guardada — dejala vacía para conservarla"
 
-#: templates/settings-server.php:115
+#: templates/settings-server.php:124
 msgid "not set"
 msgstr "sin definir"
 
-#: templates/settings-server.php:120
+#: templates/settings-server.php:129
 msgid ""
-"The password never comes back to the browser. It is redacted from the log, "
-"the status screen and any SMTP transcript."
+"The password never comes back to the browser. It is stored encrypted with a "
+"key derived from this site's WordPress salts, and it is redacted from the "
+"log, the status screen and any SMTP transcript."
 msgstr ""
-"La contraseña nunca vuelve al navegador. Se tapa en el historial, en la "
-"pantalla de estado y en cualquier diálogo SMTP."
+"La contraseña nunca vuelve al navegador. Se guarda cifrada con una clave "
+"derivada de las salts de WordPress de este sitio, y se tacha del registro, "
+"de la pantalla de estado y de cualquier diálogo SMTP."
 
-#: templates/settings-server.php:124
+#: templates/settings-server.php:131
+msgid ""
+"Better still, keep it out of the database altogether: define it in wp-"
+"config.php and the plugin reads it from there and never stores it."
+msgstr ""
+"Mejor todavía: sacala de la base por completo. Definila en wp-config.php y "
+"el plugin la lee de ahí sin guardarla nunca."
+
+#: templates/settings-server.php:137
 msgid "Timeout"
 msgstr "Tiempo de espera"
 
-#: templates/settings-server.php:126
+#: templates/settings-server.php:139
 msgid "seconds"
 msgstr "segundos"
 
-#: templates/settings-server.php:132
+#: templates/settings-server.php:145
 msgid "Test connection and save"
 msgstr "Probar conexión y guardar"
 
@@ -1948,6 +1988,13 @@ msgstr "Todavía nada."
 #: templates/user-profile.php:65
 msgid "See all in the mail log"
 msgstr "Ver todo en el historial de correo"
+
+#~ msgid ""
+#~ "The password never comes back to the browser. It is redacted from the log, "
+#~ "the status screen and any SMTP transcript."
+#~ msgstr ""
+#~ "La contraseña nunca vuelve al navegador. Se tapa en el historial, en la "
+#~ "pantalla de estado y en cualquier diálogo SMTP."
 
 #~ msgid "Message resent."
 #~ msgstr "Mensaje reenviado."

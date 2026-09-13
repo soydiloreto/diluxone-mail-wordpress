@@ -43,6 +43,15 @@ $diluxone_mail_c = $data['connection'];
 	</div>
 <?php endif; ?>
 
+<?php if ( $data['pass_unreadable'] ) : ?>
+	<div class="notice notice-warning inline">
+		<p>
+			<strong><?php esc_html_e( 'The stored password can no longer be decrypted.', 'diluxone-mail' ); ?></strong>
+			<?php esc_html_e( 'It is encrypted with a key derived from this site\'s WordPress salts, and those have changed since it was saved — a new wp-config.php, a restored copy, a rotation. Nothing is broken and nothing leaked: type the password again and test the connection.', 'diluxone-mail' ); ?>
+		</p>
+	</div>
+<?php endif; ?>
+
 <form method="post" action="<?php echo esc_url( (string) $data['action_url'] ); ?>" class="diluxone-mail-form">
 	<?php wp_nonce_field( 'diluxone_mail_settings' ); ?>
 	<input type="hidden" name="action" value="diluxone_mail_connection">
@@ -117,7 +126,11 @@ $diluxone_mail_c = $data['connection'];
 				<?php if ( '' !== (string) $data['profile']['pass_hint'] ) : ?>
 					<p class="description"><?php echo esc_html( (string) $data['profile']['pass_hint'] ); ?></p>
 				<?php endif; ?>
-				<p class="description"><?php esc_html_e( 'The password never comes back to the browser. It is redacted from the log, the status screen and any SMTP transcript.', 'diluxone-mail' ); ?></p>
+				<p class="description"><?php esc_html_e( 'The password never comes back to the browser. It is stored encrypted with a key derived from this site\'s WordPress salts, and it is redacted from the log, the status screen and any SMTP transcript.', 'diluxone-mail' ); ?></p>
+				<p class="description">
+					<?php esc_html_e( 'Better still, keep it out of the database altogether: define it in wp-config.php and the plugin reads it from there and never stores it.', 'diluxone-mail' ); ?>
+					<code>define( 'DILUXONE_MAIL_PASS', '…' );</code>
+				</p>
 			</td>
 		</tr>
 		<tr>

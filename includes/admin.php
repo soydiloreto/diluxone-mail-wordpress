@@ -157,6 +157,7 @@ function diluxone_mail_done_notice(): void {
 		'took-over'         => array( __( 'DiluxOne Mail is now handling this site\'s outgoing mail.', 'diluxone-mail' ), 'success' ),
 		'revalidated'       => array( __( 'DNS cache cleared and the diagnosis run again.', 'diluxone-mail' ), 'success' ),
 		'connected'         => array( __( 'The server answered and the credentials work. They are saved.', 'diluxone-mail' ), 'success' ),
+		'no-crypto'         => array( __( 'The server answered, but this PHP cannot encrypt the password (openssl with AES-256-GCM is missing), and it is not stored in the clear. Set it through the DILUXONE_MAIL_PASS constant in wp-config.php instead.', 'diluxone-mail' ), 'error' ),
 		'connection-failed' => array( __( 'The server did not accept the connection, so nothing was saved. What went wrong is below.', 'diluxone-mail' ), 'error' ),
 		'tested'            => array( __( 'Test message sent.', 'diluxone-mail' ), 'success' ),
 		'not-allowed'       => array( __( 'This site\'s settings are fixed by the network and cannot be changed here.', 'diluxone-mail' ), 'warning' ),
@@ -182,6 +183,8 @@ function diluxone_mail_source_label( string $source, string $origin ): string {
 		case 'env':
 			/* translators: %s: name of the variable */
 			return sprintf( __( 'defined by the environment — variable %s', 'diluxone-mail' ), $origin );
+		case 'unreadable':
+			return __( 'stored, but it can no longer be decrypted — type it again', 'diluxone-mail' );
 		case 'network':
 			return __( 'set by the network', 'diluxone-mail' );
 		case 'site':

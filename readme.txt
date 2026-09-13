@@ -97,6 +97,23 @@ in as an administrator would be able to take over accounts without knowing a
 single password. An earlier version of this plugin could be told to store
 bodies; updating removes the column and everything that was in it.
 
+= Where does the SMTP password end up? =
+
+Encrypted, with AES-256-GCM and a key derived from your site's own WordPress
+salts, so a database dump or a backup taken elsewhere cannot read it. Rotating
+the salts makes it unreadable, which is the point; the settings screen says so
+and asks you to type it again rather than failing at the next send.
+
+Better than encrypting it is not storing it: define `DILUXONE_MAIL_PASS` in
+`wp-config.php`, or set it as an environment variable, and the plugin reads it
+from there. The field then shows as read-only and says where the value comes
+from. Host, port, encryption, username and the sender address work the same
+way.
+
+Encryption at rest is worth being honest about: it protects the credential
+where it travels — dumps, backups, staging copies — not from code running on
+the site, which can always ask the plugin for it.
+
 = Do I have to uninstall my current SMTP plugin? =
 
 No. Install this one and it will detect the other, stay out of the way, and

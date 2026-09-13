@@ -273,6 +273,14 @@ if (!function_exists('wp_check_password')) {
 }
 
 if (!function_exists('wp_rand')) {
+	/**
+	 * The salts the credential's key is derived from. Fixed per test run and
+	 * changeable, so a test can rotate them and see what that does.
+	 */
+	function wp_salt(string $scheme = 'auth'): string {
+		return ($GLOBALS['_test_salt'] ?? 'sal-de-prueba') . '|' . $scheme;
+	}
+
 	function wp_rand(int $min = 0, int $max = 0): int {
 		return random_int($min, $max);
 	}

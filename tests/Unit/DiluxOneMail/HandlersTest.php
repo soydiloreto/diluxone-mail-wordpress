@@ -106,8 +106,11 @@ class HandlersTest extends AdminTestCase {
 		$this->assertStringContainsString( 'tab=sender', $url );
 		$this->assertSame( 'smtp.x.test', \get_option( 'diluxone_mail_host' ) );
 		$this->assertSame( 2525, \get_option( 'diluxone_mail_port' ) );
-		// The password is stored as it was typed, quotes and all.
-		$this->assertSame( 'p@ss "rara"', \get_option( 'diluxone_mail_pass' ) );
+		// The password comes back as it was typed, quotes and all — but not
+		// from the column: what is in there is ciphertext.
+		$this->assertSame( 'p@ss "rara"', \diluxone_mail_config_value( 'pass' )['value'] );
+		$this->assertStringNotContainsString( 'p@ss', (string) \get_option( 'diluxone_mail_pass' ) );
+		$this->assertTrue( \diluxone_mail_is_encrypted( (string) \get_option( 'diluxone_mail_pass' ) ) );
 		$this->assertTrue( \diluxone_mail_connection_verified() );
 	}
 
@@ -141,16 +144,18 @@ class HandlersTest extends AdminTestCase {
 
 	public function test_an_empty_password_keeps_the_stored_one_and_the_environment_is_left_alone(): void {
 		\PHPMailer\PHPMailer\PHPMailer::$connects = true;
-		\update_option( 'diluxone_mail_pass', 'vieja' );
+		\update_option( 'diluxone_mail_pass', \diluxone_mail_encrypt( 'vieja' ) );
 
 		$_POST = array( 'scope' => 'site', 'tab' => 'server', 'diluxone_mail_host' => 'smtp.x.test', 'diluxone_mail_pass' => '' );
 		$this->redirect_of( 'diluxone_mail_connection_action' );
-		$this->assertSame( 'vieja', \get_option( 'diluxone_mail_pass' ) );
+		$this->assertSame( 'vieja', \diluxone_mail_config_value( 'pass' )['value'] );
 
 		putenv( 'DILUXONE_MAIL_PASS=del-entorno' );
 		$_POST = array( 'scope' => 'site', 'tab' => 'server', 'diluxone_mail_host' => 'smtp.x.test', 'diluxone_mail_pass' => 'attempt' );
 		$this->redirect_of( 'diluxone_mail_connection_action' );
-		$this->assertSame( 'vieja', \get_option( 'diluxone_mail_pass' ) );
+
+		putenv( 'DILUXONE_MAIL_PASS' );
+		$this->assertSame( 'vieja', \diluxone_mail_config_value( 'pass' )['value'] );
 	}
 
 	public function test_a_site_without_permission_on_the_network_does_not_save(): void {

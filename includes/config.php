@@ -95,6 +95,22 @@ function diluxone_mail_config_value( string $field ): array {
 	$stored = diluxone_mail_option_stored( $option );
 
 	if ( 'default' !== $stored['scope'] && '' !== (string) $stored['value'] ) {
+		// The credential is kept encrypted, so what comes out of the option is
+		// not usable as it is. A value that cannot be decrypted — rotated
+		// salts, a truncated copy — answers as an empty password on purpose:
+		// every caller already handles "there is none", and the settings
+		// screen asks for it again rather than letting a send fail with an
+		// authentication error that explains nothing.
+		if ( 'pass' === $field ) {
+			$plain = diluxone_mail_stored_password( (string) $stored['value'] );
+
+			return array(
+				'value'  => null === $plain ? '' : $plain,
+				'source' => null === $plain ? 'unreadable' : $stored['scope'],
+				'origin' => $option,
+			);
+		}
+
 		return array(
 			'value'  => (string) $stored['value'],
 			'source' => $stored['scope'],

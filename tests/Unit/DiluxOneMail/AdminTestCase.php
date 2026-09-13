@@ -31,6 +31,7 @@ abstract class AdminTestCase extends TestCase {
 		$GLOBALS['_test_users']              = array();
 		$GLOBALS['_test_sites']              = array();
 		$GLOBALS['_test_screen']             = null;
+		$GLOBALS['_test_salt']               = 'sal-de-prueba';
 		$GLOBALS['_test_referer']            = false;
 		$GLOBALS['_test_cli_items']           = array();
 		$GLOBALS['wp_filter']                = array();

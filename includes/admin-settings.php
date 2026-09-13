@@ -53,21 +53,25 @@ function diluxone_mail_settings_data( string $scope ): array {
 	$provider = diluxone_mail_config_value( 'provider' );
 
 	return array(
-		'scope'          => $scope,
-		'tab'            => $tab,
-		'progress'       => diluxone_mail_settings_progress(),
-		'editable'       => $editable,
-		'fields'         => diluxone_mail_settings_field_values( $scope, $attempt ),
-		'provider'       => $provider,
-		'profile'        => diluxone_mail_provider( $provider['value'] ),
-		'providers'      => diluxone_mail_providers(),
-		'has_password'   => '' !== diluxone_mail_config_value( 'pass' )['value'],
-		'allow_override' => (bool) get_site_option( 'diluxone_mail_network_allow_override', 0 ),
-		'verified'       => diluxone_mail_connection_verified(),
-		'connection'     => is_array( $attempt ) ? $attempt : null,
-		'test'           => diluxone_mail_test_result_take(),
-		'action_url'     => admin_url( 'admin-post.php' ),
-		'back_url'       => diluxone_mail_tab_url( $tab, $scope ),
+		'scope'           => $scope,
+		'tab'             => $tab,
+		'progress'        => diluxone_mail_settings_progress(),
+		'editable'        => $editable,
+		'fields'          => diluxone_mail_settings_field_values( $scope, $attempt ),
+		'provider'        => $provider,
+		'profile'         => diluxone_mail_provider( $provider['value'] ),
+		'providers'       => diluxone_mail_providers(),
+		'has_password'    => '' !== diluxone_mail_config_value( 'pass' )['value'],
+		// Stored, and unreadable. Not the same as absent, and the difference
+		// is the whole message: nothing is broken, the salts changed, type it
+		// again.
+		'pass_unreadable' => 'unreadable' === diluxone_mail_config_value( 'pass' )['source'],
+		'allow_override'  => (bool) get_site_option( 'diluxone_mail_network_allow_override', 0 ),
+		'verified'        => diluxone_mail_connection_verified(),
+		'connection'      => is_array( $attempt ) ? $attempt : null,
+		'test'            => diluxone_mail_test_result_take(),
+		'action_url'      => admin_url( 'admin-post.php' ),
+		'back_url'        => diluxone_mail_tab_url( $tab, $scope ),
 	);
 }
 
@@ -319,7 +323,10 @@ function diluxone_mail_connection_action(): void {
 		$scope
 	);
 
-	diluxone_mail_store_password( $posted['pass'], $scope );
+	if ( ! diluxone_mail_store_password( $posted['pass'], $scope ) ) {
+		diluxone_mail_settings_redirect( $scope, 'no-crypto', 'server' );
+	}
+
 	diluxone_mail_verified( 'connection' );
 
 	diluxone_mail_settings_redirect( $scope, 'connected', 'sender' );
@@ -332,17 +339,29 @@ add_action( 'admin_post_diluxone_mail_connection', 'diluxone_mail_connection_act
  * Save_options() would run it through sanitize_textarea_field(), which strips
  * characters that are perfectly valid in a credential.
  */
-function diluxone_mail_store_password( string $pass, string $scope ): void {
+function diluxone_mail_store_password( string $pass, string $scope ): bool {
 	if ( '' === $pass || diluxone_mail_option_from_environment( 'diluxone_mail_pass' ) ) {
-		return;
+		return true;
+	}
+
+	$encrypted = diluxone_mail_encrypt( $pass );
+
+	// Nothing is written in the clear because encrypting it did not work. A
+	// site whose PHP has no openssl can still send: it configures the password
+	// through the DILUXONE_MAIL_PASS constant, where the plugin never stores
+	// it in the first place.
+	if ( '' === $encrypted ) {
+		return false;
 	}
 
 	if ( 'network' === $scope ) {
-		update_site_option( 'diluxone_mail_pass', $pass );
-		return;
+		update_site_option( 'diluxone_mail_pass', $encrypted );
+		return true;
 	}
 
-	update_option( 'diluxone_mail_pass', $pass );
+	update_option( 'diluxone_mail_pass', $encrypted );
+
+	return true;
 }
 
 /** Saves one tab. */
