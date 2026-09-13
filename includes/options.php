@@ -114,24 +114,6 @@ function diluxone_mail_option_defaults(): array {
 }
 
 /**
- * Las options que no se editan: las escribe el plugin para sí mismo.
- *
- * Están fuera de los defaults a propósito. Si estuvieran adentro, el guardado
- * del formulario las aceptaría como si fueran un ajuste más, y un POST armado
- * a mano podría escribir la versión del esquema de la base.
- *
- * @return array<int, string>
- */
-function diluxone_mail_internal_options(): array {
-	return array(
-		// Versión del esquema de las tablas, para saber cuándo migrar.
-		'diluxone_mail_db_version',
-		// Lo que pasó en el último envío, para la pantalla de estado.
-		'diluxone_mail_last_result',
-	);
-}
-
-/**
  * Un ajuste, con su valor por defecto.
  *
  * @param string $key      Nombre de la option, con prefijo.
@@ -153,72 +135,6 @@ function diluxone_mail_option( string $key, $fallback = null ) {
 	 * @param string $key   Nombre de la option.
 	 */
 	return apply_filters( 'diluxone_mail_option', $value, $key );
-}
-
-/**
- * ¿Este ajuste lo está forzando el sitio desde código?
- *
- * Otro plugin puede fijar un valor por el filtro `diluxone_mail_option`
- * —porque en ese sitio no es una opción sino cómo funciona—. Cuando eso pasa,
- * el control del admin se guarda y no cambia nada, que es exactamente la clase
- * de mentira que hay que evitar en una pantalla de ajustes. Con esto se puede
- * mostrar al lado del control.
- *
- * Ojo que esto es el filtro, no la precedencia de entorno: que un valor venga
- * de una constante o de una variable de entorno lo contesta config.php, y se
- * muestra distinto porque se arregla en otro lado.
- */
-function diluxone_mail_option_forced( string $key ): bool {
-	$defaults = diluxone_mail_option_defaults();
-	$stored   = get_option( $key, null );
-	$stored   = null === $stored ? ( $defaults[ $key ] ?? null ) : $stored;
-
-	return diluxone_mail_option( $key ) !== $stored;
-}
-
-/**
- * Quién está fijando un ajuste desde el código.
- *
- * «Algo del sitio decidió esto» no le sirve a nadie: quien lee eso quiere ir
- * a sacarlo, y no sabe dónde. Acá sale el archivo y la función, que es lo que
- * hace falta para encontrarlo. Se listan todos los enganchados al filtro
- * porque cualquiera de ellos puede ser el que manda; cuál de todos, lo dice
- * abrir el archivo.
- *
- * @return array<int, string>
- */
-function diluxone_mail_option_forced_by(): array {
-	global $wp_filter;
-
-	if ( ! isset( $wp_filter['diluxone_mail_option'] ) ) {
-		return array();
-	}
-
-	$quienes = array();
-
-	foreach ( $wp_filter['diluxone_mail_option']->callbacks as $enganchados ) {
-		foreach ( $enganchados as $enganche ) {
-			$fn = $enganche['function'];
-
-			if ( ! is_string( $fn ) || ! function_exists( $fn ) ) {
-				continue;
-			}
-
-			try {
-				$archivo = (string) ( new ReflectionFunction( $fn ) )->getFileName();
-			} catch ( ReflectionException $e ) {
-				continue;
-			}
-
-			$quienes[] = sprintf(
-				'%s() — %s',
-				$fn,
-				ltrim( str_replace( wp_normalize_path( WP_PLUGIN_DIR ), '', wp_normalize_path( $archivo ) ), '/' )
-			);
-		}
-	}
-
-	return $quienes;
 }
 
 /**
