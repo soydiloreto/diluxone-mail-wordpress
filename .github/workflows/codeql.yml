@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # CodeQL aborts — it does not warn, it fails — when the language it was
       # asked for is nowhere in the repository. That happens at two perfectly
@@ -60,7 +60,7 @@ jobs:
 
       - name: Initialize CodeQL
         if: steps.js.outputs.found == 'true'
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
           # `security-extended` adds queries beyond the default set —
@@ -71,6 +71,6 @@ jobs:
 
       - name: Perform CodeQL analysis
         if: steps.js.outputs.found == 'true'
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:javascript-typescript"
