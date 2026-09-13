@@ -123,7 +123,7 @@ credential.
   DNS lookup must go through `dns.php`, which falls back to DoH. A direct call
   to `dns_get_record()` in a new file is a defect.
 - Every `.php` file starts with `defined( 'ABSPATH' ) || exit;`.
-- **PHP 8.1 minimum**, WordPress 6.0 minimum.
+- **PHP 8.1 minimum**, WordPress 6.2 minimum (the log uses the `%i` identifier placeholder of `$wpdb->prepare()`).
 
 ### Data
 

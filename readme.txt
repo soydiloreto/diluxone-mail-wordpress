@@ -1,7 +1,7 @@
 === DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics ===
 Contributors: soydiloreto
 Tags: smtp, email log, deliverability, spf dkim dmarc, wp mail
-Requires at least: 6.0
+Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 8.1
 Stable tag: 1.0.0
@@ -49,6 +49,23 @@ you what is broken. This one does:
 
 Hosts that disable `dns_get_record()` are common, so it falls back to
 DNS-over-HTTPS automatically. Results are cached, with a revalidate button.
+
+= Three levels of logging =
+
+* **Log** (on by default): date, recipients, sender, subject, outcome, error,
+  provider, and which plugin sent it. This is what the user profile shows.
+* **Extended log** (off): also the headers, attachment names and the full SMTP
+  conversation with the provider — what you need when arguing with their support.
+* **Message body** (off, on purpose): the body is personal data. It is also
+  the only way to resend a message, so the resend button works only for
+  messages logged while this is on.
+
+= Multisite =
+
+On a network the mail server belongs to the network: settings live under
+Network Admin → Settings and apply to every site, read-only, unless the network
+allows sites to override them. The log is one table for the whole network, and
+a person's profile shows their mail from every site.
 
 = Observer mode =
 

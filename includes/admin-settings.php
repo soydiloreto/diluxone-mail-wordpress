@@ -103,21 +103,21 @@ function diluxone_mail_screen_settings(): void {
  * Quién puede guardar en cada alcance.
  *
  * Guardar en la red es del superadministrador; guardar en un sitio, de quien
- * administra ese sitio. Y siempre con nonce.
+ * administra ese sitio. El nonce lo verifica cada handler antes de llamar
+ * acá, a la vista: así lo ve cualquiera que lea el handler, y lo ve también
+ * el sniff de seguridad de wp.org, que no sigue llamadas a funciones.
  */
-function diluxone_mail_settings_authorize( string $scope, string $nonce_action ): void {
+function diluxone_mail_settings_authorize( string $scope ): void {
 	$cap = 'network' === $scope ? 'manage_network_options' : 'manage_options';
 
 	if ( ! current_user_can( $cap ) ) {
 		wp_die( esc_html__( 'You are not allowed to do this.', 'diluxone-mail' ) );
 	}
-
-	check_admin_referer( $nonce_action );
 }
 
 /** El alcance que vino en el POST, saneado a los dos que existen. */
 function diluxone_mail_posted_scope(): string {
-	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- El nonce se verifica en quien llama, con el alcance ya resuelto.
+	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- El nonce ya lo verificó el handler que llama; acá sólo se elige entre dos valores.
 	$scope = isset( $_POST['scope'] ) ? sanitize_key( wp_unslash( $_POST['scope'] ) ) : 'site';
 
 	return 'network' === $scope && is_multisite() ? 'network' : 'site';
@@ -141,9 +141,11 @@ function diluxone_mail_settings_redirect( string $scope, string $done ): void {
  * hace falta JavaScript para que el desplegable rellene nada.
  */
 function diluxone_mail_apply_provider(): void {
+	check_admin_referer( 'diluxone_mail_settings' );
+
 	$scope = diluxone_mail_posted_scope();
 
-	diluxone_mail_settings_authorize( $scope, 'diluxone_mail_settings' );
+	diluxone_mail_settings_authorize( $scope );
 
 	if ( 'site' === $scope && ! diluxone_mail_site_override_allowed() ) {
 		diluxone_mail_settings_redirect( $scope, 'not-allowed' );
@@ -158,9 +160,11 @@ add_action( 'admin_post_diluxone_mail_apply_provider', 'diluxone_mail_apply_prov
 
 /** Guarda el formulario. */
 function diluxone_mail_save_settings(): void {
+	check_admin_referer( 'diluxone_mail_settings' );
+
 	$scope = diluxone_mail_posted_scope();
 
-	diluxone_mail_settings_authorize( $scope, 'diluxone_mail_settings' );
+	diluxone_mail_settings_authorize( $scope );
 
 	if ( 'site' === $scope && ! diluxone_mail_site_override_allowed() ) {
 		diluxone_mail_settings_redirect( $scope, 'not-allowed' );

@@ -167,7 +167,7 @@ function diluxone_mail_providers(): array {
 		'ses'              => array(
 			'name'           => 'Amazon SES',
 			'group'          => __( 'Providers', 'diluxone-mail' ),
-			'host'           => 'email-smtp.us-east-1.amazonaws.com',
+			'host'           => 'email-smtp.us-east-1.amazonaws.com', // phpcs:ignore PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Es el servidor SMTP de SES, no un recurso servido desde afuera.
 			'port'           => 587,
 			'encryption'     => 'tls',
 			'auth'           => true,

@@ -101,9 +101,11 @@ function diluxone_mail_test_result_take(): ?array {
 
 /** El botón del admin. */
 function diluxone_mail_test_action(): void {
+	check_admin_referer( 'diluxone_mail_test' );
+
 	$scope = diluxone_mail_posted_scope();
 
-	diluxone_mail_settings_authorize( $scope, 'diluxone_mail_test' );
+	diluxone_mail_settings_authorize( $scope );
 
 	$to = sanitize_email( wp_unslash( $_POST['diluxone_mail_test_to'] ?? '' ) );
 

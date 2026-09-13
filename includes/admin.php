@@ -95,11 +95,6 @@ function diluxone_mail_admin_url( string $screen, array $args = array() ): strin
 	return add_query_arg( array_merge( array( 'page' => $screen ), $args ), admin_url( 'admin.php' ) );
 }
 
-/** ¿Estamos en la pantalla de la red? */
-function diluxone_mail_is_network_screen(): bool {
-	return is_multisite() && is_network_admin();
-}
-
 /**
  * La cabecera común: título y, si hay, los avisos que valen en todas.
  *

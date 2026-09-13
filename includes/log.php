@@ -42,10 +42,10 @@
  *
  * Todo el archivo habla con la base directamente y sin caché, y tiene que ser
  * así: es una tabla propia que la API de WordPress no conoce, y un historial
- * que se cachea es un historial que miente durante el tiempo del caché. Las
- * anotaciones van acá arriba y los `phpcs:enable` de más abajo nombran el
- * sniff que reactivan, porque un `phpcs:enable` a secas reactiva también
- * éstos.
+ * que se cachea es un historial que miente durante el tiempo del caché. Los
+ * nombres de las tablas van por el marcador %i de prepare() —WordPress 6.2—,
+ * que los entrecomilla como identificadores: por eso el mínimo del plugin es
+ * 6.2 y no 6.0.
  *
  * phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery
  * phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -289,19 +289,19 @@ function diluxone_mail_log_query( array $args = array() ): array {
 	$tabla = diluxone_mail_log_table();
 	$sql   = 'WHERE ' . implode( ' AND ', $where );
 
-	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $sql se arma sólo con marcadores y $params los llena; el nombre de la tabla sale del prefijo de $wpdb.
-	$total = array() !== $params
-		? (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$tabla} {$sql}", $params ) )
-		: (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$tabla} {$sql}" );
+	// El nombre de la tabla va por %i, que prepare() entrecomilla como
+	// identificador. $sql se arma sólo con marcadores y $params los llena.
+	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $sql son marcadores; los valores van en $params.
+	$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i {$sql}", array_merge( array( $tabla ), $params ) ) );
 
 	$params[] = $per_page;
 	$params[] = ( $page - 1 ) * $per_page;
 
 	$rows = $wpdb->get_results(
-		$wpdb->prepare( "SELECT * FROM {$tabla} {$sql} ORDER BY sent_at DESC, id DESC LIMIT %d OFFSET %d", $params ),
+		$wpdb->prepare( "SELECT * FROM %i {$sql} ORDER BY sent_at DESC, id DESC LIMIT %d OFFSET %d", array_merge( array( $tabla ), $params ) ),
 		ARRAY_A
 	);
-	// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
+	// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 
 	return array(
 		'rows'  => is_array( $rows ) ? $rows : array(),
@@ -317,11 +317,7 @@ function diluxone_mail_log_query( array $args = array() ): array {
 function diluxone_mail_log_get( int $id ): ?array {
 	global $wpdb;
 
-	$tabla = diluxone_mail_log_table();
-
-	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- El nombre de la tabla sale del prefijo de $wpdb.
-	$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$tabla} WHERE id = %d", $id ), ARRAY_A );
-	// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', diluxone_mail_log_table(), $id ), ARRAY_A );
 
 	return is_array( $row ) ? $row : null;
 }
@@ -334,11 +330,7 @@ function diluxone_mail_log_get( int $id ): ?array {
 function diluxone_mail_log_recipients_of( string $message_id ): array {
 	global $wpdb;
 
-	$tabla = diluxone_mail_log_table();
-
-	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- El nombre de la tabla sale del prefijo de $wpdb.
-	$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$tabla} WHERE message_id = %s ORDER BY id ASC", $message_id ), ARRAY_A );
-	// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE message_id = %s ORDER BY id ASC', diluxone_mail_log_table(), $message_id ), ARRAY_A );
 
 	return is_array( $rows ) ? $rows : array();
 }
@@ -368,11 +360,9 @@ function diluxone_mail_log_totals( ?int $site_id ): array {
 
 	$tabla = diluxone_mail_log_table();
 
-	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- El nombre de la tabla sale del prefijo de $wpdb.
 	$rows = null === $site_id
-		? $wpdb->get_results( "SELECT status, COUNT(*) AS n FROM {$tabla} GROUP BY status", ARRAY_A )
-		: $wpdb->get_results( $wpdb->prepare( "SELECT status, COUNT(*) AS n FROM {$tabla} WHERE site_id = %d GROUP BY status", $site_id ), ARRAY_A );
-	// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		? $wpdb->get_results( $wpdb->prepare( 'SELECT status, COUNT(*) AS n FROM %i GROUP BY status', $tabla ), ARRAY_A )
+		: $wpdb->get_results( $wpdb->prepare( 'SELECT status, COUNT(*) AS n FROM %i WHERE site_id = %d GROUP BY status', $tabla, $site_id ), ARRAY_A );
 
 	$salida = array();
 
@@ -421,11 +411,7 @@ function diluxone_mail_detail_save( string $message_id, array $campos ): void {
 function diluxone_mail_detail_get( string $message_id ): ?array {
 	global $wpdb;
 
-	$tabla = diluxone_mail_detail_table();
-
-	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- El nombre de la tabla sale del prefijo de $wpdb.
-	$row = $wpdb->get_row( $wpdb->prepare( "SELECT body, body_type, transcript FROM {$tabla} WHERE message_id = %s", $message_id ), ARRAY_A );
-	// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$row = $wpdb->get_row( $wpdb->prepare( 'SELECT body, body_type, transcript FROM %i WHERE message_id = %s', diluxone_mail_detail_table(), $message_id ), ARRAY_A );
 
 	if ( ! is_array( $row ) ) {
 		return null;
@@ -457,15 +443,13 @@ function diluxone_mail_log_purge(): array {
 	$detail       = diluxone_mail_detail_table();
 	$guarda_algo  = (bool) diluxone_mail_option( 'diluxone_mail_log_body' ) || (bool) diluxone_mail_option( 'diluxone_mail_log_extended' );
 
-	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Los nombres de las tablas salen del prefijo de $wpdb.
 	$detalles = $guarda_algo
-		? (int) $wpdb->query( $wpdb->prepare( "DELETE FROM {$detail} WHERE created_at < %s", gmdate( 'Y-m-d H:i:s', time() - $dias_detalle * DAY_IN_SECONDS ) ) )
-		: (int) $wpdb->query( "DELETE FROM {$detail}" );
+		? (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s', $detail, gmdate( 'Y-m-d H:i:s', time() - $dias_detalle * DAY_IN_SECONDS ) ) )
+		: (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i', $detail ) );
 
 	$filas = (int) $wpdb->query(
-		$wpdb->prepare( "DELETE FROM {$log} WHERE sent_at < %s", gmdate( 'Y-m-d H:i:s', time() - $dias_log * DAY_IN_SECONDS ) )
+		$wpdb->prepare( 'DELETE FROM %i WHERE sent_at < %s', $log, gmdate( 'Y-m-d H:i:s', time() - $dias_log * DAY_IN_SECONDS ) )
 	);
-	// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 	return array(
 		'log'     => $filas,
@@ -492,19 +476,20 @@ function diluxone_mail_log_delete_by_email( string $email ): int {
 	$log    = diluxone_mail_log_table();
 	$detail = diluxone_mail_detail_table();
 
-	// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Los nombres de las tablas salen del prefijo de $wpdb.
 	$wpdb->query(
 		$wpdb->prepare(
-			"DELETE d FROM {$detail} d
-			  WHERE EXISTS ( SELECT 1 FROM {$log} l WHERE l.message_id = d.message_id AND l.email = %s )
-			    AND NOT EXISTS ( SELECT 1 FROM {$log} l2 WHERE l2.message_id = d.message_id AND l2.email <> %s )",
+			'DELETE d FROM %i d
+			  WHERE EXISTS ( SELECT 1 FROM %i l WHERE l.message_id = d.message_id AND l.email = %s )
+			    AND NOT EXISTS ( SELECT 1 FROM %i l2 WHERE l2.message_id = d.message_id AND l2.email <> %s )',
+			$detail,
+			$log,
 			$email,
+			$log,
 			$email
 		)
 	);
 
-	$borradas = (int) $wpdb->query( $wpdb->prepare( "DELETE FROM {$log} WHERE email = %s", $email ) );
-	// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$borradas = (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE email = %s', $log, $email ) );
 
 	return $borradas;
 }
