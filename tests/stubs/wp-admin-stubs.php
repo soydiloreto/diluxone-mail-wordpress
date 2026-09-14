@@ -38,6 +38,7 @@ if (!function_exists('wp_readonly')) { function wp_readonly($a, $b = true, $e = 
 if (!function_exists('add_menu_page')) { function add_menu_page(...$a): string { $GLOBALS['_test_menu'][] = $a; return 'toplevel_page_' . $a[3]; } }
 if (!function_exists('add_submenu_page')) { function add_submenu_page(...$a): string { $GLOBALS['_test_submenu'][] = $a; return $a[0] . '_page_' . $a[3]; } }
 if (!function_exists('wp_enqueue_style')) { function wp_enqueue_style(...$a): void { $GLOBALS['_test_styles'][] = $a; } }
+if (!function_exists('wp_enqueue_script')) { function wp_enqueue_script(...$a): void { $GLOBALS['_test_scripts'][] = $a; } }
 if (!function_exists('get_user_by')) {
 	function get_user_by(string $field, $value) {
 		$prop = ['email' => 'user_email', 'login' => 'user_login', 'id' => 'ID', 'ID' => 'ID'][$field] ?? $field;

@@ -31,6 +31,22 @@ class ScreensTest extends AdminTestCase {
 		\diluxone_mail_admin_styles( 'toplevel_page_diluxone-mail' );
 		\diluxone_mail_admin_styles( 'edit.php' );
 		$this->assertCount( 1, $GLOBALS['_test_styles'] );
+
+		// The script goes where there is a form, which is every screen that
+		// renders the tabs — and not on the ones that do not.
+		$GLOBALS['_test_scripts'] = array();
+
+		foreach ( array( 'diluxone-mail_page_diluxone-mail-provider', 'diluxone-mail_page_diluxone-mail-settings', 'settings_page_diluxone-mail-network' ) as $con_formulario ) {
+			$GLOBALS['_test_scripts'] = array();
+			\diluxone_mail_admin_styles( $con_formulario );
+			$this->assertCount( 1, $GLOBALS['_test_scripts'], $con_formulario );
+		}
+
+		foreach ( array( 'toplevel_page_diluxone-mail', 'diluxone-mail_page_diluxone-mail-log', 'profile.php' ) as $sin_formulario ) {
+			$GLOBALS['_test_scripts'] = array();
+			\diluxone_mail_admin_styles( $sin_formulario );
+			$this->assertCount( 0, $GLOBALS['_test_scripts'], $sin_formulario );
+		}
 	}
 
 	public function test_the_first_tab_offers_the_profiles(): void {

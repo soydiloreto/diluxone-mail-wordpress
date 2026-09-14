@@ -309,9 +309,26 @@ function diluxone_mail_admin_styles( string $hook ): void {
 		file_exists( $css ) ? (string) filemtime( $css ) : DILUXONE_MAIL_VERSION
 	);
 
-	// Only where there is a form to help: the log, the status and somebody's
-	// profile have nothing for it to do.
-	if ( false === strpos( $hook, DILUXONE_MAIL_SETTINGS ) && false === strpos( $hook, 'diluxone-mail-network' ) ) {
+	// Only where there is a form for it to help with. Named rather than
+	// matched on a fragment of a slug: this guard has already been wrong once
+	// per screen added, each time by leaving the script switched off somewhere
+	// the form needed it and saying nothing about it.
+	$with_forms = array(
+		DILUXONE_MAIL_PROVIDER_PAGE,
+		DILUXONE_MAIL_SETTINGS,
+		'diluxone-mail-network',
+	);
+
+	$here = false;
+
+	foreach ( $with_forms as $screen ) {
+		if ( false !== strpos( $hook, $screen ) ) {
+			$here = true;
+			break;
+		}
+	}
+
+	if ( ! $here ) {
 		return;
 	}
 
