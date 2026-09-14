@@ -27,14 +27,29 @@ class PluginTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * Message bodies are not stored unless somebody asks for it.
+	 * There is nowhere to put a message body.
 	 *
-	 * This is a test and not a comment because it is a privacy promise: if one
-	 * day somebody changes the default without thinking it through, every site
-	 * that updates starts storing the content of its people's mail without
-	 * anybody having decided so.
+	 * It used to be a setting that shipped off, and this test checked the
+	 * default. A default is a promise somebody can change in an afternoon, so
+	 * the setting went and the column with it: what is asserted now is that
+	 * the schema itself has no room for a body, which is the only version of
+	 * this promise that cannot be undone by editing one line.
+	 *
+	 * A log that kept bodies would be keeping every password-reset link the
+	 * site has ever sent.
 	 */
-	public function test_the_message_body_is_not_stored_by_default(): void {
+	public function test_the_schema_has_nowhere_to_put_a_message_body(): void {
+		global $wpdb;
+
+		diluxone_mail_install();
+
+		foreach ( array( diluxone_mail_log_table(), diluxone_mail_detail_table() ) as $table ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$columnas = array_column( (array) $wpdb->get_results( "DESCRIBE `{$table}`", ARRAY_A ), 'Field' );
+
+			$this->assertNotContains( 'body', $columnas, "{$table} still has room for a message body" );
+			$this->assertNotContains( 'body_type', $columnas, "{$table} still has room for a message body" );
+		}
 	}
 
 	public function test_the_log_tables_exist(): void {

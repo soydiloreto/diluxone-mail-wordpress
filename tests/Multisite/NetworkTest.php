@@ -16,6 +16,11 @@ use Tests\Integration\IntegrationTestCase;
 
 class NetworkTest extends IntegrationTestCase {
 
+	/** This is the suite the network is for. */
+	protected function needs_single_site(): bool {
+		return false;
+	}
+
 	protected function setUp(): void {
 		parent::setUp();
 
@@ -34,6 +39,10 @@ class NetworkTest extends IntegrationTestCase {
 		delete_site_option( 'diluxone_mail_network_allow_override' );
 		delete_site_option( 'diluxone_mail_host' );
 		delete_option( 'diluxone_mail_host' );
+		// A list left behind by another suite answers for every field a
+		// provider owns, and would decide these tests instead of them.
+		delete_site_option( 'diluxone_mail_connections' );
+		delete_option( 'diluxone_mail_connections' );
 		update_site_option( 'diluxone_mail_mode', 'observe' );
 		update_site_option( 'diluxone_mail_log_enabled', 1 );
 	}
@@ -94,6 +103,13 @@ class NetworkTest extends IntegrationTestCase {
 		$this->assertSame( 2, diluxone_mail_log_count( diluxone_mail_user_emails( $user ) ) );
 	}
 
+	/**
+	 * The precedence on an install that has not migrated yet.
+	 *
+	 * Flat options are still where a site's transport lives until the list is
+	 * written, so the rule they obey is worth keeping honest on a real
+	 * network.
+	 */
 	public function test_the_network_wins_and_the_site_only_overrides_with_permission(): void {
 		update_site_option( 'diluxone_mail_host', 'smtp.red.test' );
 		update_option( 'diluxone_mail_host', 'smtp.sitio.test' );
@@ -105,6 +121,36 @@ class NetworkTest extends IntegrationTestCase {
 
 		$this->assertSame( 'site', diluxone_mail_config_value( 'host' )['source'] );
 		$this->assertSame( 'smtp.sitio.test', diluxone_mail_config_value( 'host' )['value'] );
+	}
+
+	/**
+	 * And the same rule once a site has a list of providers.
+	 *
+	 * There is one list per scope rather than one merged list: a network that
+	 * has not handed over control keeps its providers for everybody, and one
+	 * that has lets each site keep its own. Which list is read is the whole of
+	 * the precedence now, and it answers with the same two words the flat
+	 * options did.
+	 */
+	public function test_the_list_of_providers_follows_the_same_rule(): void {
+		update_site_option(
+			'diluxone_mail_connections',
+			array( 'cn_red' => array( 'diluxone_mail_host' => 'smtp.red.test', 'label' => 'La de la red' ) )
+		);
+		update_option(
+			'diluxone_mail_connections',
+			array( 'cn_sitio' => array( 'diluxone_mail_host' => 'smtp.sitio.test', 'label' => 'La del sitio' ) )
+		);
+
+		$this->assertSame( 'network', diluxone_mail_connections_scope() );
+		$this->assertSame( 'smtp.red.test', diluxone_mail_config_value( 'host' )['value'] );
+		$this->assertSame( 'network', diluxone_mail_config_value( 'host' )['source'] );
+
+		update_site_option( 'diluxone_mail_network_allow_override', 1 );
+
+		$this->assertSame( 'site', diluxone_mail_connections_scope() );
+		$this->assertSame( 'smtp.sitio.test', diluxone_mail_config_value( 'host' )['value'] );
+		$this->assertSame( 'site', diluxone_mail_config_value( 'host' )['source'] );
 	}
 
 	public function test_saving_on_a_site_without_permission_does_nothing(): void {

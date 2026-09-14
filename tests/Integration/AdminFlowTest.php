@@ -60,32 +60,82 @@ class AdminFlowTest extends IntegrationTestCase {
 		$_POST['_wpnonce']    = $_REQUEST['_wpnonce'];
 	}
 
+	/**
+	 * One configured provider, which is where a site's settings live.
+	 *
+	 * @param array<string, mixed> $values
+	 */
+	private function proveedor( array $values ): string {
+		return diluxone_mail_connection_put( '', $values );
+	}
+
 	private function interceptar(): callable {
 		$fn = static fn( $pre ): bool => null === $pre ? true : (bool) $pre;
 		add_filter( 'pre_wp_mail', $fn, 10, 1 );
 		return $fn;
 	}
 
+	/**
+	 * The settings a provider owns go into that provider's record.
+	 *
+	 * Not into options of their own, which is where they used to live and
+	 * where this test used to look for them: a site keeps a list of providers,
+	 * and a host stored loose would belong to all of them at once.
+	 *
+	 * The host and the credential have no plain-save path at all — they are
+	 * written by the connection test and by nothing else, which is what makes
+	 * "it was never saved without working" true rather than merely encouraged
+	 * by the layout of the screen. So what a save writes here is the sender,
+	 * and the host is what applying the profile put there.
+	 */
 	public function test_applying_a_profile_and_saving_the_settings_with_a_real_nonce(): void {
 		$this->nonce( 'diluxone_mail_settings' );
 		$_POST['scope']                  = 'site';
 		$_POST['diluxone_mail_provider'] = 'mailjet';
 
 		$this->assertStringContainsString( 'profile-applied', $this->redirect_of( 'diluxone_mail_apply_provider' ) );
-		$this->assertSame( 'in-v3.mailjet.com', get_option( 'diluxone_mail_host' ) );
+
+		$id = diluxone_mail_default_id();
+		$this->assertNotSame( '', $id, 'applying a profile did not create a provider' );
+		$this->assertSame( 'in-v3.mailjet.com', diluxone_mail_connection( $id )['diluxone_mail_host'] );
+		$this->assertSame( 'in-v3.mailjet.com', diluxone_mail_option( 'diluxone_mail_host' ) );
+
+		// And nothing was left lying around in an option of its own.
+		$this->assertFalse( get_option( 'diluxone_mail_host' ) );
 
 		$_POST = array(
-			'scope'                  => 'site',
-			'_wpnonce'               => $_REQUEST['_wpnonce'],
-			'diluxone_mail_host'     => 'smtp.propio.test',
-			'diluxone_mail_pass'     => 'clave nueva',
-			'diluxone_mail_from'     => 'hello@propio.test',
+			'scope'              => 'site',
+			'tab'                => 'sender',
+			'_wpnonce'           => $_REQUEST['_wpnonce'],
+			'connection'         => $id,
+			'diluxone_mail_from' => 'hello@propio.test',
 		);
+		$_REQUEST['connection'] = $id;
 
 		$this->assertStringContainsString( 'saved', $this->redirect_of( 'diluxone_mail_save_settings' ) );
-		$this->assertSame( 'smtp.propio.test', get_option( 'diluxone_mail_host' ) );
-		$this->assertSame( 'clave nueva', get_option( 'diluxone_mail_pass' ) );
+		$this->assertSame( 'hello@propio.test', diluxone_mail_connection( $id )['diluxone_mail_from'] );
+		$this->assertSame( 'hello@propio.test', diluxone_mail_option( 'diluxone_mail_from' ) );
+
+		// A tab saves its own group and no other: a POST carrying somebody
+		// else's field is a POST that writes nothing of theirs.
 		$this->assertSame( 0, (int) get_option( 'diluxone_mail_log_extended' ) );
+	}
+
+	/**
+	 * The credential comes back readable through the plugin and is not
+	 * readable in the row. That is the whole of encryption at rest, and the
+	 * key is the site's own salts, which only exist for real here.
+	 */
+	public function test_the_credential_is_unreadable_in_the_row_it_is_stored_in(): void {
+		$id = $this->proveedor( array( 'diluxone_mail_provider' => 'mailjet' ) );
+
+		$this->assertTrue( diluxone_mail_store_password( 'clave nueva' ) );
+
+		$this->assertSame( 'clave nueva', diluxone_mail_config_value( 'pass' )['value'] );
+		$this->assertStringNotContainsString(
+			'clave nueva',
+			(string) diluxone_mail_connection( $id )['diluxone_mail_pass']
+		);
 	}
 
 	public function test_without_a_valid_nonce_nothing_is_saved(): void {
@@ -115,7 +165,7 @@ class AdminFlowTest extends IntegrationTestCase {
 		$this->assertStringContainsString( 'took-over', $this->redirect_of( 'diluxone_mail_take_over' ) );
 		$this->assertSame( 'transport', get_option( 'diluxone_mail_mode' ) );
 
-		update_option( 'diluxone_mail_from', 'hello@example.org' );
+		$this->proveedor( array( 'diluxone_mail_from' => 'hello@example.org' ) );
 		update_option( 'diluxone_mail_dns_resolver', 'doh' );
 		$this->nonce( 'diluxone_mail_revalidate' );
 		$this->assertStringContainsString( 'revalidated', $this->redirect_of( 'diluxone_mail_revalidate' ) );
@@ -146,7 +196,7 @@ class AdminFlowTest extends IntegrationTestCase {
 
 	public function test_the_screens_paint_with_real_data(): void {
 		update_option( 'diluxone_mail_mode', 'observe' );
-		update_option( 'diluxone_mail_from', 'hello@example.org' );
+		$this->proveedor( array( 'diluxone_mail_from' => 'hello@example.org' ) );
 		update_option( 'diluxone_mail_dns_resolver', 'doh' );
 
 		$fn = $this->interceptar();
