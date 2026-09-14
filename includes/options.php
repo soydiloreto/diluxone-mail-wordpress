@@ -180,6 +180,19 @@ function diluxone_mail_site_override_allowed(): bool {
 function diluxone_mail_option_stored( string $key ): array {
 	$defaults = diluxone_mail_option_defaults();
 
+	// A field that describes a provider is answered by whichever provider is
+	// sending, not by an option of its own. Only once there is a list: until
+	// the migration has run, the flat options below are still where a site's
+	// configuration lives.
+	if ( diluxone_mail_is_connection_field( $key ) && array() !== diluxone_mail_connections() ) {
+		$value = diluxone_mail_connection_value( $key );
+
+		return array(
+			'value' => null === $value ? ( $defaults[ $key ] ?? null ) : $value,
+			'scope' => null === $value ? 'default' : diluxone_mail_connections_scope(),
+		);
+	}
+
 	if ( is_multisite() ) {
 		if ( diluxone_mail_site_override_allowed() && ! in_array( $key, diluxone_mail_network_only_options(), true ) ) {
 			$site = get_option( $key, null );
@@ -262,6 +275,8 @@ function diluxone_mail_save_options( array $input, string $scope = 'site' ): voi
 		return;
 	}
 
+	$into_connection = array();
+
 	foreach ( $input as $key => $value ) {
 		if ( ! array_key_exists( $key, $defaults ) ) {
 			continue;
@@ -287,10 +302,22 @@ function diluxone_mail_save_options( array $input, string $scope = 'site' ): voi
 			$value = sanitize_textarea_field( (string) $value );
 		}
 
+		// Everything that describes a provider travels together into the
+		// connection being edited; the rest belongs to the site and stays
+		// where it was.
+		if ( diluxone_mail_is_connection_field( $key ) ) {
+			$into_connection[ $key ] = $value;
+			continue;
+		}
+
 		if ( 'network' === $scope ) {
 			update_site_option( $key, $value );
 		} else {
 			update_option( $key, $value );
 		}
+	}
+
+	if ( array() !== $into_connection ) {
+		diluxone_mail_connection_put( diluxone_mail_editing_id(), $into_connection );
 	}
 }

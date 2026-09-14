@@ -13,8 +13,8 @@ class HandlersTest extends AdminTestCase {
 		$url = $this->redirect_of( 'diluxone_mail_apply_provider' );
 
 		$this->assertStringContainsString( 'profile-applied', $url );
-		$this->assertSame( 'smtp.sendgrid.net', \get_option( 'diluxone_mail_host' ) );
-		$this->assertSame( 'apikey', \get_option( 'diluxone_mail_user' ) );
+		$this->assertSame( 'smtp.sendgrid.net', \diluxone_mail_option( 'diluxone_mail_host' ) );
+		$this->assertSame( 'apikey', \diluxone_mail_option( 'diluxone_mail_user' ) );
 	}
 
 	public function test_a_tab_saves_its_own_settings_and_leaves_the_others_alone(): void {
@@ -53,8 +53,7 @@ class HandlersTest extends AdminTestCase {
 
 		$this->redirect_of( 'diluxone_mail_save_settings' );
 
-		$this->assertFalse( \get_option( 'diluxone_mail_host' ) );
-		$this->assertFalse( \get_option( 'diluxone_mail_pass' ) );
+		$this->assertSame( array(), \diluxone_mail_connections() );
 		$this->assertFalse( \diluxone_mail_connection_verified() );
 	}
 
@@ -104,13 +103,13 @@ class HandlersTest extends AdminTestCase {
 		$this->assertStringContainsString( 'diluxone_mail_done=connected', $url );
 		// It moves on to the next step by itself.
 		$this->assertStringContainsString( 'tab=sender', $url );
-		$this->assertSame( 'smtp.x.test', \get_option( 'diluxone_mail_host' ) );
-		$this->assertSame( 2525, \get_option( 'diluxone_mail_port' ) );
+		$this->assertSame( 'smtp.x.test', \diluxone_mail_option( 'diluxone_mail_host' ) );
+		$this->assertSame( 2525, \diluxone_mail_option( 'diluxone_mail_port' ) );
 		// The password comes back as it was typed, quotes and all — but not
 		// from the column: what is in there is ciphertext.
 		$this->assertSame( 'p@ss "rara"', \diluxone_mail_config_value( 'pass' )['value'] );
-		$this->assertStringNotContainsString( 'p@ss', (string) \get_option( 'diluxone_mail_pass' ) );
-		$this->assertTrue( \diluxone_mail_is_encrypted( (string) \get_option( 'diluxone_mail_pass' ) ) );
+		$this->assertStringNotContainsString( 'p@ss', (string) \diluxone_mail_connection( \diluxone_mail_default_id() )['diluxone_mail_pass'] );
+		$this->assertTrue( \diluxone_mail_is_encrypted( (string) \diluxone_mail_connection( \diluxone_mail_default_id() )['diluxone_mail_pass'] ) );
 		$this->assertTrue( \diluxone_mail_connection_verified() );
 	}
 
@@ -131,8 +130,7 @@ class HandlersTest extends AdminTestCase {
 
 		$this->assertStringContainsString( 'connection-failed', $url );
 		$this->assertStringContainsString( 'tab=server', $url );
-		$this->assertFalse( \get_option( 'diluxone_mail_host' ) );
-		$this->assertFalse( \get_option( 'diluxone_mail_pass' ) );
+		$this->assertSame( array(), \diluxone_mail_connections() );
 		$this->assertFalse( \diluxone_mail_connection_verified() );
 
 		// What was typed comes back; the password does not travel with it.
@@ -144,7 +142,7 @@ class HandlersTest extends AdminTestCase {
 
 	public function test_an_empty_password_keeps_the_stored_one_and_the_environment_is_left_alone(): void {
 		\PHPMailer\PHPMailer\PHPMailer::$connects = true;
-		\update_option( 'diluxone_mail_pass', \diluxone_mail_encrypt( 'vieja' ) );
+		$this->conexion( array( 'diluxone_mail_pass' => \diluxone_mail_encrypt( 'vieja' ) ) );
 
 		$_POST = array( 'scope' => 'site', 'tab' => 'server', 'diluxone_mail_host' => 'smtp.x.test', 'diluxone_mail_pass' => '' );
 		$this->redirect_of( 'diluxone_mail_connection_action' );
@@ -164,7 +162,7 @@ class HandlersTest extends AdminTestCase {
 
 		$this->assertStringContainsString( 'not-allowed', $this->redirect_of( 'diluxone_mail_save_settings' ) );
 		$this->assertStringContainsString( 'not-allowed', $this->redirect_of( 'diluxone_mail_apply_provider' ) );
-		$this->assertFalse( \get_option( 'diluxone_mail_host' ) );
+		$this->assertSame( '', (string) \diluxone_mail_option( 'diluxone_mail_host' ) );
 	}
 
 	public function test_without_capability_it_stops(): void {

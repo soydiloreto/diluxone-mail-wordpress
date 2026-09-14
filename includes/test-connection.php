@@ -76,10 +76,7 @@ function diluxone_mail_connection_fingerprint( ?array $config = null ): string {
  * @return array{connection: string, message: string, time: int}
  */
 function diluxone_mail_verification(): array {
-	$stored = is_network_admin()
-		? get_site_option( 'diluxone_mail_verified', array() )
-		: get_option( 'diluxone_mail_verified', array() );
-
+	$stored = diluxone_mail_connection( diluxone_mail_editing_id() )['verified'] ?? array();
 	$stored = is_array( $stored ) ? $stored : array();
 
 	return array(
@@ -99,12 +96,7 @@ function diluxone_mail_verified( string $what ): void {
 	$stored[ $what ] = diluxone_mail_connection_fingerprint();
 	$stored['time']  = time();
 
-	if ( is_network_admin() ) {
-		update_site_option( 'diluxone_mail_verified', $stored );
-		return;
-	}
-
-	update_option( 'diluxone_mail_verified', $stored );
+	diluxone_mail_connection_put( diluxone_mail_editing_id(), array( 'verified' => $stored ) );
 }
 
 /** Did the server answer to the credentials that are stored right now? */

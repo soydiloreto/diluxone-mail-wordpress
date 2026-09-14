@@ -139,6 +139,11 @@ function diluxone_mail_settings_field_values( string $scope, ?array $attempt = n
 
 /** The four steps of setting up a provider. */
 function diluxone_mail_screen_provider(): void {
+	// Everything this screen reads — the fields, their provenance, what has
+	// been verified — resolves against the record it is editing, which is not
+	// necessarily the one delivering the site's mail right now.
+	diluxone_mail_active_id( diluxone_mail_editing_id() );
+
 	diluxone_mail_screen_open( __( 'Provider', 'diluxone-mail' ) );
 	diluxone_mail_view( 'admin-settings', diluxone_mail_settings_data( 'site', 'provider' ) );
 	diluxone_mail_screen_close();
@@ -272,6 +277,8 @@ function diluxone_mail_posted_transport(): array {
 function diluxone_mail_apply_provider(): void {
 	check_admin_referer( 'diluxone_mail_settings' );
 
+	diluxone_mail_active_id( diluxone_mail_editing_id() );
+
 	$scope = diluxone_mail_posted_scope();
 
 	diluxone_mail_settings_authorize( $scope );
@@ -310,6 +317,8 @@ add_action( 'admin_post_diluxone_mail_apply_provider', 'diluxone_mail_apply_prov
  */
 function diluxone_mail_connection_action(): void {
 	check_admin_referer( 'diluxone_mail_settings' );
+
+	diluxone_mail_active_id( diluxone_mail_editing_id() );
 
 	$scope = diluxone_mail_posted_scope();
 
@@ -351,7 +360,7 @@ function diluxone_mail_connection_action(): void {
 		$scope
 	);
 
-	if ( ! diluxone_mail_store_password( $posted['pass'], $scope ) ) {
+	if ( ! diluxone_mail_store_password( $posted['pass'] ) ) {
 		diluxone_mail_settings_redirect( $scope, 'no-crypto', 'server' );
 	}
 
@@ -373,6 +382,8 @@ add_action( 'admin_post_diluxone_mail_connection', 'diluxone_mail_connection_act
  */
 function diluxone_mail_api_key_action(): void {
 	check_admin_referer( 'diluxone_mail_settings' );
+
+	diluxone_mail_active_id( diluxone_mail_editing_id() );
 
 	$scope = diluxone_mail_posted_scope();
 
@@ -406,7 +417,7 @@ function diluxone_mail_api_key_action(): void {
 		diluxone_mail_settings_redirect( $scope, 'key-refused', 'server' );
 	}
 
-	if ( ! diluxone_mail_store_api_key( $key, $scope ) ) {
+	if ( ! diluxone_mail_store_api_key( $key ) ) {
 		diluxone_mail_settings_redirect( $scope, 'no-crypto', 'server' );
 	}
 
@@ -416,7 +427,7 @@ function diluxone_mail_api_key_action(): void {
 add_action( 'admin_post_diluxone_mail_api_key', 'diluxone_mail_api_key_action' );
 
 /** The API key, encrypted like the SMTP password and for the same reasons. */
-function diluxone_mail_store_api_key( string $key, string $scope ): bool {
+function diluxone_mail_store_api_key( string $key ): bool {
 	if ( '' === $key || diluxone_mail_option_from_environment( 'diluxone_mail_api_key' ) ) {
 		return true;
 	}
@@ -427,23 +438,18 @@ function diluxone_mail_store_api_key( string $key, string $scope ): bool {
 		return false;
 	}
 
-	if ( 'network' === $scope ) {
-		update_site_option( 'diluxone_mail_api_key', $encrypted );
-		return true;
-	}
-
-	update_option( 'diluxone_mail_api_key', $encrypted );
+	diluxone_mail_connection_put( diluxone_mail_editing_id(), array( 'diluxone_mail_api_key' => $encrypted ) );
 
 	return true;
 }
 
 /**
- * Stores the password as it is.
+ * Stores the password as it is, with the provider it belongs to.
  *
  * Save_options() would run it through sanitize_textarea_field(), which strips
  * characters that are perfectly valid in a credential.
  */
-function diluxone_mail_store_password( string $pass, string $scope ): bool {
+function diluxone_mail_store_password( string $pass ): bool {
 	if ( '' === $pass || diluxone_mail_option_from_environment( 'diluxone_mail_pass' ) ) {
 		return true;
 	}
@@ -458,12 +464,7 @@ function diluxone_mail_store_password( string $pass, string $scope ): bool {
 		return false;
 	}
 
-	if ( 'network' === $scope ) {
-		update_site_option( 'diluxone_mail_pass', $encrypted );
-		return true;
-	}
-
-	update_option( 'diluxone_mail_pass', $encrypted );
+	diluxone_mail_connection_put( diluxone_mail_editing_id(), array( 'diluxone_mail_pass' => $encrypted ) );
 
 	return true;
 }

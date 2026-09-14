@@ -78,7 +78,7 @@ class NetworkOptionsTest extends TestCase {
 	public function test_saving_on_the_network_writes_to_the_network(): void {
 		\diluxone_mail_save_options( array( 'diluxone_mail_host' => 'smtp.red.test' ), 'network' );
 
-		$this->assertSame( 'smtp.red.test', \get_site_option( 'diluxone_mail_host' ) );
+		$this->assertSame( 'smtp.red.test', \diluxone_mail_option( 'diluxone_mail_host' ) );
 		$this->assertArrayNotHasKey( 'diluxone_mail_host', $GLOBALS['_test_wp_options'] );
 	}
 

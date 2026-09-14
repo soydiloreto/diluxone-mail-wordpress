@@ -28,12 +28,17 @@ class ApiTest extends AdminTestCase {
 	private function por_api( string $key = 'tok_123' ): void {
 		$this->enganchar();
 
-		\update_option( 'diluxone_mail_provider', 'mailtrap_sending' );
-		\update_option( 'diluxone_mail_transport', 'api' );
-		\update_option( 'diluxone_mail_from', 'hello@x.test' );
-		\update_option( 'diluxone_mail_from_name', 'X' );
+		$this->conexion(
+			array(
+				'diluxone_mail_provider'  => 'mailtrap_sending',
+				'diluxone_mail_transport' => 'api',
+				'diluxone_mail_from'      => 'hello@x.test',
+				'diluxone_mail_from_name' => 'X',
+				'diluxone_mail_api_key'   => \diluxone_mail_encrypt( $key ),
+			)
+		);
+
 		\update_option( 'diluxone_mail_mode', 'transport' );
-		\update_option( 'diluxone_mail_api_key', \diluxone_mail_encrypt( $key ) );
 	}
 
 	/** What the provider answers. */
@@ -59,13 +64,14 @@ class ApiTest extends AdminTestCase {
 		$this->assertSame( 'api', \diluxone_mail_transport_kind() );
 		$this->assertTrue( \diluxone_mail_api_active() );
 
+		$id = \diluxone_mail_default_id();
+
 		// A provider with no API falls back rather than failing.
-		\update_option( 'diluxone_mail_provider', 'ses' );
+		\diluxone_mail_connection_put( $id, array( 'diluxone_mail_provider' => 'ses' ) );
 		$this->assertFalse( \diluxone_mail_api_active() );
 
 		// And so does a missing key.
-		\update_option( 'diluxone_mail_provider', 'mailtrap_sending' );
-		\delete_option( 'diluxone_mail_api_key' );
+		\diluxone_mail_connection_put( $id, array( 'diluxone_mail_provider' => 'mailtrap_sending', 'diluxone_mail_api_key' => '' ) );
 		$this->assertFalse( \diluxone_mail_api_active() );
 	}
 
@@ -223,7 +229,7 @@ class ApiTest extends AdminTestCase {
 
 	public function test_without_a_sender_it_does_not_even_try(): void {
 		$this->por_api();
-		\delete_option( 'diluxone_mail_from' );
+		\diluxone_mail_connection_put( \diluxone_mail_default_id(), array( 'diluxone_mail_from' => '' ) );
 
 		$this->assertFalse( \wp_mail( 'ana@x.test', 'Hola', 'texto' ) );
 		$this->assertSame( array(), $GLOBALS['_test_http'] );
@@ -239,7 +245,7 @@ class ApiTest extends AdminTestCase {
 		$url   = $this->redirect_of( 'diluxone_mail_api_key_action' );
 
 		$this->assertStringContainsString( 'key-refused', $url );
-		$this->assertFalse( \get_option( 'diluxone_mail_api_key' ) );
+		$this->assertSame( '', \diluxone_mail_api_key() );
 		$this->assertFalse( \diluxone_mail_connection_verified() );
 
 		// An empty body is not a message, so the endpoint complains about the
@@ -253,13 +259,12 @@ class ApiTest extends AdminTestCase {
 		$this->assertStringContainsString( 'tab=sender', $url );
 		$this->assertSame( 'buena', \diluxone_mail_api_key() );
 		// Stored the way the password is: encrypted, never in the clear.
-		$this->assertTrue( \diluxone_mail_is_encrypted( (string) \get_option( 'diluxone_mail_api_key' ) ) );
+		$this->assertTrue( \diluxone_mail_is_encrypted( (string) \diluxone_mail_connection( \diluxone_mail_default_id() )['diluxone_mail_api_key'] ) );
 		$this->assertTrue( \diluxone_mail_connection_verified() );
 	}
 
 	public function test_a_provider_that_cannot_be_asked_is_not_a_refusal(): void {
-		\update_option( 'diluxone_mail_provider', 'mailtrap_sending' );
-		\update_option( 'diluxone_mail_transport', 'api' );
+		$this->conexion( array( 'diluxone_mail_provider' => 'mailtrap_sending', 'diluxone_mail_transport' => 'api' ) );
 
 		// No network at all: the key is stored and the screen says it could
 		// not be checked, rather than refusing over a question we could not
@@ -274,11 +279,11 @@ class ApiTest extends AdminTestCase {
 		$_POST = array( 'scope' => 'site', 'diluxone_mail_provider' => 'ses', 'diluxone_mail_transport' => 'api' );
 
 		$this->assertStringContainsString( 'no-api', $this->redirect_of( 'diluxone_mail_apply_provider' ) );
-		$this->assertFalse( \get_option( 'diluxone_mail_transport' ) );
+		$this->assertSame( array(), \diluxone_mail_connections() );
 
 		$_POST = array( 'scope' => 'site', 'diluxone_mail_provider' => 'ses', 'diluxone_mail_transport' => 'smtp' );
 		$this->assertStringContainsString( 'profile-applied', $this->redirect_of( 'diluxone_mail_apply_provider' ) );
-		$this->assertSame( 'smtp', \get_option( 'diluxone_mail_transport' ) );
+		$this->assertSame( 'smtp', \diluxone_mail_option( 'diluxone_mail_transport' ) );
 	}
 
 	public function test_changing_the_method_reopens_the_step_that_proved_the_old_one(): void {
@@ -287,14 +292,16 @@ class ApiTest extends AdminTestCase {
 
 		$this->assertTrue( \diluxone_mail_connection_verified() );
 
-		\update_option( 'diluxone_mail_transport', 'smtp' );
+		$id = \diluxone_mail_default_id();
+
+		\diluxone_mail_connection_put( $id, array( 'diluxone_mail_transport' => 'smtp' ) );
 		$this->assertFalse( \diluxone_mail_connection_verified() );
 
-		\update_option( 'diluxone_mail_transport', 'api' );
+		\diluxone_mail_connection_put( $id, array( 'diluxone_mail_transport' => 'api' ) );
 		$this->assertTrue( \diluxone_mail_connection_verified() );
 
 		// And so does changing the key.
-		\update_option( 'diluxone_mail_api_key', \diluxone_mail_encrypt( 'otra' ) );
+		\diluxone_mail_connection_put( $id, array( 'diluxone_mail_api_key' => \diluxone_mail_encrypt( 'otra' ) ) );
 		$this->assertFalse( \diluxone_mail_connection_verified() );
 	}
 
@@ -414,7 +421,7 @@ class ApiTest extends AdminTestCase {
 	}
 
 	public function test_a_key_in_the_environment_is_read_and_never_written(): void {
-		\update_option( 'diluxone_mail_api_key', \diluxone_mail_encrypt( 'de-la-base' ) );
+		$this->conexion( array( 'diluxone_mail_api_key' => \diluxone_mail_encrypt( 'de-la-base' ) ) );
 		$this->assertSame( 'de-la-base', \diluxone_mail_api_key() );
 
 		putenv( 'DILUXONE_MAIL_API_KEY=del-entorno' );
@@ -422,8 +429,8 @@ class ApiTest extends AdminTestCase {
 		// The environment wins over what is stored, and storing over it is a
 		// no-op: the screen shows that field read-only for the same reason.
 		$this->assertSame( 'del-entorno', \diluxone_mail_api_key() );
-		$this->assertTrue( \diluxone_mail_store_api_key( 'otra', 'site' ) );
-		$this->assertSame( 'de-la-base', \diluxone_mail_stored_password( (string) \get_option( 'diluxone_mail_api_key' ) ) );
+		$this->assertTrue( \diluxone_mail_store_api_key( 'otra' ) );
+		$this->assertSame( 'de-la-base', \diluxone_mail_stored_password( (string) \diluxone_mail_connection( \diluxone_mail_default_id() )['diluxone_mail_api_key'] ) );
 
 		putenv( 'DILUXONE_MAIL_API_KEY' );
 	}
@@ -431,9 +438,9 @@ class ApiTest extends AdminTestCase {
 	public function test_the_network_keeps_its_own_key(): void {
 		$GLOBALS['_test_multisite'] = true;
 
-		$this->assertTrue( \diluxone_mail_store_api_key( 'de-la-red', 'network' ) );
-		$this->assertTrue( \diluxone_mail_is_encrypted( (string) \get_site_option( 'diluxone_mail_api_key' ) ) );
-		$this->assertTrue( \diluxone_mail_store_api_key( '', 'network' ) );
+		$this->assertTrue( \diluxone_mail_store_api_key( 'de-la-red' ) );
+		$this->assertTrue( \diluxone_mail_is_encrypted( (string) \diluxone_mail_connection( \diluxone_mail_default_id() )['diluxone_mail_api_key'] ) );
+		$this->assertTrue( \diluxone_mail_store_api_key( '' ) );
 	}
 
 	/**
@@ -504,7 +511,7 @@ class ApiTest extends AdminTestCase {
 		$this->assertSame( array(), $GLOBALS['_test_http'] );
 
 		$this->por_api();
-		\update_option( 'diluxone_mail_transport', 'smtp' );
+		\diluxone_mail_connection_put( \diluxone_mail_default_id(), array( 'diluxone_mail_transport' => 'smtp' ) );
 
 		$this->assertFalse( \diluxone_mail_api_sender_domains( true )['ok'] );
 		$this->assertSame( array(), $GLOBALS['_test_http'] );
@@ -541,7 +548,7 @@ class ApiTest extends AdminTestCase {
 
 		$this->redirect_of( 'diluxone_mail_save_settings' );
 
-		$this->assertSame( 'donotreply@conosur.tech', \get_option( 'diluxone_mail_from' ) );
+		$this->assertSame( 'donotreply@conosur.tech', \diluxone_mail_option( 'diluxone_mail_from' ) );
 
 		// With no domain half it is one plain field, as it has always been.
 		$_POST = array(
@@ -551,7 +558,7 @@ class ApiTest extends AdminTestCase {
 		);
 
 		$this->redirect_of( 'diluxone_mail_save_settings' );
-		$this->assertSame( 'otra@x.test', \get_option( 'diluxone_mail_from' ) );
+		$this->assertSame( 'otra@x.test', \diluxone_mail_option( 'diluxone_mail_from' ) );
 	}
 
 	public function test_the_transport_comes_back_when_something_sweeps_the_hook(): void {

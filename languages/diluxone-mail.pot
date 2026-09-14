@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-14T00:39:00+00:00\n"
+"POT-Creation-Date: 2026-09-14T00:47:52+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: diluxone-mail\n"
@@ -45,8 +45,8 @@ msgstr ""
 
 #: includes/admin-dns.php:42
 #: includes/admin-log.php:62
-#: includes/admin-settings.php:167
-#: includes/admin-settings.php:480
+#: includes/admin-settings.php:172
+#: includes/admin-settings.php:481
 #: includes/observer.php:300
 msgid "You are not allowed to do this."
 msgstr ""
@@ -77,7 +77,7 @@ msgstr ""
 msgid "Overview"
 msgstr ""
 
-#: includes/admin-settings.php:142
+#: includes/admin-settings.php:147
 #: includes/admin-tabs.php:37
 #: includes/admin.php:81
 #: includes/log-list-table.php:48
@@ -88,7 +88,7 @@ msgstr ""
 msgid "Provider"
 msgstr ""
 
-#: includes/admin-settings.php:149
+#: includes/admin-settings.php:154
 #: includes/admin.php:82
 #: templates/admin-overview.php:58
 msgid "Settings"
@@ -314,6 +314,14 @@ msgstr ""
 #: includes/api-transport.php:156
 #, php-format
 msgid "The provider refused the message (HTTP %1$d): %2$s"
+msgstr ""
+
+#. translators: 1: provider name, 2: the From address
+#. translators: 1: domain name, 2: why it cannot be used
+#: includes/connections.php:315
+#: templates/settings-sender.php:47
+#, php-format
+msgid "%1$s — %2$s"
 msgstr ""
 
 #: includes/diagnostics.php:157
@@ -850,11 +858,11 @@ msgstr ""
 msgid "Anything else"
 msgstr ""
 
-#: includes/test-connection.php:176
+#: includes/test-connection.php:168
 msgid "There is no host to connect to. Choose a provider profile, or type the server's address."
 msgstr ""
 
-#: includes/test-connection.php:219
+#: includes/test-connection.php:211
 msgid "The server did not accept the connection and gave no reason. The dialogue below is everything it said."
 msgstr ""
 
@@ -1559,12 +1567,6 @@ msgstr ""
 
 #: templates/settings-sender.php:28
 msgid "From address"
-msgstr ""
-
-#. translators: 1: domain name, 2: why it cannot be used
-#: templates/settings-sender.php:47
-#, php-format
-msgid "%1$s — %2$s"
 msgstr ""
 
 #: templates/settings-sender.php:53

@@ -40,6 +40,10 @@ abstract class AdminTestCase extends TestCase {
 		$GLOBALS['wp_filter']                = array();
 		$_GET                                = array();
 		$_POST                               = array();
+		// Read by whatever needs to work from either: the screen asking which
+		// provider it is editing arrives in one or the other depending on
+		// whether it is being looked at or submitted.
+		$_REQUEST                            = array();
 
 		\WP_CLI::reset();
 
@@ -87,12 +91,26 @@ abstract class AdminTestCase extends TestCase {
 	 * this sets exactly what a real run through the wizard would leave.
 	 */
 	protected function configured( string $provider = 'mailjet' ): void {
-		\update_option( 'diluxone_mail_provider', $provider );
-		\update_option( 'diluxone_mail_host', 'smtp.' . $provider . '.test' );
-		\update_option( 'diluxone_mail_port', 587 );
-		\update_option( 'diluxone_mail_from', 'hello@x.test' );
-		\update_option( 'diluxone_mail_from_name', 'X' );
+		$this->conexion(
+			array(
+				'diluxone_mail_provider'  => $provider,
+				'diluxone_mail_host'      => 'smtp.' . $provider . '.test',
+				'diluxone_mail_port'      => 587,
+				'diluxone_mail_from'      => 'hello@x.test',
+				'diluxone_mail_from_name' => 'X',
+			)
+		);
+
 		\diluxone_mail_verified( 'connection' );
+	}
+
+	/**
+	 * One configured provider, which is where a site's settings live.
+	 *
+	 * @param array<string, mixed> $values
+	 */
+	protected function conexion( array $values ): string {
+		return \diluxone_mail_connection_put( '', $values );
 	}
 
 	/** Runs a handler that ends in a redirect and returns where to. */

@@ -97,10 +97,13 @@ class ConfigTest extends TestCase {
 			)
 		);
 
-		// The host was left alone: the environment dictates it.
-		$this->assertArrayNotHasKey( 'diluxone_mail_host', $GLOBALS['_test_wp_options'] );
+		// The provider's settings live in its own record now, and the host is
+		// not among them: the environment dictates it.
+		$guardado = \diluxone_mail_connection( \diluxone_mail_default_id() );
+
+		$this->assertArrayNotHasKey( 'diluxone_mail_host', $guardado );
 		// The port was written: nothing else dictates it.
-		$this->assertSame( 2525, \get_option( 'diluxone_mail_port' ) );
+		$this->assertSame( 2525, $guardado['diluxone_mail_port'] );
 	}
 
 	public function test_a_key_that_is_not_a_setting_is_not_saved(): void {

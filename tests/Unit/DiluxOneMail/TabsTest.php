@@ -23,15 +23,15 @@ class TabsTest extends AdminTestCase {
 	}
 
 	public function test_each_step_opens_the_next(): void {
-		\update_option( 'diluxone_mail_provider', 'mailjet' );
+		$id = $this->conexion( array( 'diluxone_mail_provider' => 'mailjet' ) );
 		$this->assertSame( 'server', \diluxone_mail_current_tab() );
 		$this->assertFalse( \diluxone_mail_tab_open( 'sender', \diluxone_mail_settings_progress() ) );
 
-		\update_option( 'diluxone_mail_host', 'smtp.x.test' );
+		\diluxone_mail_connection_put( $id, array( 'diluxone_mail_host' => 'smtp.x.test' ) );
 		\diluxone_mail_verified( 'connection' );
 		$this->assertSame( 'sender', \diluxone_mail_current_tab() );
 
-		\update_option( 'diluxone_mail_from', 'hello@x.test' );
+		\diluxone_mail_connection_put( $id, array( 'diluxone_mail_from' => 'hello@x.test' ) );
 		$this->assertSame( 'test', \diluxone_mail_current_tab() );
 
 		\diluxone_mail_verified( 'message' );
@@ -44,8 +44,12 @@ class TabsTest extends AdminTestCase {
 		// server it would send through has never answered. Asking only the
 		// neighbouring step let the last one open here, and offered to send a
 		// test message through a server that was never verified.
-		\update_option( 'diluxone_mail_provider', 'mailjet' );
-		\update_option( 'diluxone_mail_from', 'hello@x.test' );
+		$this->conexion(
+			array(
+				'diluxone_mail_provider' => 'mailjet',
+				'diluxone_mail_from'     => 'hello@x.test',
+			)
+		);
 
 		$progress = \diluxone_mail_settings_progress();
 
@@ -74,24 +78,29 @@ class TabsTest extends AdminTestCase {
 	}
 
 	public function test_changing_a_verified_credential_closes_the_step_again(): void {
-		\update_option( 'diluxone_mail_host', 'smtp.x.test' );
-		\update_option( 'diluxone_mail_pass', 'una' );
+		$id = $this->conexion(
+			array(
+				'diluxone_mail_host' => 'smtp.x.test',
+				'diluxone_mail_pass' => 'una',
+			)
+		);
+
 		\diluxone_mail_verified( 'connection' );
 
 		$this->assertTrue( \diluxone_mail_connection_verified() );
 
-		\update_option( 'diluxone_mail_pass', 'otra' );
+		\diluxone_mail_connection_put( $id, array( 'diluxone_mail_pass' => 'otra' ) );
 		$this->assertFalse( \diluxone_mail_connection_verified() );
 
-		\update_option( 'diluxone_mail_pass', 'una' );
+		\diluxone_mail_connection_put( $id, array( 'diluxone_mail_pass' => 'una' ) );
 		$this->assertTrue( \diluxone_mail_connection_verified() );
 
-		\update_option( 'diluxone_mail_port', 2525 );
+		\diluxone_mail_connection_put( $id, array( 'diluxone_mail_port' => 2525 ) );
 		$this->assertFalse( \diluxone_mail_connection_verified() );
 	}
 
 	public function test_the_row_of_tabs_locks_what_is_not_reachable(): void {
-		\update_option( 'diluxone_mail_provider', 'mailjet' );
+		$this->conexion( array( 'diluxone_mail_provider' => 'mailjet' ) );
 
 		\ob_start();
 		\diluxone_mail_tabs_nav( 'server', 'site' );
@@ -229,7 +238,7 @@ class TabsTest extends AdminTestCase {
 		$this->assertTrue( \diluxone_mail_test_passed() );
 
 		// Change the sender and the proof no longer applies to what is stored.
-		\update_option( 'diluxone_mail_host', 'smtp.other.test' );
+		\diluxone_mail_connection_put( \diluxone_mail_default_id(), array( 'diluxone_mail_host' => 'smtp.other.test' ) );
 		$this->assertFalse( \diluxone_mail_test_passed() );
 
 		$_POST = array( 'scope' => 'site', 'diluxone_mail_test_to' => 'a@x.test', 'return' => 'overview' );
