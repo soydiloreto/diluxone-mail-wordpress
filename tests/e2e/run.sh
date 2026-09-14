@@ -3,11 +3,18 @@
 # End to end: WordPress sends a message through the plugin and the message
 # turns up in a real mailbox.
 #
-# It brings Mailpit up on the same Docker network as the test wp-env, points
-# the plugin at it, makes a real wp_mail() from WP-CLI, and checks through
-# Mailpit's API that it arrived with the sender, subject and recipients it was
-# supposed to. Then it breaks the port on purpose and checks that the failure
-# lands in the log with the real SMTP error.
+# It brings Mailpit up on the same Docker network as the test wp-env, writes a
+# provider into the plugin's list pointing at it, makes a real wp_mail() from
+# WP-CLI, and checks through Mailpit's API that it arrived with the sender,
+# subject and recipients it was supposed to. Then it breaks the port on purpose
+# and checks that the failure lands in the log with the real SMTP error — and,
+# with a second provider underneath, that the message goes out through that one
+# instead, once, with both attempts in the log.
+#
+# The configuration is written as a record on the list rather than as the flat
+# options this used to set. Those still answer for an install whose migration
+# has not run, so setting them would leave the suite testing a path almost
+# nobody is on while the one every site uses went unchecked.
 #
 # It is the only test that walks the whole chain — config → phpmailer_init →
 # SMTP → mailbox — and that is why it is the one that counts when the others
@@ -73,20 +80,33 @@ curl -s -X DELETE "$API/messages" >/dev/null
 ok "Mailpit ready"
 
 # ── The plugin points at Mailpit through the local profile ──────────
-log "Configuring the plugin: Mailpit profile, transport mode"
+#
+# A site's providers are records in a list, and the first one sends. Writing
+# the flat options instead — which is what this did before there was a list —
+# exercises only the path left for installs whose migration has not run, and
+# would keep saying yes while the thing every site actually uses was broken.
+
+# Writes a provider into the list and prints its id.
+conn() { wpc eval "echo diluxone_mail_connection_put( '', array( $1 ) );"; }
+
+# Changes one field of a provider already on the list.
+conn_set() { wpc eval "diluxone_mail_connection_put( '$1', array( $2 ) );" >/dev/null; }
+
+log "Configuring the plugin: one Mailpit provider on the list, transport mode"
 wpc plugin activate diluxone-mail >/dev/null || true
-wpc option update diluxone_mail_provider mailpit >/dev/null
-wpc option update diluxone_mail_host "$MAILPIT_NAME" >/dev/null
-wpc option update diluxone_mail_port 1025 >/dev/null
-wpc option update diluxone_mail_encryption none >/dev/null
-wpc option update diluxone_mail_auth 0 >/dev/null
+wpc eval "delete_option( 'diluxone_mail_connections' );" >/dev/null
+
+MAILPIT_ID=$(conn "'label' => 'Mailpit', 'diluxone_mail_provider' => 'mailpit', 'diluxone_mail_transport' => 'smtp', 'diluxone_mail_host' => '${MAILPIT_NAME}', 'diluxone_mail_port' => 1025, 'diluxone_mail_encryption' => 'none', 'diluxone_mail_auth' => 0, 'diluxone_mail_from' => 'e2e@example.test', 'diluxone_mail_from_name' => 'E2E'")
+[ -n "$MAILPIT_ID" ] || fail "the provider was not written to the list"
+
 wpc option update diluxone_mail_mode transport >/dev/null
-wpc option update diluxone_mail_from e2e@example.test >/dev/null
-wpc option update diluxone_mail_from_name "E2E" >/dev/null
 wpc option update diluxone_mail_log_enabled 1 >/dev/null
 wpc option update diluxone_mail_log_extended 1 >/dev/null
-wpc option delete diluxone_mail_last_result >/dev/null 2>&1 || true
-ok "configured"
+
+# And the list is what answers, rather than an option left lying around.
+HOST=$(wpc eval "echo diluxone_mail_config_value( 'host' )['value'];")
+[ "$HOST" = "$MAILPIT_NAME" ] || fail "the list is not what the transport reads (host=$HOST)"
+ok "configured: provider ${MAILPIT_ID} at the top of the list"
 
 # ── 1. A send with a recipient and a copy reaches Mailpit ────────────
 STAMP=$(date +%s)
@@ -162,7 +182,7 @@ ok "test command"
 
 # ── 7. A real failure keeps its SMTP error ───────────────────────────
 log "Breaking the port on purpose"
-wpc option update diluxone_mail_port 1026 >/dev/null
+conn_set "$MAILPIT_ID" "'diluxone_mail_port' => 1026"
 RESULT=$(wpc eval "echo wp_mail( 'fails@example.test', 'Fails ${STAMP}', 'x' ) ? 'true' : 'false';")
 [ "$RESULT" = "false" ] || fail "wp_mail() should have failed"
 wpc diluxone-mail log list --format=json --email=fails@example.test --limit=1 > /tmp/diluxone-e2e-fail.json
@@ -173,10 +193,56 @@ assert r["status"] == "failed", r
 assert r["error"] != "", r
 print("   recorded error:", r["error"][:80])
 PY
-wpc option update diluxone_mail_port 1025 >/dev/null
+conn_set "$MAILPIT_ID" "'diluxone_mail_port' => 1025"
 ok "the failure landed in the log with the SMTP error"
 
-# ── 8. The status tells the truth ────────────────────────────────────
+# ── 8. With a second provider, the one underneath takes it ───────────
+#
+# The reason a site configures two. The first is pointed at a port nothing is
+# listening on, the second at Mailpit, and the message has to come out the
+# other end — through the second — with both attempts in the log, because a
+# log that showed one of them would be hiding the whole point.
+log "Adding a second provider and breaking the first"
+SECOND_ID=$(conn "'label' => 'El de respaldo', 'diluxone_mail_provider' => 'mailpit', 'diluxone_mail_transport' => 'smtp', 'diluxone_mail_host' => '${MAILPIT_NAME}', 'diluxone_mail_port' => 1025, 'diluxone_mail_encryption' => 'none', 'diluxone_mail_auth' => 0, 'diluxone_mail_from' => 'e2e@example.test', 'diluxone_mail_from_name' => 'E2E'")
+[ -n "$SECOND_ID" ] || fail "the second provider was not written"
+
+ORDER=$(wpc eval "echo implode( ',', array_keys( diluxone_mail_connections() ) );")
+[ "$ORDER" = "${MAILPIT_ID},${SECOND_ID}" ] || fail "the order is not the one written: $ORDER"
+
+conn_set "$MAILPIT_ID" "'diluxone_mail_port' => 1026"
+
+FAILOVER="Failover ${STAMP}"
+wpc eval "wp_mail( 'fallback@example.test', '${FAILOVER}', 'x' );" >/dev/null
+
+log "Checking that it went out through the second and that both attempts are logged"
+wpc diluxone-mail log list --format=json --email=fallback@example.test --limit=5 > /tmp/diluxone-e2e-failover.json
+python3 - <<'FAILOVER_PY'
+import json
+rows = sorted(json.load(open("/tmp/diluxone-e2e-failover.json")), key=lambda r: r["id"])
+assert len(rows) == 2, f"expected two attempts, found {len(rows)}: {rows}"
+assert rows[0]["status"] == "failed", rows[0]
+assert rows[0]["carrier"] == "Mailpit", rows[0]["carrier"]
+assert rows[0]["error"], "the first attempt lost its error"
+assert rows[1]["status"] == "sent", rows[1]
+assert rows[1]["carrier"] == "El de respaldo", rows[1]["carrier"]
+print("   ", rows[0]["carrier"], "refused, ", rows[1]["carrier"], "sent it")
+FAILOVER_PY
+
+# And it really left: the mailbox has it, once.
+python3 - "$API" "$FAILOVER" <<'ONCE_PY'
+import json, sys, urllib.request
+api, subject = sys.argv[1], sys.argv[2]
+msgs = json.load(urllib.request.urlopen(f"{api}/messages"))["messages"]
+match = [m for m in msgs if m["Subject"] == subject]
+assert len(match) == 1, f"expected exactly one copy, found {len(match)}"
+ONCE_PY
+
+# Back to one working provider for everything that follows.
+conn_set "$MAILPIT_ID" "'diluxone_mail_port' => 1025"
+wpc eval "diluxone_mail_connection_forget( '${SECOND_ID}' );" >/dev/null
+ok "the provider underneath took the message the first refused, once"
+
+# ── 9. The status tells the truth ────────────────────────────────────
 log "wp diluxone-mail status"
 wpc diluxone-mail status --format=json | python3 -c "
 import json,sys
@@ -188,14 +254,14 @@ print('   mode:', rows['mode'], '| host:', rows['host'])
 "
 ok "status is consistent"
 
-# ── 9. A Bcc leaves its row too ─────────────────────────────────────
+# ── 10. A Bcc leaves its row too ─────────────────────────────────────
 log "Sending with a Bcc"
 wpc eval "wp_mail( 'to@example.test', 'Bcc ${STAMP}', 'x', array( 'Bcc: hidden@example.test' ) );" >/dev/null
 N=$(wpc diluxone-mail log list --format=json --email=hidden@example.test --limit=1 | python3 -c "import json,sys; r=json.load(sys.stdin); print(len(r), r[0]['status'] if r else '')")
 [ "$N" = "1 sent" ] || fail "the Bcc row: $N"
 ok "the hidden recipient has its row"
 
-# ── 10. Somebody else on phpmailer_init does not take the mail away ──
+# ── 11. Somebody else on phpmailer_init does not take the mail away ──
 log "Installing a mu-plugin that configures PHPMailer, the way a snippet does"
 mu_plugin other-mailer.php '<?php
 /* Plugin Name: Another Mailer */
@@ -203,16 +269,16 @@ add_action( "phpmailer_init", function ( $m ) { $m->isSMTP(); $m->Host = "diluxo
 add_filter( "wp_mail_from", function () { return "other@example.test"; } );
 '
 wpc option update diluxone_mail_mode auto >/dev/null
-wpc option update diluxone_mail_force_from 1 >/dev/null
+conn_set "$MAILPIT_ID" "'diluxone_mail_force_from' => 1"
 MODE=$(wpc diluxone-mail status --format=json | python3 -c "import json,sys; r={x['key']:x['value'] for x in json.load(sys.stdin)}; print(r['mode'], '|', r['other mailers'])")
 [ "$MODE" = "auto (sending) | other-mailer.php" ] || fail "phpmailer_init should not demote us: $MODE"
 wpc eval "wp_mail( 'obs@example.test', 'Observed ${STAMP}', 'x' );" >/dev/null
 ROW=$(wpc eval "\$r = diluxone_mail_log_query( array( 'emails' => array( 'obs@example.test' ), 'per_page' => 1 ) )['rows'][0]; echo \$r['status'], '|', \$r['from_email'];")
 [ "$ROW" = "sent|e2e@example.test" ] || fail "the sender should still be ours: $ROW"
-wpc option update diluxone_mail_force_from 0 >/dev/null
+conn_set "$MAILPIT_ID" "'diluxone_mail_force_from' => 0"
 ok "seen but not obeyed: this plugin stays the transport and keeps its sender"
 
-# ── 11. Real observer mode: another plugin owns wp_mail() ────────────
+# ── 12. Real observer mode: another plugin owns wp_mail() ────────────
 log "Installing a mu-plugin that answers pre_wp_mail, which does end the send"
 npx wp-env run tests-cli sh -c "rm -f ${MU}/other-mailer.php" >/dev/null 2>&1
 mu_plugin owner.php '<?php
@@ -224,7 +290,7 @@ MODE=$(wpc diluxone-mail status --format=json | python3 -c "import json,sys; r={
 npx wp-env run tests-cli sh -c "rm -f ${MU}/owner.php" >/dev/null 2>&1
 ok "the one that ends the send does demote us: $MODE"
 
-# ── 12. The pre_wp_mail trap: an interceptor that cuts the send off ──
+# ── 13. The pre_wp_mail trap: an interceptor that cuts the send off ──
 log "Installing a mu-plugin that short-circuits pre_wp_mail with a closure (like Azure App Service's)"
 mu_plugin interceptor.php '<?php
 /* Plugin Name: Interceptor */
@@ -245,7 +311,7 @@ npx wp-env run tests-cli sh -c "rm -f ${MU}/interceptor.php" >/dev/null 2>&1
 wpc option update diluxone_mail_unhook_pre_wp_mail 0 >/dev/null
 ok "with the interceptor detached the mail goes out"
 
-# ── 13. Privacy: exporting and erasing a person ──────────────────────
+# ── 14. Privacy: exporting and erasing a person ──────────────────────
 log "Personal data exporter and eraser"
 EXP=$(wpc eval "\$e = diluxone_mail_export_personal_data( 'to@example.test' ); echo count( \$e['data'] );")
 [ "$EXP" -ge 2 ] || fail "export: $EXP rows"
@@ -254,7 +320,7 @@ LEFT=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'to@exa
 [ "$LEFT" = "0" ] || fail "$LEFT rows left after erasing"
 ok "exported $EXP rows and erased them"
 
-# ── 14. The cron purge ───────────────────────────────────────────────
+# ── 15. The cron purge ───────────────────────────────────────────────
 log "Cron purge"
 wpc eval "global \$wpdb; \$wpdb->query( \$wpdb->prepare( 'UPDATE %i SET sent_at = %s WHERE email = %s', diluxone_mail_log_table(), '2000-01-01 00:00:00', 'cc@example.test' ) );" >/dev/null
 wpc eval "diluxone_mail_run_purge();" >/dev/null
@@ -262,7 +328,7 @@ LEFT=$(wpc eval "echo diluxone_mail_log_query( array( 'emails' => array( 'cc@exa
 [ "$LEFT" = "0" ] || fail "the purge did not delete what had expired ($LEFT)"
 ok "what expired is gone, the rest stays"
 
-# ── 15. The diagnosis runs against a real domain (read only) ─────────
+# ── 16. The diagnosis runs against a real domain (read only) ─────────
 log "wp diluxone-mail dns pablodiloreto.com"
 wpc diluxone-mail dns pablodiloreto.com --fresh --format=json | python3 -c "
 import json,sys
