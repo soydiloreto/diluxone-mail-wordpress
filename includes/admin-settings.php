@@ -600,6 +600,13 @@ function diluxone_mail_save_settings(): void {
 
 	diluxone_mail_save_options( $input, $scope );
 
+	// A step of the wizard moves on once it is done; a settings tab stays
+	// where it is. The sender is the last one that saves a field, so without
+	// this the four steps end on a screen that has nothing left to do on it.
+	if ( 'sender' === $tab && diluxone_mail_tab_open( 'test', diluxone_mail_settings_progress(), $scope ) ) {
+		diluxone_mail_settings_redirect( $scope, 'saved', 'test' );
+	}
+
 	if ( 'dns' === $tab ) {
 		wp_safe_redirect( diluxone_mail_admin_url( 'diluxone-mail-dns', array( 'diluxone_mail_done' => 'saved' ) ) );
 		exit;

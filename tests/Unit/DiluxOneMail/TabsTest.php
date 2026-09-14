@@ -68,6 +68,43 @@ class TabsTest extends AdminTestCase {
 		$this->assertTrue( \diluxone_mail_tab_open( 'test', \diluxone_mail_settings_progress() ) );
 	}
 
+	public function test_saving_the_sender_moves_on_to_the_last_step(): void {
+		$id = $this->conexion( array( 'diluxone_mail_provider' => 'mailjet', 'diluxone_mail_host' => 'smtp.x.test' ) );
+		\diluxone_mail_verified( 'connection' );
+
+		$_POST = array(
+			'scope'              => 'site',
+			'tab'                => 'sender',
+			'connection'         => $id,
+			'diluxone_mail_from' => 'hello@x.test',
+		);
+		$_REQUEST = $_POST;
+
+		$url = $this->redirect_of( 'diluxone_mail_save_settings' );
+
+		$this->assertStringContainsString( 'tab=test', $url );
+		$this->assertStringContainsString( 'connection=' . $id, $url );
+
+		// A settings tab is not a step and stays where it was.
+		$_POST = array( 'scope' => 'site', 'tab' => 'logging' );
+		$this->assertStringContainsString( 'tab=logging', $this->redirect_of( 'diluxone_mail_save_settings' ) );
+	}
+
+	public function test_a_sender_that_does_not_open_the_last_step_stays_put(): void {
+		// No verified server behind it, so there is nowhere to move on to.
+		$id = $this->conexion( array( 'diluxone_mail_provider' => 'mailjet' ) );
+
+		$_POST = array(
+			'scope'              => 'site',
+			'tab'                => 'sender',
+			'connection'         => $id,
+			'diluxone_mail_from' => 'hello@x.test',
+		);
+		$_REQUEST = $_POST;
+
+		$this->assertStringContainsString( 'tab=sender', $this->redirect_of( 'diluxone_mail_save_settings' ) );
+	}
+
 	public function test_a_closed_tab_cannot_be_reached_by_asking_for_it(): void {
 		$_GET['tab'] = 'test';
 
