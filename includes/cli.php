@@ -213,10 +213,15 @@ class DiluxOne_Mail_CLI {
 				'status'  => (string) $row['status'],
 				'error'   => (string) $row['error'],
 				'source'  => (string) $row['source'],
+				// Which of the site's providers carried it, by the name the
+				// site gave it. On a list with a fallback, "it went out" and
+				// "it went out through the second one" are different answers,
+				// and the second is the one worth knowing.
+				'carrier' => diluxone_mail_log_carrier( $row ),
 			);
 		}
 
-		WP_CLI\Utils\format_items( (string) ( $assoc_args['format'] ?? 'table' ), $rows, array( 'id', 'date', 'to', 'subject', 'status', 'error', 'source' ) );
+		WP_CLI\Utils\format_items( (string) ( $assoc_args['format'] ?? 'table' ), $rows, array( 'id', 'date', 'to', 'subject', 'status', 'carrier', 'error', 'source' ) );
 	}
 }
 

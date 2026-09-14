@@ -84,6 +84,11 @@ class CliTest extends AdminTestCase {
 		$this->assertSame( 'ana@x.test', $item['to'] );
 		$this->assertSame( 'plugin:shop', $item['source'] );
 		$this->assertStringContainsString( 'LIMIT 5', $this->db->of( 'get_results' )[0]['sql'] );
+
+		// A site with a fallback configured answers "it went out" and "it went
+		// out through the second one" differently, and the terminal had no way
+		// of asking the second question.
+		$this->assertSame( 'Mailjet', $item['carrier'] );
 	}
 
 	public function test_log_without_list(): void {
