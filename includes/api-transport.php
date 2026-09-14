@@ -216,3 +216,81 @@ function diluxone_mail_api_reply( ?string $set = null ): string {
 
 	return $reply;
 }
+
+/**
+ * The domains the provider will accept mail from, cached.
+ *
+ * Two HTTP calls is not something to do while painting a settings screen on
+ * every load, and the answer changes when somebody finishes a DNS setup —
+ * which is rarely, and which the refresh link is for.
+ *
+ * A provider that cannot be asked answers `ok` false, and the screen falls
+ * back to a plain text field. Not being able to offer a list is not a reason
+ * to stop somebody typing an address that works.
+ *
+ * @return array{ok: bool, domains: array<int, array{name: string, usable: bool, note: string}>, error: string}
+ */
+function diluxone_mail_api_sender_domains( bool $fresh = false ): array {
+	$provider = (string) diluxone_mail_config()['provider'];
+	$api      = diluxone_mail_api_provider( $provider );
+	$key      = diluxone_mail_api_key();
+
+	$none = array(
+		'ok'      => false,
+		'domains' => array(),
+		'error'   => '',
+	);
+
+	if ( ! isset( $api['domains'] ) || '' === $key || 'api' !== diluxone_mail_transport_kind() ) {
+		return $none;
+	}
+
+	$cache = 'diluxone_mail_domains_' . md5( $provider . '|' . $key );
+
+	if ( ! $fresh ) {
+		$cached = get_site_transient( $cache );
+
+		if ( is_array( $cached ) && isset( $cached['ok'], $cached['domains'], $cached['error'] ) ) {
+			return diluxone_mail_api_domains_shape( $cached );
+		}
+	}
+
+	$listed = call_user_func( $api['domains'], $key );
+
+	if ( ! is_array( $listed ) || ! isset( $listed['ok'], $listed['domains'], $listed['error'] ) ) {
+		return $none;
+	}
+
+	$listed = diluxone_mail_api_domains_shape( $listed );
+
+	set_site_transient( $cache, $listed, $listed['ok'] ? 10 * MINUTE_IN_SECONDS : MINUTE_IN_SECONDS );
+
+	return $listed;
+}
+
+/**
+ * The listing, with every field the shape promises.
+ *
+ * What comes back crosses a transient and a per-provider callback, and neither
+ * can be trusted to keep a shape by itself.
+ *
+ * @param array<string, mixed> $listed
+ * @return array{ok: bool, domains: array<int, array{name: string, usable: bool, note: string}>, error: string}
+ */
+function diluxone_mail_api_domains_shape( array $listed ): array {
+	$domains = array();
+
+	foreach ( (array) ( $listed['domains'] ?? array() ) as $domain ) {
+		$domains[] = array(
+			'name'   => (string) ( $domain['name'] ?? '' ),
+			'usable' => (bool) ( $domain['usable'] ?? false ),
+			'note'   => (string) ( $domain['note'] ?? '' ),
+		);
+	}
+
+	return array(
+		'ok'      => (bool) ( $listed['ok'] ?? false ),
+		'domains' => $domains,
+		'error'   => (string) ( $listed['error'] ?? '' ),
+	);
+}

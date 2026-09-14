@@ -162,6 +162,8 @@ function diluxone_mail_done_notice(): void {
 		'key-ok'            => array( __( 'The provider recognised the key. It is saved.', 'diluxone-mail' ), 'success' ),
 		'key-unchecked'     => array( __( 'The key is saved. The provider could not be asked whether it is valid, so the test message is what will tell you.', 'diluxone-mail' ), 'warning' ),
 		'key-refused'       => array( __( 'The provider does not recognise that key, so nothing was saved.', 'diluxone-mail' ), 'error' ),
+		'domains-refreshed' => array( __( 'The list of domains was read again from the provider.', 'diluxone-mail' ), 'success' ),
+		'domains-failed'    => array( __( 'The provider could not be asked for its domains. The address can be typed by hand.', 'diluxone-mail' ), 'warning' ),
 		'connection-failed' => array( __( 'The server did not accept the connection, so nothing was saved. What went wrong is below.', 'diluxone-mail' ), 'error' ),
 		'tested'            => array( __( 'Test message sent.', 'diluxone-mail' ), 'success' ),
 		'not-allowed'       => array( __( 'This site\'s settings are fixed by the network and cannot be changed here.', 'diluxone-mail' ), 'warning' ),

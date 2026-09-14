@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-14T00:22:24+00:00\n"
+"POT-Creation-Date: 2026-09-14T00:28:15+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -51,7 +51,8 @@ msgid "Deliverability"
 msgstr "Entregabilidad"
 
 #: includes/admin-dns.php:42 includes/admin-log.php:62
-#: includes/admin-settings.php:157 includes/observer.php:300
+#: includes/admin-settings.php:159 includes/admin-settings.php:472
+#: includes/observer.php:300
 msgid "You are not allowed to do this."
 msgstr "No tenés permiso para hacer esto."
 
@@ -77,7 +78,7 @@ msgstr "Ajustes de la red"
 msgid "Overview"
 msgstr "Resumen"
 
-#: includes/admin-settings.php:139 includes/admin.php:67
+#: includes/admin-settings.php:141 includes/admin.php:67
 #: templates/admin-overview.php:56
 msgid "Settings"
 msgstr "Ajustes"
@@ -104,7 +105,7 @@ msgstr "Clave de API"
 msgid "SMTP server"
 msgstr "Servidor SMTP"
 
-#: includes/admin-tabs.php:57 templates/settings-sender.php:20
+#: includes/admin-tabs.php:57 templates/settings-sender.php:25
 msgid "Sender"
 msgstr "Remitente"
 
@@ -238,6 +239,18 @@ msgid "The provider does not recognise that key, so nothing was saved."
 msgstr "El proveedor no reconoce esa clave, así que no se guardó nada."
 
 #: includes/admin.php:165
+msgid "The list of domains was read again from the provider."
+msgstr "La lista de dominios se volvió a leer del proveedor."
+
+#: includes/admin.php:166
+msgid ""
+"The provider could not be asked for its domains. The address can be typed by"
+" hand."
+msgstr ""
+"No se le pudo preguntar al proveedor por sus dominios. La dirección se puede"
+" escribir a mano."
+
+#: includes/admin.php:167
 msgid ""
 "The server did not accept the connection, so nothing was saved. What went "
 "wrong is below."
@@ -245,54 +258,54 @@ msgstr ""
 "El servidor no aceptó la conexión, así que no se guardó nada. Abajo está qué"
 " falló."
 
-#: includes/admin.php:166
+#: includes/admin.php:168
 msgid "Test message sent."
 msgstr "Mensaje de prueba enviado."
 
-#: includes/admin.php:167
+#: includes/admin.php:169
 msgid ""
 "This site's settings are fixed by the network and cannot be changed here."
 msgstr "Los ajustes de este sitio los fija la red y no se pueden cambiar acá."
 
 #. translators: %s: name of the constant
-#: includes/admin.php:186
+#: includes/admin.php:188
 #, php-format
 msgid "defined by the environment — PHP constant %s"
 msgstr "definido por el entorno — constante de PHP %s"
 
 #. translators: %s: name of the variable
-#: includes/admin.php:189
+#: includes/admin.php:191
 #, php-format
 msgid "defined by the environment — variable %s"
 msgstr "definido por el entorno — variable %s"
 
-#: includes/admin.php:191
+#: includes/admin.php:193
 msgid "stored, but it can no longer be decrypted — type it again"
 msgstr "guardada, pero ya no se puede descifrar — escribila de nuevo"
 
-#: includes/admin.php:193
+#: includes/admin.php:195
 msgid "set by the network"
 msgstr "fijado por la red"
 
-#: includes/admin.php:195
+#: includes/admin.php:197
 msgid "set on this site"
 msgstr "fijado en este sitio"
 
-#: includes/admin.php:197
+#: includes/admin.php:199
 msgid "default value"
 msgstr "valor por defecto"
 
-#: includes/admin.php:242
+#: includes/admin.php:244
 msgid ""
 "This site fixes this from code: whatever is chosen here, it stays as it is."
 msgstr ""
 "Este sitio lo fija desde el código: lo que se elija acá, queda como está."
 
-#: includes/api-providers.php:39
+#: includes/api-providers.php:40
 msgid "API token"
 msgstr "Token de API"
 
-#: includes/api-providers.php:40
+#: includes/api-providers.php:41
 msgid ""
 "Sending Domains → your domain → Integration, on the API tab. Careful with "
 "the box beside it: the SMTP credentials shown there include a password that "
@@ -304,11 +317,11 @@ msgstr ""
 "que parece igual a un token y no lo es — esa funciona por SMTP, con el "
 "usuario «api», y en ningún otro lado."
 
-#: includes/api-providers.php:250
+#: includes/api-providers.php:251
 msgid "There is no key to check."
 msgstr "No hay clave que verificar."
 
-#: includes/api-providers.php:311
+#: includes/api-providers.php:312
 msgid ""
 "The provider does not recognise this key. What was pasted has the shape of "
 "an SMTP password — thirty-two hexadecimal characters — and that is a "
@@ -321,7 +334,7 @@ msgstr ""
 "credencial: funciona por SMTP junto con un usuario, nunca por la API. El "
 "token de API está en el mismo panel, casi siempre en una pestaña aparte."
 
-#: includes/api-providers.php:314
+#: includes/api-providers.php:315
 msgid ""
 "The provider does not recognise this key. Check that it is the API token of "
 "the sending domain, and not one from a testing or sandbox environment, which"
@@ -330,6 +343,26 @@ msgstr ""
 "El proveedor no reconoce esta clave. Fijate que sea el token de API del "
 "dominio de envío, y no uno de un entorno de pruebas o sandbox, que "
 "corresponde a otro endpoint."
+
+#: includes/api-providers.php:374
+msgid "the DNS is not verified yet"
+msgstr "el DNS todavía no está verificado"
+
+#: includes/api-providers.php:376
+msgid "demo domain, allowance spent"
+msgstr "dominio demo, cupo agotado"
+
+#: includes/api-providers.php:378
+msgid ""
+"demo domain: it only delivers to the address the account was registered with"
+msgstr ""
+"dominio demo: sólo entrega a la dirección con la que se registró la cuenta"
+
+#. translators: %d: HTTP status code
+#: includes/api-providers.php:426
+#, php-format
+msgid "The provider answered HTTP %d."
+msgstr "El proveedor contestó HTTP %d."
 
 #: includes/api-transport.php:123
 msgid "There is no valid From address to send with."
@@ -1149,6 +1182,7 @@ msgid "%1$d of %2$d DNS lookups."
 msgstr "%1$d de %2$d lookups de DNS."
 
 #: templates/admin-dns.php:80 templates/admin-dns.php:176
+#: templates/settings-sender.php:38
 msgid "Domain"
 msgstr "Dominio"
 
@@ -1874,11 +1908,31 @@ msgstr "Usar este perfil"
 msgid "Use this provider"
 msgstr "Usar este proveedor"
 
-#: templates/settings-sender.php:23
+#: templates/settings-sender.php:28
 msgid "From address"
 msgstr "Dirección de remitente"
 
-#: templates/settings-sender.php:27
+#. translators: 1: domain name, 2: why it cannot be used
+#: templates/settings-sender.php:47
+#, php-format
+msgid "%1$s — %2$s"
+msgstr "%1$s — %2$s"
+
+#: templates/settings-sender.php:53
+msgid "Refresh"
+msgstr "Actualizar"
+
+#: templates/settings-sender.php:55
+msgid ""
+"These are the domains the provider has, and only the ones it will accept "
+"mail from can be chosen. A domain missing from the list has not been added "
+"there yet."
+msgstr ""
+"Estos son los dominios que tiene el proveedor, y sólo se pueden elegir "
+"aquellos de los que va a aceptar correo. Un dominio que no figure en la "
+"lista todavía no fue dado de alta ahí."
+
+#: templates/settings-sender.php:60
 msgid ""
 "WordPress signs as wordpress@yourdomain by default, which usually does not "
 "exist and which most providers reject. Use an address on a domain the "
@@ -1888,22 +1942,32 @@ msgstr ""
 "existe y que la mayoría de los proveedores rechaza. Usá una dirección de un "
 "dominio que el proveedor haya verificado."
 
-#: templates/settings-sender.php:31
+#. translators: %s: what the provider answered
+#: templates/settings-sender.php:66
+#, php-format
+msgid ""
+"The provider could not be asked which domains it has, so this is typed by "
+"hand: %s"
+msgstr ""
+"No se le pudo preguntar al proveedor qué dominios tiene, así que esto se "
+"escribe a mano: %s"
+
+#: templates/settings-sender.php:76
 msgid "From name"
 msgstr "Nombre del remitente"
 
-#: templates/settings-sender.php:38
+#: templates/settings-sender.php:83
 msgid "Force sender"
 msgstr "Forzar remitente"
 
-#: templates/settings-sender.php:40
+#: templates/settings-sender.php:85
 msgid ""
 "Replace the From address other plugins set, not only the WordPress default"
 msgstr ""
 "Reemplazar la dirección de remitente que pongan otros plugins, no sólo la de"
 " WordPress por defecto"
 
-#: templates/settings-sender.php:41
+#: templates/settings-sender.php:86
 msgid ""
 "Off, the address above is used only where WordPress would have signed as "
 "wordpress@yourdomain. On, it also replaces one another plugin — or a snippet"
@@ -1913,7 +1977,7 @@ msgstr ""
 "firmado como wordpress@tudominio. Tildado, reemplaza también la que decidió "
 "otro plugin —o un snippet del tema— para el mensaje."
 
-#: templates/settings-sender.php:48
+#: templates/settings-sender.php:93
 msgid "Save sender"
 msgstr "Guardar remitente"
 

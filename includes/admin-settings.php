@@ -55,29 +55,31 @@ function diluxone_mail_settings_data( string $scope ): array {
 	$provider = diluxone_mail_config_value( 'provider' );
 
 	return array(
-		'scope'           => $scope,
-		'tab'             => $tab,
-		'progress'        => diluxone_mail_settings_progress(),
-		'editable'        => $editable,
-		'fields'          => diluxone_mail_settings_field_values( $scope, $attempt ),
-		'provider'        => $provider,
-		'profile'         => diluxone_mail_provider( $provider['value'] ),
-		'providers'       => diluxone_mail_providers(),
-		'has_password'    => '' !== diluxone_mail_config_value( 'pass' )['value'],
+		'scope'               => $scope,
+		'tab'                 => $tab,
+		'progress'            => diluxone_mail_settings_progress(),
+		'editable'            => $editable,
+		'fields'              => diluxone_mail_settings_field_values( $scope, $attempt ),
+		'provider'            => $provider,
+		'profile'             => diluxone_mail_provider( $provider['value'] ),
+		'providers'           => diluxone_mail_providers(),
+		'has_password'        => '' !== diluxone_mail_config_value( 'pass' )['value'],
 		// Stored, and unreadable. Not the same as absent, and the difference
 		// is the whole message: nothing is broken, the salts changed, type it
 		// again.
-		'pass_unreadable' => 'unreadable' === diluxone_mail_config_value( 'pass' )['source'],
-		'allow_override'  => (bool) get_site_option( 'diluxone_mail_network_allow_override', 0 ),
-		'verified'        => diluxone_mail_connection_verified(),
-		'transport_kind'  => diluxone_mail_transport_kind(),
-		'api'             => diluxone_mail_api_provider( (string) $provider['value'] ),
-		'api_providers'   => array_keys( diluxone_mail_api_providers() ),
-		'has_api_key'     => '' !== diluxone_mail_api_key(),
-		'connection'      => is_array( $attempt ) ? $attempt : null,
-		'test'            => diluxone_mail_test_result_take(),
-		'action_url'      => admin_url( 'admin-post.php' ),
-		'back_url'        => diluxone_mail_tab_url( $tab, $scope ),
+		'pass_unreadable'     => 'unreadable' === diluxone_mail_config_value( 'pass' )['source'],
+		'allow_override'      => (bool) get_site_option( 'diluxone_mail_network_allow_override', 0 ),
+		'verified'            => diluxone_mail_connection_verified(),
+		'transport_kind'      => diluxone_mail_transport_kind(),
+		'api'                 => diluxone_mail_api_provider( (string) $provider['value'] ),
+		'api_providers'       => array_keys( diluxone_mail_api_providers() ),
+		'has_api_key'         => '' !== diluxone_mail_api_key(),
+		'sender_domains'      => diluxone_mail_api_sender_domains(),
+		'refresh_domains_url' => wp_nonce_url( admin_url( 'admin-post.php?action=diluxone_mail_refresh_domains' ), 'diluxone_mail_refresh_domains' ),
+		'connection'          => is_array( $attempt ) ? $attempt : null,
+		'test'                => diluxone_mail_test_result_take(),
+		'action_url'          => admin_url( 'admin-post.php' ),
+		'back_url'            => diluxone_mail_tab_url( $tab, $scope ),
 	);
 }
 
@@ -458,6 +460,26 @@ function diluxone_mail_store_password( string $pass, string $scope ): bool {
 	return true;
 }
 
+/**
+ * Asks the provider again which domains it has.
+ *
+ * The list is cached because building it is two HTTP calls and it changes
+ * about as often as somebody finishes a DNS setup — which is exactly when
+ * this button is needed.
+ */
+function diluxone_mail_refresh_domains(): void {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'You are not allowed to do this.', 'diluxone-mail' ) );
+	}
+
+	check_admin_referer( 'diluxone_mail_refresh_domains' );
+
+	$listed = diluxone_mail_api_sender_domains( true );
+
+	diluxone_mail_settings_redirect( 'site', $listed['ok'] ? 'domains-refreshed' : 'domains-failed', 'sender' );
+}
+add_action( 'admin_post_diluxone_mail_refresh_domains', 'diluxone_mail_refresh_domains' );
+
 /** Saves one tab. */
 function diluxone_mail_save_settings(): void {
 	check_admin_referer( 'diluxone_mail_settings' );
@@ -482,6 +504,23 @@ function diluxone_mail_save_settings(): void {
 			// the connection test, which is the only thing that knows the
 			// values work.
 			if ( in_array( $key, array( 'diluxone_mail_pass', 'diluxone_mail_api_key' ), true ) ) {
+				continue;
+			}
+
+			// The sender step offers the provider's verified domains, so the
+			// address arrives in two halves. Only when the domain half is
+			// there: with no list to choose from it is one plain field, as it
+			// has always been.
+			if ( 'diluxone_mail_from' === $key && isset( $_POST['diluxone_mail_from_domain'] ) ) {
+				$local  = sanitize_text_field( wp_unslash( $_POST['diluxone_mail_from_local'] ?? '' ) );
+				$domain = sanitize_text_field( wp_unslash( $_POST['diluxone_mail_from_domain'] ) );
+
+				if ( '' === $domain ) {
+					continue;
+				}
+
+				$input[ $key ] = '' === $local ? '' : $local . '@' . $domain;
+
 				continue;
 			}
 

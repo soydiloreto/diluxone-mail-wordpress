@@ -57,6 +57,11 @@ abstract class AdminTestCase extends TestCase {
 	}
 
 	protected function tearDown(): void {
+		// The HTTP doubles are global and the suite runs in a random order:
+		// a map left behind here answers a lookup in a test case that never
+		// asked for one, and the failure lands somewhere else entirely.
+		unset( $GLOBALS['_test_wp_remote_get'], $GLOBALS['_test_wp_remote_post'] );
+
 		$GLOBALS['_test_multisite'] = false;
 		$GLOBALS['_test_can']       = true;
 		$GLOBALS['_test_blog_id']   = 1;

@@ -36,6 +36,7 @@ function diluxone_mail_api_providers(): array {
 			'build'     => 'diluxone_mail_api_body_mailtrap',
 			'error'     => 'diluxone_mail_api_error_mailtrap',
 			'ok_status' => array( 200 ),
+			'domains'   => 'diluxone_mail_api_domains_mailtrap',
 			'key_label' => __( 'API token', 'diluxone-mail' ),
 			'key_hint'  => __( 'Sending Domains → your domain → Integration, on the API tab. Careful with the box beside it: the SMTP credentials shown there include a password that looks exactly like a token and is not one — that one works over SMTP, with the username "api", and nowhere else.', 'diluxone-mail' ),
 			'docs'      => 'https://docs.mailtrap.io/developers/email-api/introduction',
@@ -312,4 +313,123 @@ function diluxone_mail_api_key_advice( string $key ): string {
 	}
 
 	return __( 'The provider does not recognise this key. Check that it is the API token of the sending domain, and not one from a testing or sandbox environment, which belongs to a different endpoint.', 'diluxone-mail' );
+}
+
+/**
+ * The domains Mailtrap will actually accept mail from.
+ *
+ * Two calls: the accounts the token reaches, and each one's sending domains.
+ * What comes back is not a yes or a no but three states worth telling apart —
+ * verified, not verified yet, and the demo domain, which is verified and still
+ * refuses everything once its allowance is spent. A screen that offers all
+ * three equally is a screen that lets you pick the one that cannot send.
+ *
+ * @return array{ok: bool, domains: array<int, array{name: string, usable: bool, note: string}>, error: string}
+ */
+function diluxone_mail_api_domains_mailtrap( string $key ): array {
+	$accounts = diluxone_mail_api_get( 'https://mailtrap.io/api/accounts', $key );
+
+	if ( ! $accounts['ok'] ) {
+		return array(
+			'ok'      => false,
+			'domains' => array(),
+			'error'   => $accounts['error'],
+		);
+	}
+
+	$domains = array();
+
+	foreach ( (array) $accounts['data'] as $account ) {
+		$id = (int) ( $account['id'] ?? 0 );
+
+		if ( 0 === $id ) {
+			continue;
+		}
+
+		$listed = diluxone_mail_api_get( 'https://mailtrap.io/api/accounts/' . $id . '/sending_domains', $key );
+
+		if ( ! $listed['ok'] ) {
+			continue;
+		}
+
+		// The list arrives bare on some accounts and wrapped in `data` on
+		// others; both are the same list.
+		$rows = isset( $listed['data']['data'] ) && is_array( $listed['data']['data'] ) ? $listed['data']['data'] : $listed['data'];
+
+		foreach ( (array) $rows as $row ) {
+			$name = (string) ( $row['domain_name'] ?? '' );
+
+			if ( '' === $name ) {
+				continue;
+			}
+
+			$verified   = (bool) ( $row['dns_verified'] ?? false );
+			$compliance = (string) ( $row['compliance_status'] ?? '' );
+			$demo       = (bool) ( $row['demo'] ?? false );
+
+			$usable = $verified && 'demo_exhausted' !== $compliance;
+			$note   = '';
+
+			if ( ! $verified ) {
+				$note = __( 'the DNS is not verified yet', 'diluxone-mail' );
+			} elseif ( 'demo_exhausted' === $compliance ) {
+				$note = __( 'demo domain, allowance spent', 'diluxone-mail' );
+			} elseif ( $demo ) {
+				$note = __( 'demo domain: it only delivers to the address the account was registered with', 'diluxone-mail' );
+			}
+
+			$domains[] = array(
+				'name'   => $name,
+				'usable' => $usable,
+				'note'   => $note,
+			);
+		}
+	}
+
+	return array(
+		'ok'      => true,
+		'domains' => $domains,
+		'error'   => '',
+	);
+}
+
+/**
+ * One authenticated GET, decoded.
+ *
+ * @return array{ok: bool, data: array<mixed>, error: string}
+ */
+function diluxone_mail_api_get( string $url, string $key ): array {
+	$response = wp_remote_get(
+		$url,
+		array(
+			'headers' => array( 'Authorization' => 'Bearer ' . $key ),
+			'timeout' => 15,
+		)
+	);
+
+	if ( is_wp_error( $response ) ) {
+		return array(
+			'ok'    => false,
+			'data'  => array(),
+			'error' => $response->get_error_message(),
+		);
+	}
+
+	$status  = (int) wp_remote_retrieve_response_code( $response );
+	$decoded = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+
+	if ( $status < 200 || $status >= 300 || ! is_array( $decoded ) ) {
+		return array(
+			'ok'    => false,
+			'data'  => array(),
+			/* translators: %d: HTTP status code */
+			'error' => sprintf( __( 'The provider answered HTTP %d.', 'diluxone-mail' ), $status ),
+		);
+	}
+
+	return array(
+		'ok'    => true,
+		'data'  => $decoded,
+		'error' => '',
+	);
 }

@@ -448,7 +448,19 @@ if (!function_exists('wp_remote_get')) {
 	function wp_remote_get($url, array $args = []) {
 		$GLOBALS['_test_http'][] = ['method' => 'GET', 'url' => $url, 'args' => $args];
 
-		return $GLOBALS['_test_wp_remote_get'] ?? new \WP_Error('http', 'no network in tests');
+		$answer = $GLOBALS['_test_wp_remote_get'] ?? null;
+
+		// A map keyed by a piece of the URL, for the calls that chain: ask for
+		// the accounts, then ask each account for its domains.
+		if (is_array($answer) && !isset($answer['response'])) {
+			foreach ($answer as $needle => $response) {
+				if (false !== strpos($url, (string) $needle)) return $response;
+			}
+
+			return new \WP_Error('http', 'no double for ' . $url);
+		}
+
+		return $answer ?? new \WP_Error('http', 'no network in tests');
 	}
 }
 

@@ -435,6 +435,124 @@ class ApiTest extends AdminTestCase {
 		$this->assertTrue( \diluxone_mail_store_api_key( '', 'network' ) );
 	}
 
+	/**
+	 * What Mailtrap answers: the accounts, and then that account's domains.
+	 *
+	 * @param array<int, array<string, mixed>> $domains
+	 */
+	private function con_dominios( array $domains = array() ): void {
+		$GLOBALS['_test_wp_remote_get'] = array(
+			'/api/accounts/7/sending_domains' => array(
+				'response' => array( 'code' => 200 ),
+				'body'     => (string) wp_json_encode( $domains ),
+			),
+			'/api/accounts'                   => array(
+				'response' => array( 'code' => 200 ),
+				'body'     => (string) wp_json_encode( array( array( 'id' => 7, 'name' => 'Cuenta' ) ) ),
+			),
+		);
+	}
+
+	public function test_the_sender_step_offers_the_domains_the_provider_will_accept(): void {
+		$this->por_api();
+
+		$this->con_dominios(
+			array(
+				array( 'domain_name' => 'conosur.tech', 'dns_verified' => true, 'compliance_status' => 'compliant', 'demo' => false ),
+				array( 'domain_name' => 'demomailtrap.co', 'dns_verified' => true, 'compliance_status' => 'demo_exhausted', 'demo' => true ),
+				array( 'domain_name' => 'a-medio-hacer.test', 'dns_verified' => false, 'compliance_status' => '', 'demo' => false ),
+			)
+		);
+
+		$listed = \diluxone_mail_api_sender_domains( true );
+
+		$this->assertTrue( $listed['ok'] );
+		$por_nombre = array_column( $listed['domains'], null, 'name' );
+
+		$this->assertTrue( $por_nombre['conosur.tech']['usable'] );
+		$this->assertSame( '', $por_nombre['conosur.tech']['note'] );
+
+		// Verified and still unable to send: the one that costs an afternoon.
+		$this->assertFalse( $por_nombre['demomailtrap.co']['usable'] );
+		$this->assertStringContainsString( 'allowance', $por_nombre['demomailtrap.co']['note'] );
+
+		$this->assertFalse( $por_nombre['a-medio-hacer.test']['usable'] );
+		$this->assertStringContainsString( 'DNS', $por_nombre['a-medio-hacer.test']['note'] );
+	}
+
+	public function test_the_list_is_cached_and_the_button_asks_again(): void {
+		$this->por_api();
+		$this->con_dominios();
+
+		\diluxone_mail_api_sender_domains( true );
+		$llamadas = count( $GLOBALS['_test_http'] );
+
+		// A second look costs nothing.
+		\diluxone_mail_api_sender_domains();
+		$this->assertCount( $llamadas, $GLOBALS['_test_http'] );
+
+		// Asking again does.
+		\diluxone_mail_api_sender_domains( true );
+		$this->assertGreaterThan( $llamadas, count( $GLOBALS['_test_http'] ) );
+	}
+
+	public function test_over_smtp_or_without_a_key_nothing_is_asked(): void {
+		$this->con_dominios();
+
+		$this->assertFalse( \diluxone_mail_api_sender_domains( true )['ok'] );
+		$this->assertSame( array(), $GLOBALS['_test_http'] );
+
+		$this->por_api();
+		\update_option( 'diluxone_mail_transport', 'smtp' );
+
+		$this->assertFalse( \diluxone_mail_api_sender_domains( true )['ok'] );
+		$this->assertSame( array(), $GLOBALS['_test_http'] );
+	}
+
+	public function test_a_provider_that_will_not_answer_leaves_the_field_typed_by_hand(): void {
+		$this->por_api();
+		\diluxone_mail_verified( 'connection' );
+		$GLOBALS['_test_wp_remote_get'] = array( 'response' => array( 'code' => 500 ), 'body' => '' );
+
+		$listed = \diluxone_mail_api_sender_domains( true );
+
+		$this->assertFalse( $listed['ok'] );
+		$this->assertStringContainsString( '500', $listed['error'] );
+
+		// And the step still paints, with the plain field.
+		$_GET['tab'] = 'sender';
+		$html        = $this->render( 'diluxone_mail_screen_settings' );
+
+		$this->assertStringContainsString( 'name="diluxone_mail_from"', $html );
+		$this->assertStringNotContainsString( 'diluxone_mail_from_domain', $html );
+		$this->assertStringContainsString( 'could not be asked which domains', $html );
+	}
+
+	public function test_the_address_is_put_back_together_out_of_its_two_halves(): void {
+		$this->por_api();
+
+		$_POST = array(
+			'scope'                    => 'site',
+			'tab'                      => 'sender',
+			'diluxone_mail_from_local' => 'donotreply',
+			'diluxone_mail_from_domain' => 'conosur.tech',
+		);
+
+		$this->redirect_of( 'diluxone_mail_save_settings' );
+
+		$this->assertSame( 'donotreply@conosur.tech', \get_option( 'diluxone_mail_from' ) );
+
+		// With no domain half it is one plain field, as it has always been.
+		$_POST = array(
+			'scope'              => 'site',
+			'tab'                => 'sender',
+			'diluxone_mail_from' => 'otra@x.test',
+		);
+
+		$this->redirect_of( 'diluxone_mail_save_settings' );
+		$this->assertSame( 'otra@x.test', \get_option( 'diluxone_mail_from' ) );
+	}
+
 	public function test_the_first_step_offers_both_methods(): void {
 		$html = $this->render( 'diluxone_mail_screen_settings' );
 
