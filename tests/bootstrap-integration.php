@@ -30,8 +30,30 @@ if (!defined('DOING_AJAX')) {
 $_SERVER['PHP_SELF'] = '/wp-admin/admin-ajax.php';
 
 // 2. Set HTTP_HOST etc. to prevent "Undefined array key" warnings under CLI.
+//
+//    On a network this is not cosmetic. WordPress looks the current site up by
+//    HTTP_HOST, and when it does not recognise the host it redirects and exits
+//    before this file's last line — with no body, because there is nobody to
+//    send one to. PHPUnit then prints nothing, exits 0, and every runner above
+//    it reports success for a suite that never ran a single test. That is
+//    exactly what `make test-multisite` did until this was found.
+//
+//    So the host is the network's own, read out of wp-config.php before
+//    WordPress is loaded, because the constant that holds it is defined in
+//    there and this runs first. On a single site it does not matter and the
+//    fallback is used.
 if (empty($_SERVER['HTTP_HOST'])) {
-    $_SERVER['HTTP_HOST'] = getenv('HTTP_HOST') ?: 'tests.local';
+    $host = getenv('HTTP_HOST') ?: '';
+
+    if ('' === $host) {
+        $config = @file_get_contents('/var/www/html/wp-config.php');
+
+        if (is_string($config) && preg_match("/DOMAIN_CURRENT_SITE'\s*,\s*'([^']+)'/", $config, $m)) {
+            $host = $m[1];
+        }
+    }
+
+    $_SERVER['HTTP_HOST'] = '' !== $host ? $host : 'tests.local';
 }
 if (empty($_SERVER['SERVER_NAME'])) {
     $_SERVER['SERVER_NAME'] = $_SERVER['HTTP_HOST'];
@@ -111,6 +133,14 @@ add_filter('wp_die_ajax_handler', function () use ($_diluxone_mail_wp_die_test_h
 add_filter('wp_die_handler', function () use ($_diluxone_mail_wp_die_test_handler) {
     return $_diluxone_mail_wp_die_test_handler;
 }, 999);
+
+// 11b. Having got this far, say so in a way a runner can check. A bootstrap
+//      that dies during WordPress's own load leaves no output at all, and
+//      silence is the one failure mode nothing downstream notices.
+if (is_multisite() && !get_site(get_current_blog_id())) {
+    fwrite(STDERR, "ERROR: the network does not recognise host {$_SERVER['HTTP_HOST']}.\n");
+    exit(1);
+}
 
 // 12. Confirmation banner (shows in CI logs).
 echo "Integration test bootstrap loaded.\n";

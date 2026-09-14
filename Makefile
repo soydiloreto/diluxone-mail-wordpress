@@ -113,7 +113,11 @@ test-unit: ## Run only the unit-test suite (no WordPress runtime).
 .PHONY: test-integration
 test-integration: ## Run integration tests inside the wp-env tests container (must be `make env-up` first).
 	npx wp-env run tests-cli wp plugin activate diluxone-mail
-	npx wp-env run tests-cli ./wp-content/plugins/diluxone-mail/vendor/bin/phpunit -c ./wp-content/plugins/diluxone-mail/phpunit-integration.xml
+# A bootstrap that dies inside WordPress's load prints nothing and exits 0, so
+# the output is checked for a result line rather than trusting the status.
+	@out=$$(npx wp-env run tests-cli ./wp-content/plugins/diluxone-mail/vendor/bin/phpunit -c ./wp-content/plugins/diluxone-mail/phpunit-integration.xml 2>&1); \
+	printf '%s\n' "$$out"; \
+	printf '%s' "$$out" | grep -qE '^(OK|Tests: )' || { echo "✖ the integration suite produced no result: it did not run"; exit 1; }
 
 .PHONY: test-e2e
 test-e2e: ## End-to-end: a real wp_mail() through the plugin into a Mailpit mailbox (needs wp-env up).

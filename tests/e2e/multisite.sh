@@ -35,8 +35,15 @@ SITE2=$(wpc site list --field=url | sed -n '2p')
 [ -n "$SITE2" ] || fail "there is no second site"
 ok "second site: $SITE2"
 
+# PHPUnit's exit code is not enough on its own here: a bootstrap that dies
+# inside WordPress's own load — which is what an unrecognised host on a network
+# does — leaves no output, exits 0, and every runner above reports success for
+# a suite that never ran a test. It did exactly that for a while. So the output
+# is read, and a run with no result line in it is a failure.
 log "PHPUnit multisite suite"
-npx wp-env run tests-cli ./wp-content/plugins/diluxone-mail/vendor/bin/phpunit -c ./wp-content/plugins/diluxone-mail/phpunit-multisite.xml
+OUT=$(npx wp-env run tests-cli ./wp-content/plugins/diluxone-mail/vendor/bin/phpunit -c ./wp-content/plugins/diluxone-mail/phpunit-multisite.xml 2>&1)
+printf '%s\n' "$OUT"
+printf '%s' "$OUT" | grep -qE '^(OK|OK \(|Tests: )' || fail "the multisite suite produced no result: it did not run"
 ok "multisite suite"
 
 log "Network/site precedence through WP-CLI, from site 2"
