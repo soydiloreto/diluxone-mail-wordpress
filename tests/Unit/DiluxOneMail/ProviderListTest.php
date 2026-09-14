@@ -180,6 +180,43 @@ class ProviderListTest extends AdminTestCase {
 		$this->assertStringNotContainsString( 'name="connection"', $panel );
 	}
 
+	public function test_opening_a_new_one_over_a_configured_list_starts_at_the_first_step(): void {
+		// The flow exactly as a browser walks it: a provider already set up and
+		// verified, and then the link that adds another. Drawing the list must
+		// not leave the panel pointing at a row of it.
+		$this->configured();
+
+		$_GET     = array( 'page' => 'diluxone-mail-provider', 'new' => '1' );
+		$_REQUEST = $_GET;
+
+		$html = $this->render( 'diluxone_mail_screen_provider' );
+
+		$panel = substr( $html, (int) strpos( $html, 'diluxone-mail-backdrop' ) );
+
+		// The first step, with nothing done and nothing borrowed.
+		$this->assertStringContainsString( 'diluxone_mail_apply_provider', $panel );
+		$this->assertStringNotContainsString( 'diluxone-mail-tab-done', $html );
+		$this->assertStringNotContainsString( 'diluxone_mail_api_key', $panel );
+		$this->assertSame( 'profile', \diluxone_mail_current_tab( 'site', 'provider' ) );
+	}
+
+	public function test_drawing_the_list_leaves_the_request_where_it_found_it(): void {
+		$this->configured();
+
+		$_GET     = array( 'new' => '1' );
+		$_REQUEST = $_GET;
+
+		\diluxone_mail_focus_editing();
+		$antes = \diluxone_mail_focus();
+
+		\diluxone_mail_connections_data();
+
+		// Each row points the request at itself for a moment; all of them put
+		// it back, and what they put back is what was there.
+		$this->assertSame( $antes, \diluxone_mail_focus() );
+		$this->assertSame( '', \diluxone_mail_active_id() );
+	}
+
 	public function test_none_of_it_without_the_capability(): void {
 		$GLOBALS['_test_can'] = false;
 

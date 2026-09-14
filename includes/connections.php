@@ -206,11 +206,7 @@ const DILUXONE_MAIL_NEW = '__new__';
  * @param string|null $set An id to switch to, or '' to go back to the default.
  */
 function diluxone_mail_active_id( ?string $set = null ): string {
-	static $override = '';
-
-	if ( null !== $set ) {
-		$override = $set;
-	}
+	$override = diluxone_mail_focus( $set );
 
 	if ( DILUXONE_MAIL_NEW === $override ) {
 		return '';
@@ -223,6 +219,29 @@ function diluxone_mail_active_id( ?string $set = null ): string {
 	}
 
 	return diluxone_mail_default_id();
+}
+
+/**
+ * The override itself, which is not the same as the id it resolves to.
+ *
+ * Anything that points the request somewhere for a moment and then puts it
+ * back has to save and restore this, not the answer: the answer to "which one
+ * is active" is a real id even when nothing was overridden, so restoring that
+ * pins the request to a provider it was only ever defaulting to. The list
+ * screen does exactly that once per row, and the panel drawn afterwards
+ * inherited it — which is how adding a provider ended up showing the ticks and
+ * the second step of the one already in charge.
+ *
+ * @param string|null $set An id, DILUXONE_MAIL_NEW, or '' to stop overriding.
+ */
+function diluxone_mail_focus( ?string $set = null ): string {
+	static $override = '';
+
+	if ( null !== $set ) {
+		$override = $set;
+	}
+
+	return $override;
 }
 
 /**

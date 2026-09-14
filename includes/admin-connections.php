@@ -26,9 +26,11 @@ defined( 'ABSPATH' ) || exit;
  * @return array<string, mixed>
  */
 function diluxone_mail_connection_row( string $id, array $connection, int $position ): array {
-	$was = diluxone_mail_active_id();
+	// The override, not the id it resolves to: restoring the latter would pin
+	// the request to this row's provider for everything drawn afterwards.
+	$was = diluxone_mail_focus();
 
-	diluxone_mail_active_id( $id );
+	diluxone_mail_focus( $id );
 
 	$row = array(
 		'id'        => $id,
@@ -41,7 +43,7 @@ function diluxone_mail_connection_row( string $id, array $connection, int $posit
 		'position'  => $position,
 	);
 
-	diluxone_mail_active_id( $was );
+	diluxone_mail_focus( $was );
 
 	return $row;
 }
