@@ -9,8 +9,16 @@
  * written from memory is a plugin that does not send mail, so every profile
  * carries the link to the page it came from.
  *
- * SMTP only. A single code path reaches every provider on the market; HTTP
- * APIs add nothing today and multiply the code per provider.
+ * These are the SMTP profiles. Reaching the same providers over their HTTP
+ * APIs is a different thing with different credentials, and it lives in
+ * api-providers.php: a provider that can be used either way appears in both
+ * files, and the method chosen on the first step decides which one is read.
+ *
+ * Nothing here is imposed after the fact. The profile fills the form once and
+ * from then on every value is an ordinary, editable option — the host
+ * included, because regional endpoints, EU tenants and on-premises relays are
+ * all real and a field the plugin refuses to let you change is a site that
+ * cannot send.
  *
  * The local profiles — Mailpit and MailHog — run without authentication and
  * without TLS on purpose, and with PHPMailer's autoTLS turned off. Without
@@ -23,8 +31,12 @@
  * The two DNS lists on each profile feed the diagnosis: the DKIM selectors to
  * probe, and the SPF `include`s that identify the provider inside the
  * domain's record, so the ones still declared but no longer used can be
- * pointed out. They are empty where they could not be verified — empty means
- * "unknown", never "has none".
+ * pointed out. Both were confirmed by querying the providers' own domains,
+ * not copied from a support article. They are empty where there is nothing
+ * fixed to look for — Amazon SES mints a random selector per identity,
+ * Mailtrap covers SPF through its verification record rather than an
+ * `include`, Resend puts its SPF on a subdomain — and empty means "unknown",
+ * never "has none": the screen says less rather than something wrong.
  *
  * @package DiluxOneMail
  */
@@ -49,7 +61,6 @@ function diluxone_mail_providers(): array {
 			'user'           => '',
 			'user_hint'      => '',
 			'pass_hint'      => '',
-			'host_editable'  => true,
 			'local'          => true,
 			'dkim_selectors' => array(),
 			'spf_includes'   => array(),
@@ -67,7 +78,6 @@ function diluxone_mail_providers(): array {
 			'user'           => '',
 			'user_hint'      => '',
 			'pass_hint'      => '',
-			'host_editable'  => true,
 			'local'          => true,
 			'dkim_selectors' => array(),
 			'spf_includes'   => array(),
@@ -85,7 +95,6 @@ function diluxone_mail_providers(): array {
 			'user'           => '',
 			'user_hint'      => __( 'The sandbox inbox username, from its Integration tab.', 'diluxone-mail' ),
 			'pass_hint'      => __( 'The sandbox inbox password.', 'diluxone-mail' ),
-			'host_editable'  => false,
 			'local'          => false,
 			'dkim_selectors' => array(),
 			'spf_includes'   => array(),
@@ -103,9 +112,8 @@ function diluxone_mail_providers(): array {
 			'user'           => 'api',
 			'user_hint'      => __( 'Always the word "api".', 'diluxone-mail' ),
 			'pass_hint'      => __( 'Your Mailtrap API token.', 'diluxone-mail' ),
-			'host_editable'  => false,
 			'local'          => false,
-			'dkim_selectors' => array(),
+			'dkim_selectors' => array( 'rwmt1', 'rwmt2' ),
 			'spf_includes'   => array(),
 			'return_path'    => '',
 			'docs'           => 'https://docs.mailtrap.io/getting-started/email-api-smtp',
@@ -121,7 +129,6 @@ function diluxone_mail_providers(): array {
 			'user'           => '',
 			'user_hint'      => __( 'The full address of the mailbox that sends. SMTP AUTH must be enabled for it.', 'diluxone-mail' ),
 			'pass_hint'      => __( 'That mailbox\'s password. Microsoft is retiring basic authentication; check the docs for your tenant.', 'diluxone-mail' ),
-			'host_editable'  => false,
 			'local'          => false,
 			'dkim_selectors' => array( 'selector1', 'selector2' ),
 			'spf_includes'   => array( 'spf.protection.outlook.com' ),
@@ -139,7 +146,6 @@ function diluxone_mail_providers(): array {
 			'user'           => '',
 			'user_hint'      => __( 'The SMTP Username created on the Communication Services resource.', 'diluxone-mail' ),
 			'pass_hint'      => __( 'A client secret of the Entra application linked to that username.', 'diluxone-mail' ),
-			'host_editable'  => false,
 			'local'          => false,
 			'dkim_selectors' => array( 'selector1-azurecomm-prod-net', 'selector2-azurecomm-prod-net' ),
 			'spf_includes'   => array( 'spf.protection.outlook.com' ),
@@ -157,7 +163,6 @@ function diluxone_mail_providers(): array {
 			'user'           => '',
 			'user_hint'      => __( 'The full Gmail or Workspace address.', 'diluxone-mail' ),
 			'pass_hint'      => __( 'An app password, not the account password. Requires two-step verification on the account.', 'diluxone-mail' ),
-			'host_editable'  => true,
 			'local'          => false,
 			'dkim_selectors' => array( 'google' ),
 			'spf_includes'   => array( '_spf.google.com' ),
@@ -175,7 +180,6 @@ function diluxone_mail_providers(): array {
 			'user'           => '',
 			'user_hint'      => __( 'The SMTP username generated in SES (not the IAM access key).', 'diluxone-mail' ),
 			'pass_hint'      => __( 'The SMTP password generated with it.', 'diluxone-mail' ),
-			'host_editable'  => true,
 			'local'          => false,
 			'dkim_selectors' => array(),
 			'spf_includes'   => array( 'amazonses.com' ),
@@ -193,7 +197,6 @@ function diluxone_mail_providers(): array {
 			'user'           => '',
 			'user_hint'      => __( 'Your Brevo login email.', 'diluxone-mail' ),
 			'pass_hint'      => __( 'An SMTP key from SMTP & API settings — not an API key.', 'diluxone-mail' ),
-			'host_editable'  => false,
 			'local'          => false,
 			'dkim_selectors' => array( 'mail' ),
 			'spf_includes'   => array( 'spf.sendinblue.com', 'spf.brevo.com' ),
@@ -211,7 +214,6 @@ function diluxone_mail_providers(): array {
 			'user'           => 'apikey',
 			'user_hint'      => __( 'Always the word "apikey".', 'diluxone-mail' ),
 			'pass_hint'      => __( 'An API key with at least Mail Send permission.', 'diluxone-mail' ),
-			'host_editable'  => false,
 			'local'          => false,
 			'dkim_selectors' => array( 's1', 's2' ),
 			'spf_includes'   => array( 'sendgrid.net' ),
@@ -229,7 +231,6 @@ function diluxone_mail_providers(): array {
 			'user'           => '',
 			'user_hint'      => __( 'The API Key.', 'diluxone-mail' ),
 			'pass_hint'      => __( 'The Secret Key.', 'diluxone-mail' ),
-			'host_editable'  => false,
 			'local'          => false,
 			'dkim_selectors' => array( 'mailjet' ),
 			'spf_includes'   => array( 'spf.mailjet.com' ),
@@ -247,9 +248,8 @@ function diluxone_mail_providers(): array {
 			'user'           => '',
 			'user_hint'      => __( 'The Server API Token (used as both username and password), or an SMTP token Access Key.', 'diluxone-mail' ),
 			'pass_hint'      => __( 'The same Server API Token, or the SMTP token Secret Key.', 'diluxone-mail' ),
-			'host_editable'  => false,
 			'local'          => false,
-			'dkim_selectors' => array(),
+			'dkim_selectors' => array( 'pm' ),
 			'spf_includes'   => array( 'spf.mtasv.net' ),
 			'return_path'    => 'pm-bounces',
 			'docs'           => 'https://postmarkapp.com/developer/user-guide/send-email-with-smtp',
@@ -265,7 +265,6 @@ function diluxone_mail_providers(): array {
 			'user'           => 'resend',
 			'user_hint'      => __( 'Always the word "resend".', 'diluxone-mail' ),
 			'pass_hint'      => __( 'An API key.', 'diluxone-mail' ),
-			'host_editable'  => false,
 			'local'          => false,
 			'dkim_selectors' => array( 'resend' ),
 			'spf_includes'   => array(),
@@ -283,7 +282,6 @@ function diluxone_mail_providers(): array {
 			'user'           => '',
 			'user_hint'      => '',
 			'pass_hint'      => '',
-			'host_editable'  => true,
 			'local'          => false,
 			'dkim_selectors' => array(),
 			'spf_includes'   => array(),

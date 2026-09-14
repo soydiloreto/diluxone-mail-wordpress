@@ -13,7 +13,7 @@ require_once __DIR__ . '/../../../includes/providers.php';
 class ProvidersTest extends TestCase {
 
 	public function test_every_profile_has_the_same_keys(): void {
-		$keys = array( 'name', 'group', 'host', 'port', 'encryption', 'auth', 'autotls', 'user', 'user_hint', 'pass_hint', 'host_editable', 'local', 'dkim_selectors', 'spf_includes', 'return_path', 'docs' );
+		$keys = array( 'name', 'group', 'host', 'port', 'encryption', 'auth', 'autotls', 'user', 'user_hint', 'pass_hint', 'local', 'dkim_selectors', 'spf_includes', 'return_path', 'docs' );
 
 		foreach ( \diluxone_mail_providers() as $key => $profile ) {
 			$this->assertSame( $keys, array_keys( $profile ), "profile {$key} does not have the expected keys" );
@@ -75,6 +75,45 @@ class ProvidersTest extends TestCase {
 		foreach ( $esperados as $key => $host ) {
 			$this->assertSame( $host, \diluxone_mail_provider( $key )['host'] );
 		}
+	}
+
+	/**
+	 * The marks the diagnosis looks for, pinned.
+	 *
+	 * Every one of these was confirmed by querying the provider's own domain,
+	 * and the screen now tells somebody their domain was never set up when it
+	 * finds none of them. A selector quietly dropped or mistyped here turns
+	 * that sentence into an accusation against a domain that is fine.
+	 */
+	public function test_the_marks_that_were_confirmed_in_dns(): void {
+		$esperados = array(
+			'mailtrap_sending' => array( 'rwmt1', 'rwmt2' ),
+			'postmark'         => array( 'pm' ),
+			'resend'           => array( 'resend' ),
+			'brevo'            => array( 'mail' ),
+			'mailjet'          => array( 'mailjet' ),
+			'sendgrid'         => array( 's1', 's2' ),
+			'google'           => array( 'google' ),
+			'm365'             => array( 'selector1', 'selector2' ),
+		);
+
+		foreach ( $esperados as $key => $selectores ) {
+			$this->assertSame( $selectores, \diluxone_mail_provider( $key )['dkim_selectors'], $key );
+		}
+	}
+
+	/**
+	 * Empty means "there is nothing fixed to look for", not "nobody checked".
+	 *
+	 * SES mints a random selector per identity, Mailtrap covers SPF with its
+	 * verification record instead of an include, and Resend puts its SPF on a
+	 * subdomain. Filling any of these in with a plausible guess would make the
+	 * diagnosis report a missing record that was never supposed to be there.
+	 */
+	public function test_what_is_deliberately_left_unknown(): void {
+		$this->assertSame( array(), \diluxone_mail_provider( 'ses' )['dkim_selectors'] );
+		$this->assertSame( array(), \diluxone_mail_provider( 'mailtrap_sending' )['spf_includes'] );
+		$this->assertSame( array(), \diluxone_mail_provider( 'resend' )['spf_includes'] );
 	}
 
 	public function test_an_unknown_profile_falls_back_to_the_generic_one(): void {
