@@ -98,14 +98,10 @@ function diluxone_mail_option_defaults(): array {
 		// and capturing the dialogue on every send costs something, so it
 		// ships off.
 		'diluxone_mail_log_extended'              => 0,
-		// Store the message body. Off on purpose: the body is personal data
-		// — names, orders, sometimes a temporary password — and it is what
-		// turns a technical log into a legal problem. Whoever turns it on
-		// knows what they are doing. Without the body a message cannot be
-		// resent, and the person's profile says so.
-		// The body and the SMTP dialogue are deleted before the rest of the
-		// row: a few days are enough to diagnose "I did not get yesterday's",
-		// and they are the heaviest and most sensitive thing stored.
+		// The SMTP dialogue is deleted before the rest of the row: a few days
+		// are enough to diagnose "I did not get yesterday's", and it is the
+		// heaviest thing stored and the one most likely to quote a header
+		// somebody would rather not keep.
 		'diluxone_mail_log_detail_retention_days' => 7,
 
 		// ── DNS diagnostics ───────────────────────────────────────────
@@ -133,6 +129,11 @@ function diluxone_mail_option_defaults(): array {
 		// handle those requests by hand turns them off.
 		'diluxone_mail_privacy_export'            => 1,
 		'diluxone_mail_privacy_erase'             => 1,
+		// Deleting the plugin takes its tables and settings with it. Off,
+		// because uninstalling to reinstall is a thing people do and losing a
+		// year of mail history to it would be the plugin's fault, not theirs.
+		// On, it is a clean uninstall: see uninstall.php.
+		'diluxone_mail_delete_data_on_uninstall'  => 0,
 
 		// ── The network ───────────────────────────────────────────────
 		// Only exists on a network. On, each site can override the network's

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-14T01:40:17+00:00\n"
+"POT-Creation-Date: 2026-09-14T01:46:27+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -132,11 +132,11 @@ msgid "Overview"
 msgstr "Resumen"
 
 #: includes/admin-settings.php:162 includes/admin.php:81
-#: includes/providers.php:97 includes/providers.php:115
-#: includes/providers.php:133 includes/providers.php:151
-#: includes/providers.php:169 includes/providers.php:187
-#: includes/providers.php:205 includes/providers.php:223
-#: includes/providers.php:241 includes/providers.php:259
+#: includes/providers.php:106 includes/providers.php:123
+#: includes/providers.php:140 includes/providers.php:157
+#: includes/providers.php:174 includes/providers.php:191
+#: includes/providers.php:208 includes/providers.php:225
+#: includes/providers.php:242 includes/providers.php:259
 msgid "Providers"
 msgstr "Proveedores"
 
@@ -1115,31 +1115,31 @@ msgstr "Historial de correo"
 msgid "From"
 msgstr "De"
 
-#: includes/providers.php:43 includes/providers.php:61
+#: includes/providers.php:55 includes/providers.php:72
 msgid "Local development"
 msgstr "Desarrollo local"
 
-#: includes/providers.php:79
+#: includes/providers.php:89
 msgid "Testing"
 msgstr "Pruebas"
 
-#: includes/providers.php:86
+#: includes/providers.php:96
 msgid "The sandbox inbox username, from its Integration tab."
 msgstr "El usuario del buzón sandbox, de su solapa Integration."
 
-#: includes/providers.php:87
+#: includes/providers.php:97
 msgid "The sandbox inbox password."
 msgstr "La contraseña del buzón sandbox."
 
-#: includes/providers.php:104
+#: includes/providers.php:113
 msgid "Always the word \"api\"."
 msgstr "Siempre la palabra «api»."
 
-#: includes/providers.php:105
+#: includes/providers.php:114
 msgid "Your Mailtrap API token."
 msgstr "Tu token de API de Mailtrap."
 
-#: includes/providers.php:122
+#: includes/providers.php:130
 msgid ""
 "The full address of the mailbox that sends. SMTP AUTH must be enabled for "
 "it."
@@ -1147,7 +1147,7 @@ msgstr ""
 "La dirección completa del buzón que manda. Tiene que tener SMTP AUTH "
 "habilitado."
 
-#: includes/providers.php:123
+#: includes/providers.php:131
 msgid ""
 "That mailbox's password. Microsoft is retiring basic authentication; check "
 "the docs for your tenant."
@@ -1155,19 +1155,19 @@ msgstr ""
 "La contraseña de ese buzón. Microsoft está retirando la autenticación "
 "básica; revisá la documentación para tu tenant."
 
-#: includes/providers.php:140
+#: includes/providers.php:147
 msgid "The SMTP Username created on the Communication Services resource."
 msgstr "El SMTP Username creado en el recurso de Communication Services."
 
-#: includes/providers.php:141
+#: includes/providers.php:148
 msgid "A client secret of the Entra application linked to that username."
 msgstr "Un client secret de la aplicación de Entra vinculada a ese usuario."
 
-#: includes/providers.php:158
+#: includes/providers.php:164
 msgid "The full Gmail or Workspace address."
 msgstr "La dirección completa de Gmail o Workspace."
 
-#: includes/providers.php:159
+#: includes/providers.php:165
 msgid ""
 "An app password, not the account password. Requires two-step verification on"
 " the account."
@@ -1175,39 +1175,39 @@ msgstr ""
 "Una contraseña de aplicación, no la de la cuenta. Requiere verificación en "
 "dos pasos en la cuenta."
 
-#: includes/providers.php:176
+#: includes/providers.php:181
 msgid "The SMTP username generated in SES (not the IAM access key)."
 msgstr "El usuario SMTP generado en SES (no la access key de IAM)."
 
-#: includes/providers.php:177
+#: includes/providers.php:182
 msgid "The SMTP password generated with it."
 msgstr "La contraseña SMTP generada con él."
 
-#: includes/providers.php:194
+#: includes/providers.php:198
 msgid "Your Brevo login email."
 msgstr "Tu correo de acceso a Brevo."
 
-#: includes/providers.php:195
+#: includes/providers.php:199
 msgid "An SMTP key from SMTP & API settings — not an API key."
 msgstr "Una clave SMTP de la sección SMTP & API — no una clave de API."
 
-#: includes/providers.php:212
+#: includes/providers.php:215
 msgid "Always the word \"apikey\"."
 msgstr "Siempre la palabra «apikey»."
 
-#: includes/providers.php:213
+#: includes/providers.php:216
 msgid "An API key with at least Mail Send permission."
 msgstr "Una clave de API con al menos el permiso Mail Send."
 
-#: includes/providers.php:230
+#: includes/providers.php:232
 msgid "The API Key."
 msgstr "La API Key."
 
-#: includes/providers.php:231
+#: includes/providers.php:233
 msgid "The Secret Key."
 msgstr "La Secret Key."
 
-#: includes/providers.php:248
+#: includes/providers.php:249
 msgid ""
 "The Server API Token (used as both username and password), or an SMTP token "
 "Access Key."
@@ -1215,7 +1215,7 @@ msgstr ""
 "El Server API Token (va como usuario y como contraseña), o la Access Key de "
 "un token SMTP."
 
-#: includes/providers.php:249
+#: includes/providers.php:250
 msgid "The same Server API Token, or the SMTP token Secret Key."
 msgstr "El mismo Server API Token, o la Secret Key del token SMTP."
 
@@ -1227,11 +1227,11 @@ msgstr "Siempre la palabra «resend»."
 msgid "An API key."
 msgstr "Una clave de API."
 
-#: includes/providers.php:276
+#: includes/providers.php:275
 msgid "Other SMTP server"
 msgstr "Otro servidor SMTP"
 
-#: includes/providers.php:277
+#: includes/providers.php:276
 msgid "Anything else"
 msgstr "Cualquier otro"
 
@@ -2078,7 +2078,34 @@ msgid "Delete a person's mail history when they ask to be erased"
 msgstr ""
 "Borrar el historial de correo de una persona cuando pide que la borren"
 
-#: templates/settings-logging.php:71 templates/settings-sending.php:54
+#: templates/settings-logging.php:70
+msgid "Deleting the plugin"
+msgstr "Eliminar el plugin"
+
+#: templates/settings-logging.php:73
+msgid "On uninstall"
+msgstr "Al desinstalar"
+
+#: templates/settings-logging.php:75
+msgid "Delete the mail log and every setting when the plugin is deleted"
+msgstr ""
+"Borrar el registro de correo y todas las opciones cuando se elimine el "
+"plugin"
+
+#: templates/settings-logging.php:76
+msgid ""
+"Off by default, and deliberately: deleting a plugin to reinstall it is "
+"something people do, and a year of mail history that disappears because of "
+"that would be this plugin's doing. Deactivating never removes anything "
+"either way — only deleting it from the Plugins screen does, and only with "
+"this ticked."
+msgstr ""
+"Viene desactivado a propósito: eliminar un plugin para volver a instalarlo "
+"es algo que se hace, y que por eso se pierda un año de historial de correo "
+"sería culpa del plugin. Desactivarlo no borra nada en ningún caso: sólo lo "
+"hace eliminarlo desde la pantalla de Plugins, y sólo con esto tildado."
+
+#: templates/settings-logging.php:82 templates/settings-sending.php:54
 #: templates/settings-sites.php:29
 msgid "Save"
 msgstr "Guardar"

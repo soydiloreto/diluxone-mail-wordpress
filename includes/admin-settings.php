@@ -36,7 +36,7 @@ function diluxone_mail_settings_fields(): array {
 		'mode'      => array( 'diluxone_mail_mode', 'diluxone_mail_unhook_pre_wp_mail' ),
 		'log'       => array( 'diluxone_mail_log_enabled', 'diluxone_mail_log_retention_days', 'diluxone_mail_log_extended', 'diluxone_mail_log_detail_retention_days' ),
 		'dns'       => array( 'diluxone_mail_dns_domain', 'diluxone_mail_dns_selectors', 'diluxone_mail_dns_resolver', 'diluxone_mail_dns_doh_endpoint', 'diluxone_mail_dns_cache_hours' ),
-		'privacy'   => array( 'diluxone_mail_privacy_export', 'diluxone_mail_privacy_erase' ),
+		'privacy'   => array( 'diluxone_mail_privacy_export', 'diluxone_mail_privacy_erase', 'diluxone_mail_delete_data_on_uninstall' ),
 	);
 }
 

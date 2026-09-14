@@ -8,6 +8,9 @@
   <source>
     <include>
       <directory suffix=".php">includes</directory>
+      <!-- Deleting the plugin's data is code like any other, and the one
+           place where a mistake is not recoverable. -->
+      <file>uninstall.php</file>
     </include>
     <exclude>
         </exclude>

@@ -47,6 +47,10 @@ if (!function_exists('get_user_by')) {
 	}
 }
 if (!function_exists('get_sites')) { function get_sites(array $a = []): array { return $GLOBALS['_test_sites'] ?? []; } }
+// Switching sites has no separate option store here: what the multisite path
+// has to prove is that it visits every site, and that is what is recorded.
+if (!function_exists('switch_to_blog')) { function switch_to_blog(int $id): bool { $GLOBALS['_test_switched'][] = $id; return true; } }
+if (!function_exists('restore_current_blog')) { function restore_current_blog(): bool { return true; } }
 if (!function_exists('get_site')) { function get_site(int $id) { foreach ($GLOBALS['_test_sites'] ?? [] as $s) { if ($s->blog_id === $id) return $s; } return null; } }
 if (!function_exists('get_current_screen')) { function get_current_screen() { return $GLOBALS['_test_screen'] ?? null; } }
 if (!function_exists('wp_kses_post')) { function wp_kses_post(string $s): string { return $s; } }

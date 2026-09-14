@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-14T01:40:27+00:00\n"
+"POT-Creation-Date: 2026-09-14T01:46:32+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: diluxone-mail\n"
@@ -118,15 +118,15 @@ msgstr ""
 
 #: includes/admin-settings.php:162
 #: includes/admin.php:81
-#: includes/providers.php:97
-#: includes/providers.php:115
-#: includes/providers.php:133
-#: includes/providers.php:151
-#: includes/providers.php:169
-#: includes/providers.php:187
-#: includes/providers.php:205
-#: includes/providers.php:223
-#: includes/providers.php:241
+#: includes/providers.php:106
+#: includes/providers.php:123
+#: includes/providers.php:140
+#: includes/providers.php:157
+#: includes/providers.php:174
+#: includes/providers.php:191
+#: includes/providers.php:208
+#: includes/providers.php:225
+#: includes/providers.php:242
 #: includes/providers.php:259
 msgid "Providers"
 msgstr ""
@@ -866,92 +866,92 @@ msgstr ""
 msgid "From"
 msgstr ""
 
-#: includes/providers.php:43
-#: includes/providers.php:61
+#: includes/providers.php:55
+#: includes/providers.php:72
 msgid "Local development"
 msgstr ""
 
-#: includes/providers.php:79
+#: includes/providers.php:89
 msgid "Testing"
 msgstr ""
 
-#: includes/providers.php:86
+#: includes/providers.php:96
 msgid "The sandbox inbox username, from its Integration tab."
 msgstr ""
 
-#: includes/providers.php:87
+#: includes/providers.php:97
 msgid "The sandbox inbox password."
 msgstr ""
 
-#: includes/providers.php:104
+#: includes/providers.php:113
 msgid "Always the word \"api\"."
 msgstr ""
 
-#: includes/providers.php:105
+#: includes/providers.php:114
 msgid "Your Mailtrap API token."
 msgstr ""
 
-#: includes/providers.php:122
+#: includes/providers.php:130
 msgid "The full address of the mailbox that sends. SMTP AUTH must be enabled for it."
 msgstr ""
 
-#: includes/providers.php:123
+#: includes/providers.php:131
 msgid "That mailbox's password. Microsoft is retiring basic authentication; check the docs for your tenant."
 msgstr ""
 
-#: includes/providers.php:140
+#: includes/providers.php:147
 msgid "The SMTP Username created on the Communication Services resource."
 msgstr ""
 
-#: includes/providers.php:141
+#: includes/providers.php:148
 msgid "A client secret of the Entra application linked to that username."
 msgstr ""
 
-#: includes/providers.php:158
+#: includes/providers.php:164
 msgid "The full Gmail or Workspace address."
 msgstr ""
 
-#: includes/providers.php:159
+#: includes/providers.php:165
 msgid "An app password, not the account password. Requires two-step verification on the account."
 msgstr ""
 
-#: includes/providers.php:176
+#: includes/providers.php:181
 msgid "The SMTP username generated in SES (not the IAM access key)."
 msgstr ""
 
-#: includes/providers.php:177
+#: includes/providers.php:182
 msgid "The SMTP password generated with it."
 msgstr ""
 
-#: includes/providers.php:194
+#: includes/providers.php:198
 msgid "Your Brevo login email."
 msgstr ""
 
-#: includes/providers.php:195
+#: includes/providers.php:199
 msgid "An SMTP key from SMTP & API settings — not an API key."
 msgstr ""
 
-#: includes/providers.php:212
+#: includes/providers.php:215
 msgid "Always the word \"apikey\"."
 msgstr ""
 
-#: includes/providers.php:213
+#: includes/providers.php:216
 msgid "An API key with at least Mail Send permission."
 msgstr ""
 
-#: includes/providers.php:230
+#: includes/providers.php:232
 msgid "The API Key."
 msgstr ""
 
-#: includes/providers.php:231
+#: includes/providers.php:233
 msgid "The Secret Key."
 msgstr ""
 
-#: includes/providers.php:248
+#: includes/providers.php:249
 msgid "The Server API Token (used as both username and password), or an SMTP token Access Key."
 msgstr ""
 
-#: includes/providers.php:249
+#: includes/providers.php:250
 msgid "The same Server API Token, or the SMTP token Secret Key."
 msgstr ""
 
@@ -963,11 +963,11 @@ msgstr ""
 msgid "An API key."
 msgstr ""
 
-#: includes/providers.php:276
+#: includes/providers.php:275
 msgid "Other SMTP server"
 msgstr ""
 
-#: includes/providers.php:277
+#: includes/providers.php:276
 msgid "Anything else"
 msgstr ""
 
@@ -1706,7 +1706,23 @@ msgstr ""
 msgid "Delete a person's mail history when they ask to be erased"
 msgstr ""
 
-#: templates/settings-logging.php:71
+#: templates/settings-logging.php:70
+msgid "Deleting the plugin"
+msgstr ""
+
+#: templates/settings-logging.php:73
+msgid "On uninstall"
+msgstr ""
+
+#: templates/settings-logging.php:75
+msgid "Delete the mail log and every setting when the plugin is deleted"
+msgstr ""
+
+#: templates/settings-logging.php:76
+msgid "Off by default, and deliberately: deleting a plugin to reinstall it is something people do, and a year of mail history that disappears because of that would be this plugin's doing. Deactivating never removes anything either way — only deleting it from the Plugins screen does, and only with this ticked."
+msgstr ""
+
+#: templates/settings-logging.php:82
 #: templates/settings-sending.php:54
 #: templates/settings-sites.php:29
 msgid "Save"

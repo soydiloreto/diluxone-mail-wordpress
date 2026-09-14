@@ -67,6 +67,17 @@ $diluxone_mail_f = $data['fields'];
 		</tr>
 	</table>
 
+	<h2><?php esc_html_e( 'Deleting the plugin', 'diluxone-mail' ); ?></h2>
+	<table class="form-table" role="presentation">
+		<tr>
+			<th scope="row"><?php esc_html_e( 'On uninstall', 'diluxone-mail' ); ?></th>
+			<td>
+				<label><input type="checkbox" name="diluxone_mail_delete_data_on_uninstall" value="1" <?php checked( (int) $diluxone_mail_f['diluxone_mail_delete_data_on_uninstall']['value'], 1 ); ?> <?php disabled( $diluxone_mail_f['diluxone_mail_delete_data_on_uninstall']['readonly'] ); ?>> <?php esc_html_e( 'Delete the mail log and every setting when the plugin is deleted', 'diluxone-mail' ); ?></label>
+				<p class="description"><?php esc_html_e( 'Off by default, and deliberately: deleting a plugin to reinstall it is something people do, and a year of mail history that disappears because of that would be this plugin\'s doing. Deactivating never removes anything either way — only deleting it from the Plugins screen does, and only with this ticked.', 'diluxone-mail' ); ?></p>
+			</td>
+		</tr>
+	</table>
+
 	<?php if ( $data['editable'] ) : ?>
 		<?php submit_button( __( 'Save', 'diluxone-mail' ) ); ?>
 	<?php endif; ?>

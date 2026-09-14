@@ -637,6 +637,7 @@ if (!function_exists('wp_get_environment_type')) { function wp_get_environment_t
 if (!function_exists('wp_next_scheduled')) { function wp_next_scheduled(string $h) { return $GLOBALS['_test_cron'][$h] ?? false; } }
 if (!function_exists('wp_schedule_event')) { function wp_schedule_event(int $t, string $r, string $h): bool { $GLOBALS['_test_cron'][$h] = $t; return true; } }
 if (!function_exists('wp_unschedule_event')) { function wp_unschedule_event(int $t, string $h): bool { unset($GLOBALS['_test_cron'][$h]); return true; } }
+if (!function_exists('wp_clear_scheduled_hook')) { function wp_clear_scheduled_hook(string $h): int { $GLOBALS['_test_wp_cleared_hooks'][] = $h; unset($GLOBALS['_test_cron'][$h]); return 1; } }
 if (!function_exists('get_bloginfo')) { function get_bloginfo(string $k = ''): string { return 'Sitio de prueba'; } }
 if (!function_exists('wp_specialchars_decode')) { function wp_specialchars_decode(string $s, $q = ENT_NOQUOTES): string { return html_entity_decode($s, ENT_QUOTES); } }
 if (!function_exists('get_current_user_id')) { function get_current_user_id(): int { return (int) ($GLOBALS['_test_user_id'] ?? 1); } }
