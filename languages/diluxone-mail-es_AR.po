@@ -1747,6 +1747,9 @@ msgid ""
 "accepts the credentials, say who the mail comes from, and send a message to "
 "check it arrives."
 msgstr ""
+"Cuatro pasos: elegir cómo envía el sitio y por medio de quién, probar que el"
+" proveedor acepta las credenciales, decir de quién viene el correo, y mandar"
+" un mensaje para comprobar que llega."
 
 #: templates/provider-list.php:20 templates/provider-list.php:95
 msgid "Add a provider"
