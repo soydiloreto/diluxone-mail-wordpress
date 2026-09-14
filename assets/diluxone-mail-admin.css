@@ -332,6 +332,12 @@ iframe.diluxone-mail-body {
 }
 
 /* The four steps, over the list. */
+/* Only ever set by the script, and only while the panel is open: see the
+   panel() function for why it is not a plain rule on the backdrop. */
+body.diluxone-mail-panel-open {
+	overflow: hidden;
+}
+
 .diluxone-mail-backdrop {
 	position: fixed;
 	inset: 0;

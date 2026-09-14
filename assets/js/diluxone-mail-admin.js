@@ -162,7 +162,93 @@
 		} );
 	}
 
+	/**
+	 * The panel behaving like the dialog it says it is.
+	 *
+	 * The markup already declares `role="dialog"` and `aria-modal="true"`, and
+	 * declaring it is a promise: a screen reader stops announcing what is
+	 * behind, so a Tab that walks out of the panel lands on controls the
+	 * person can no longer be told about — the list under it, the admin menu,
+	 * the whole of WordPress — with no way back and nothing saying what
+	 * happened. Either the attribute goes or the focus stays in.
+	 *
+	 * Escape closes it by following the same link the Close button is, so
+	 * there is one way out and it is the one that carries the record's id
+	 * back to the list for the closing sentence.
+	 */
+	function panel() {
+		var dialog = document.querySelector( '.diluxone-mail-panel[role="dialog"]' );
+
+		if ( ! dialog ) {
+			return;
+		}
+
+		var close = dialog.querySelector( '.diluxone-mail-panel-close' );
+
+		function tabbable() {
+			// Visible and enabled only: a hidden step's fields are in the
+			// document — that is how the method swaps the two versions — and
+			// tabbing into one would be tabbing into nothing.
+			return Array.prototype.filter.call(
+				dialog.querySelectorAll( 'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])' ),
+				function ( el ) {
+					return ! el.disabled && null !== el.offsetParent;
+				}
+			);
+		}
+
+		dialog.addEventListener( 'keydown', function ( event ) {
+			if ( 'Escape' === event.key ) {
+				event.preventDefault();
+
+				if ( close ) {
+					window.location.href = close.href;
+				}
+
+				return;
+			}
+
+			if ( 'Tab' !== event.key ) {
+				return;
+			}
+
+			var stops = tabbable();
+
+			if ( ! stops.length ) {
+				return;
+			}
+
+			var first = stops[ 0 ];
+			var last = stops[ stops.length - 1 ];
+
+			// Wrapping only at the ends: everywhere else the browser already
+			// does the right thing, and taking Tab over would break every
+			// keyboard habit the rest of the dashboard teaches.
+			if ( event.shiftKey && document.activeElement === first ) {
+				event.preventDefault();
+				last.focus();
+			} else if ( ! event.shiftKey && document.activeElement === last ) {
+				event.preventDefault();
+				first.focus();
+			}
+		} );
+
+		// The list behind is long, and a wheel over the backdrop scrolling it
+		// instead of the panel is the thing that gives a dialog away as not
+		// being one. Done here rather than in the stylesheet because without
+		// the script there is no trap either, and a page that cannot scroll
+		// and cannot be escaped is worse than one that scrolls.
+		document.body.classList.add( 'diluxone-mail-panel-open' );
+
+		// Opening it puts the focus inside, because a dialog nobody is
+		// standing in is a dialog whose first Tab goes to the page behind.
+		var start = dialog.querySelector( '.diluxone-mail-panel-body input:not([type="hidden"]), .diluxone-mail-panel-body select, .diluxone-mail-panel-body button' );
+
+		( start || close || dialog ).focus();
+	}
+
 	method();
 	credentials();
 	order();
+	panel();
 }() );

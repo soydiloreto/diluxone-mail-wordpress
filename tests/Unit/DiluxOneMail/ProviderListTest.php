@@ -66,6 +66,26 @@ class ProviderListTest extends AdminTestCase {
 		$this->assertStringContainsString( 'name="connection" value="' . $id . '"', $html );
 	}
 
+	/**
+	 * A dialog that says it is one has to behave like one.
+	 *
+	 * aria-modal tells a screen reader to stop announcing everything behind
+	 * the panel. If the focus can then walk out of it — into the list, into
+	 * the admin menu — the person is standing on controls nobody is telling
+	 * them about, with no way back. The script traps Tab and closes on
+	 * Escape; what the markup has to carry for that to be possible is the
+	 * tabindex, without which the focus cannot be put inside on open.
+	 */
+	public function test_the_panel_can_be_focused_the_way_a_dialog_must(): void {
+		$this->panel( $this->conexion( array( 'diluxone_mail_provider' => 'mailjet' ) ) );
+
+		$html = $this->render( 'diluxone_mail_screen_provider' );
+
+		$this->assertStringContainsString( 'role="dialog"', $html );
+		$this->assertStringContainsString( 'aria-modal="true"', $html );
+		$this->assertStringContainsString( 'tabindex="-1"', $html );
+	}
+
 	public function test_the_arrows_move_one_and_the_list_keeps_the_rest(): void {
 		$uno = $this->conexion( array( 'diluxone_mail_host' => 'uno' ) );
 		$dos = $this->conexion( array( 'diluxone_mail_host' => 'dos' ) );
