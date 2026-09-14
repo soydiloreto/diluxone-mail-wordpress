@@ -229,7 +229,10 @@ function diluxone_mail_posted_tab( string $scope ): string {
 
 /** Where to go back to after saving. */
 function diluxone_mail_settings_redirect( string $scope, string $done, string $tab = '', string $connection = '' ): void {
-	$args = array( 'diluxone_mail_done' => $done );
+	// An empty one says nothing on arrival, for the steps that answer for
+	// themselves: a screen that already shows what happened, in detail, does
+	// not need a sentence above it saying the same thing shorter.
+	$args = '' === $done ? array() : array( 'diluxone_mail_done' => $done );
 
 	// A step that has just created the record says so, because until it does
 	// the request only knew it was setting up something new.

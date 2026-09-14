@@ -185,7 +185,9 @@ class HandlersTest extends AdminTestCase {
 
 		$url = $this->redirect_of( 'diluxone_mail_test_action' );
 
-		$this->assertStringContainsString( 'tested', $url );
+		// The step shows the result itself, so the redirect carries no headline.
+		$this->assertStringContainsString( 'tab=test', $url );
+		$this->assertStringNotContainsString( 'diluxone_mail_done', $url );
 		$r = \get_transient( 'diluxone_mail_test_1' );
 		$this->assertTrue( $r['ok'] );
 		$this->assertSame( 'admin@example.test', $r['to'] );

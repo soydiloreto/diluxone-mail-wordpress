@@ -272,6 +272,7 @@ class TabsTest extends AdminTestCase {
 		$url = $this->redirect_of( 'diluxone_mail_test_action' );
 
 		$this->assertStringContainsString( 'tab=test', $url );
+		$this->assertStringNotContainsString( 'diluxone_mail_done', $url );
 		$this->assertTrue( \diluxone_mail_test_passed() );
 
 		// Change the sender and the proof no longer applies to what is stored.
@@ -327,6 +328,25 @@ class TabsTest extends AdminTestCase {
 		$this->assertCount( 1, $GLOBALS['_test_wp_mail_calls'] );
 		// And the guard is left as it was found.
 		$this->assertFalse( \diluxone_mail_failing_over() );
+	}
+
+	public function test_the_last_step_says_what_happened_once(): void {
+		$this->configured();
+		$_GET = array( 'tab' => 'test' );
+		$this->panel();
+
+		\set_transient(
+			'diluxone_mail_test_1',
+			array( 'ok' => true, 'error' => '', 'transcript' => '', 'seconds' => 0.13, 'to' => 'a@x.test' ),
+			60
+		);
+
+		$html = $this->render( 'diluxone_mail_screen_provider' );
+
+		// The detailed result, and nothing above it repeating the headline.
+		$this->assertStringContainsString( 'handed to the server', $html );
+		$this->assertStringNotContainsString( 'Test message sent', $html );
+		$this->assertSame( 1, substr_count( $html, 'notice notice-' ) );
 	}
 
 	public function test_a_failed_send_does_not_mark_the_step(): void {

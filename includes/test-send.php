@@ -148,6 +148,10 @@ function diluxone_mail_test_action(): void {
 		exit;
 	}
 
-	diluxone_mail_settings_redirect( $scope, 'tested', 'test' );
+	// No notice of its own: the step renders the result it just produced —
+	// who it went to, how long it took, and the server's side of the
+	// conversation when it did not. Announcing "sent" above that is the same
+	// news twice, in less detail, at the top.
+	diluxone_mail_settings_redirect( $scope, '', 'test' );
 }
 add_action( 'admin_post_diluxone_mail_test', 'diluxone_mail_test_action' );
