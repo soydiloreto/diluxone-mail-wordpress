@@ -14,6 +14,14 @@
  *   3. The site option, editable from the dashboard     diluxone_mail_host
  *   4. On a network, the network option                 diluxone_mail_host
  *
+ * The top two layers describe one provider, and a site now keeps a list of
+ * them. They apply to the one at the top of that list — the one that sends —
+ * and to nothing underneath it. There is only one DILUXONE_MAIL_PASS, and
+ * letting it answer for every record would have the fallback authenticate
+ * with the credential of the provider that just refused the message: the one
+ * configuration that cannot work, applied precisely when the site is relying
+ * on it.
+ *
  * And hence every read also returns where the value came from: the form needs
  * it to show the read-only control with the "defined by the environment"
  * note, and saving needs it so as not to write a credential into the database
@@ -71,6 +79,12 @@ function diluxone_mail_config_value( string $field ): array {
 	$constant = 'DILUXONE_MAIL_' . $suffix;
 	$option   = 'diluxone_mail_' . strtolower( $suffix );
 
+	if ( ! diluxone_mail_config_environment_applies( $option ) ) {
+		$stored = diluxone_mail_option_stored( $option );
+
+		return diluxone_mail_config_stored( $field, $option, $stored );
+	}
+
 	if ( defined( $constant ) ) {
 		return array(
 			'value'  => (string) constant( $constant ),
@@ -93,8 +107,42 @@ function diluxone_mail_config_value( string $field ): array {
 		);
 	}
 
-	$stored = diluxone_mail_option_stored( $option );
+	return diluxone_mail_config_stored( $field, $option, diluxone_mail_option_stored( $option ) );
+}
 
+/**
+ * Does the environment get to answer for the provider being read?
+ *
+ * There is one constant per field and a list of providers, so the constants
+ * belong to the one at the top: every other record is an ordinary stored
+ * configuration, editable on its own screen and used as written. Until a site
+ * has a list at all — a fresh install, or one whose migration has not run —
+ * the question does not arise and the environment answers as it always did.
+ *
+ * Only fields that describe a provider are affected. The rest do not live in
+ * the list in the first place.
+ */
+function diluxone_mail_config_environment_applies( string $option_key ): bool {
+	if ( ! diluxone_mail_is_connection_field( $option_key ) ) {
+		return true;
+	}
+
+	$connections = diluxone_mail_connections();
+
+	if ( array() === $connections ) {
+		return true;
+	}
+
+	return diluxone_mail_active_id() === diluxone_mail_default_id();
+}
+
+/**
+ * The value as the database holds it, with its provenance.
+ *
+ * @param array{value: mixed, scope: string} $stored
+ * @return array{value: string, source: string, origin: string}
+ */
+function diluxone_mail_config_stored( string $field, string $option, array $stored ): array {
 	if ( 'default' !== $stored['scope'] && '' !== (string) $stored['value'] ) {
 		// The credential is kept encrypted, so what comes out of the option is
 		// not usable as it is. A value that cannot be decrypted — rotated

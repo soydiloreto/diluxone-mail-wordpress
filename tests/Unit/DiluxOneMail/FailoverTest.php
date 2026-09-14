@@ -144,6 +144,51 @@ class FailoverTest extends AdminTestCase {
 		$this->assertSame( '—', \diluxone_mail_log_carrier( array() ) );
 	}
 
+	/**
+	 * The environment configures the provider that sends, and only it.
+	 *
+	 * There is one DILUXONE_MAIL_PASS and a list of providers. Letting it
+	 * answer for all of them would have the fallback authenticate with the
+	 * credential of the provider that has just refused the message — the one
+	 * configuration guaranteed not to work, applied at the exact moment the
+	 * site is relying on it.
+	 */
+	public function test_a_constant_belongs_to_the_provider_at_the_top(): void {
+		list( $uno, $dos ) = $this->dos();
+
+		putenv( 'DILUXONE_MAIL_PASS=la-del-primero' );
+
+		\diluxone_mail_focus( $uno );
+		$this->assertSame( 'la-del-primero', \diluxone_mail_config_value( 'pass' )['value'] );
+		$this->assertSame( 'env', \diluxone_mail_config_value( 'pass' )['source'] );
+
+		// And the second reads its own, which here is nothing at all rather
+		// than somebody else's.
+		\diluxone_mail_focus( $dos );
+		$this->assertSame( '', \diluxone_mail_config_value( 'pass' )['value'] );
+		$this->assertNotSame( 'env', \diluxone_mail_config_value( 'pass' )['source'] );
+
+		// Which also means the second provider's screen lets you type one.
+		$this->assertFalse( \diluxone_mail_option_from_environment( 'diluxone_mail_pass' ) );
+
+		\diluxone_mail_focus( $uno );
+		$this->assertTrue( \diluxone_mail_option_from_environment( 'diluxone_mail_pass' ) );
+
+		putenv( 'DILUXONE_MAIL_PASS' );
+	}
+
+	/**
+	 * Settings that belong to the site, not to a provider, are unaffected:
+	 * they were never in the list.
+	 */
+	public function test_the_host_of_a_site_with_no_list_still_comes_from_the_environment(): void {
+		putenv( 'DILUXONE_MAIL_HOST=smtp.entorno.test' );
+
+		$this->assertSame( 'smtp.entorno.test', \diluxone_mail_config_value( 'host' )['value'] );
+
+		putenv( 'DILUXONE_MAIL_HOST' );
+	}
+
 	public function test_with_nobody_underneath_there_is_nothing_to_try(): void {
 		$this->conexion(
 			array(
