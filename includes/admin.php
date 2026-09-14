@@ -294,11 +294,17 @@ function diluxone_mail_source_caption( array $field ): void {
 function diluxone_mail_connection_field(): void {
 	$editing = diluxone_mail_editing_id();
 
-	if ( '' === $editing ) {
+	if ( '' !== $editing ) {
+		printf( '<input type="hidden" name="connection" value="%s">', esc_attr( $editing ) );
+
 		return;
 	}
 
-	printf( '<input type="hidden" name="connection" value="%s">', esc_attr( $editing ) );
+	// A provider being added has no id to carry, and saying nothing is not the
+	// same as saying "a new one": with neither field the handler falls back to
+	// whichever provider is in charge and writes the new one's settings over
+	// it. The marker travels with the form for exactly that reason.
+	echo '<input type="hidden" name="new" value="1">';
 }
 
 /**

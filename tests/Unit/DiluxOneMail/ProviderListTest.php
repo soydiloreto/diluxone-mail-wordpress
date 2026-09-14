@@ -136,6 +136,50 @@ class ProviderListTest extends AdminTestCase {
 		$this->assertStringContainsString( 'El de facturación', $this->render( 'diluxone_mail_screen_provider' ) );
 	}
 
+	public function test_adding_one_never_writes_over_the_one_in_charge(): void {
+		$viejo = $this->conexion(
+			array(
+				'diluxone_mail_provider' => 'mailtrap_sending',
+				'diluxone_mail_host'     => 'el.que.ya.estaba',
+				'diluxone_mail_from'     => 'hello@x.test',
+			)
+		);
+
+		// Exactly what the first step submits for a provider that does not
+		// exist yet: no id, and the marker that says so.
+		$_POST = array(
+			'scope'                  => 'site',
+			'new'                    => '1',
+			'diluxone_mail_provider' => 'sendgrid',
+			'label'                  => 'El nuevo',
+		);
+		$_REQUEST = $_POST;
+
+		$this->redirect_of( 'diluxone_mail_apply_provider' );
+
+		$conexiones = \diluxone_mail_connections();
+
+		$this->assertCount( 2, $conexiones );
+		// The one that was there is untouched, and still the one that sends.
+		$this->assertSame( 'el.que.ya.estaba', $conexiones[ $viejo ]['diluxone_mail_host'] );
+		$this->assertSame( $viejo, \diluxone_mail_default_id() );
+	}
+
+	public function test_the_first_step_of_a_new_one_carries_the_marker(): void {
+		$this->conexion( array( 'diluxone_mail_provider' => 'mailjet' ) );
+
+		$_GET     = array( 'new' => '1' );
+		$_REQUEST = $_GET;
+
+		$html = $this->render( 'diluxone_mail_screen_provider' );
+		// Only the panel: the rows behind it each carry their own id, which is
+		// how the arrows and the remove button know what they act on.
+		$panel = substr( $html, (int) strpos( $html, 'diluxone-mail-backdrop' ) );
+
+		$this->assertStringContainsString( 'name="new" value="1"', $panel );
+		$this->assertStringNotContainsString( 'name="connection"', $panel );
+	}
+
 	public function test_none_of_it_without_the_capability(): void {
 		$GLOBALS['_test_can'] = false;
 
