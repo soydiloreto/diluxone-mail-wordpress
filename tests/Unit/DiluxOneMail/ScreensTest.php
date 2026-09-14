@@ -36,7 +36,7 @@ class ScreensTest extends AdminTestCase {
 		// renders the tabs — and not on the ones that do not.
 		$GLOBALS['_test_scripts'] = array();
 
-		foreach ( array( 'diluxone-mail_page_diluxone-mail-provider', 'diluxone-mail_page_diluxone-mail-settings', 'settings_page_diluxone-mail-network' ) as $con_formulario ) {
+		foreach ( array( 'diluxone-mail_page_diluxone-mail-provider', 'diluxone-mail_page_diluxone-mail-settings', 'settings_page_diluxone-mail-network', 'diluxone-mail_page_diluxone-mail-dns' ) as $con_formulario ) {
 			$GLOBALS['_test_scripts'] = array();
 			\diluxone_mail_admin_styles( $con_formulario );
 			$this->assertCount( 1, $GLOBALS['_test_scripts'], $con_formulario );
@@ -212,13 +212,122 @@ $this->panel();
 		$GLOBALS['_test_blog_id'] = 1;
 	}
 
-	public function test_the_deliverability_screen(): void {
+	/**
+	 * With nothing cached the screen draws the shape of the answer.
+	 *
+	 * The diagnosis is seconds of DNS and it used to run inside the render, so
+	 * the screen answered a click with a blank page for as long as it took.
+	 * Now it never runs it: what comes back is the skeleton, the options form
+	 * — which is exactly what somebody opening a slow diagnosis wants to reach
+	 * — and the nonce the browser needs to go and ask.
+	 */
+	public function test_the_deliverability_screen_draws_before_the_diagnosis_runs(): void {
 		\update_option( 'diluxone_mail_from', 'hello@healthy.test' );
-		$this->assertStringContainsString( 'healthy.test', $this->render( 'diluxone_mail_screen_dns' ) );
 
 		$html = $this->render( 'diluxone_mail_screen_dns' );
+
+		$this->assertStringContainsString( 'healthy.test', $html );
+		$this->assertStringContainsString( 'diluxone-mail-skeleton', $html );
+		$this->assertStringContainsString( 'data-diluxone-mail-diagnose', $html );
+
+		// Not a dead end without JavaScript, and not a page that hides the
+		// four settings the diagnosis runs on while it is running.
+		$this->assertStringContainsString( 'diluxone_mail_wait=1', $html );
+		$this->assertStringContainsString( 'Options of the diagnosis', $html );
+
+		// And drawing it did not run the diagnosis: there is still nothing
+		// cached, which is the whole point — the wait moved out of the render
+		// rather than being hidden behind a nicer screen.
+		$this->assertNull( \diluxone_mail_diagnosis_cached( 'healthy.test' ) );
+	}
+
+	/**
+	 * The other half of the skeleton: what the browser calls behind it.
+	 *
+	 * It answers whether the work got done and nothing else. The report is in
+	 * the cache by then and the page reads it from there on the way back in —
+	 * so there is one thing that renders a report, not a template and a copy
+	 * of it in JavaScript drifting apart.
+	 */
+	public function test_the_diagnosis_the_browser_asks_for_leaves_it_cached(): void {
+		\update_option( 'diluxone_mail_from', 'hello@healthy.test' );
+
+		$this->assertNull( \diluxone_mail_diagnosis_cached( 'healthy.test' ) );
+
+		try {
+			\diluxone_mail_diagnose_ajax();
+			$this->fail( 'it did not answer' );
+		} catch ( \DiluxOne_Test_Json $json ) {
+			$this->assertTrue( $json->ok );
+			$this->assertSame( 'healthy.test', $json->data['domain'] );
+		}
+
+		$this->assertIsArray( \diluxone_mail_diagnosis_cached( 'healthy.test' ) );
+	}
+
+	public function test_the_diagnosis_is_not_something_a_visitor_can_set_running(): void {
+		$GLOBALS['_test_can'] = false;
+
+		try {
+			\diluxone_mail_diagnose_ajax();
+			$this->fail( 'it did not refuse' );
+		} catch ( \DiluxOne_Test_Json $json ) {
+			$this->assertFalse( $json->ok );
+			$this->assertSame( 403, $json->status );
+		}
+
+		// A pile of DNS lookups on somebody else's resolver, started by
+		// anybody who can load a URL, is a way of using this site to make
+		// traffic. The nonce is checked too, after the capability.
+		$GLOBALS['_test_can']          = true;
+		$GLOBALS['_test_nonce_fails']  = true;
+
+		$this->expectException( \DiluxOne_Test_Die::class );
+		\diluxone_mail_diagnose_ajax();
+	}
+
+	public function test_with_no_domain_there_is_nothing_for_the_browser_to_fetch(): void {
+		// No configured domain, no sender, and a site URL with no host in it —
+		// the three places the domain is looked for, in order.
+		\add_filter( 'diluxone_mail_option', static fn( $v, $k ) => 'diluxone_mail_dns_domain' === $k ? '' : $v, 10, 2 );
+		\update_option( 'diluxone_mail_from', '' );
+		$GLOBALS['_test_wp_url_base'] = '/';
+
+		$this->assertSame( '', \diluxone_mail_dns_domain() );
+
+		try {
+			\diluxone_mail_diagnose_ajax();
+			$this->fail( 'it did not answer' );
+		} catch ( \DiluxOne_Test_Json $json ) {
+			$this->assertFalse( $json->ok );
+			$this->assertSame( 400, $json->status );
+		}
+
+		unset( $GLOBALS['_test_wp_url_base'] );
+	}
+
+	public function test_the_deliverability_screen(): void {
+		\update_option( 'diluxone_mail_from', 'hello@healthy.test' );
+
+		// Waiting on purpose is what the fallback link asks for, and what the
+		// screen did for everybody before.
+		$_GET['diluxone_mail_wait'] = '1';
+
+		$html = $this->render( 'diluxone_mail_screen_dns' );
+
+		$this->assertStringContainsString( 'healthy.test', $html );
 		$this->assertStringContainsString( 'Revalidate', $html );
 		$this->assertStringContainsString( 'No record', $html );
+		$this->assertStringNotContainsString( 'diluxone-mail-skeleton', $html );
+
+		// And once it has run, the plain screen shows it from the cache
+		// without waiting for anything.
+		unset( $_GET['diluxone_mail_wait'] );
+
+		$html = $this->render( 'diluxone_mail_screen_dns' );
+
+		$this->assertStringContainsString( 'Revalidate', $html );
+		$this->assertStringNotContainsString( 'diluxone-mail-skeleton', $html );
 	}
 
 	public function test_the_deliverability_screen_with_no_domain(): void {

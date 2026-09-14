@@ -26,6 +26,20 @@ if (!function_exists('check_admin_referer')) {
 		return 1;
 	}
 }
+// The JSON handlers end in exit() the same way the redirecting ones do, so
+// what they answered travels in the exception rather than being lost with the
+// process PHPUnit is running in.
+class DiluxOne_Test_Json extends \RuntimeException {
+	public function __construct(public bool $ok, public $data = null, public int $status = 200) { parent::__construct($ok ? 'success' : 'error'); }
+}
+if (!function_exists('check_ajax_referer')) {
+	function check_ajax_referer($action = -1, $q = false, bool $die = true) {
+		if (!empty($GLOBALS['_test_nonce_fails'])) { throw new DiluxOne_Test_Die('nonce'); }
+		return 1;
+	}
+}
+if (!function_exists('wp_send_json_success')) { function wp_send_json_success($data = null, int $status = 200): void { throw new DiluxOne_Test_Json(true, $data, $status); } }
+if (!function_exists('wp_send_json_error')) { function wp_send_json_error($data = null, int $status = 200): void { throw new DiluxOne_Test_Json(false, $data, $status); } }
 if (!function_exists('wp_verify_nonce')) { function wp_verify_nonce($n, $a = -1) { return empty($GLOBALS['_test_nonce_fails']) ? 1 : false; } }
 if (!function_exists('wp_create_nonce')) { function wp_create_nonce($a = -1): string { return 'nonce'; } }
 if (!function_exists('wp_nonce_field')) { function wp_nonce_field($a = -1, $n = '_wpnonce', $r = true, $e = true): string { $h = '<input type="hidden" name="' . $n . '" value="nonce">'; if ($e) echo $h; return $h; } }

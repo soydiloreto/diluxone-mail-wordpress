@@ -14,10 +14,61 @@ defined( 'ABSPATH' ) || exit;
 
 $diluxone_mail_r = $data['report'];
 
-if ( ! is_array( $diluxone_mail_r ) ) :
+if ( ! is_array( $diluxone_mail_r ) && ! $data['pending'] ) :
 	?>
 	<p><?php esc_html_e( 'There is no domain to diagnose. Set a From address or a domain in the settings.', 'diluxone-mail' ); ?></p>
 	<?php
+	diluxone_mail_view( 'admin-dns-options', $data );
+
+	return;
+endif;
+
+/*
+ * Nothing cached yet: the shape of the answer, while the browser goes and
+ * asks for it. It is the shape and not a spinner on purpose — the page you
+ * are about to read is already there, in grey, so the wait is somewhere
+ * rather than nowhere, and the layout does not jump when it arrives.
+ */
+if ( ! is_array( $diluxone_mail_r ) ) :
+	?>
+	<div class="diluxone-mail-skeleton" data-diluxone-mail-diagnose="<?php echo esc_attr( (string) $data['diagnose_nonce'] ); ?>">
+		<p class="diluxone-mail-dns-meta" role="status">
+			<?php
+			printf(
+				/* translators: %s: domain name */
+				esc_html__( 'Reading the DNS of %s. Each SPF include, DKIM selector and DMARC record is a separate lookup, so this takes a few seconds the first time.', 'diluxone-mail' ),
+				'<code>' . esc_html( (string) $data['domain'] ) . '</code>'
+			);
+			?>
+		</p>
+
+		<div class="diluxone-mail-findings" aria-hidden="true">
+			<div class="diluxone-mail-finding diluxone-mail-finding--skeleton">
+				<span class="diluxone-mail-skeleton-bar diluxone-mail-skeleton-bar--label"></span>
+				<span class="diluxone-mail-skeleton-bar diluxone-mail-skeleton-bar--title"></span>
+				<span class="diluxone-mail-skeleton-bar"></span>
+				<span class="diluxone-mail-skeleton-bar diluxone-mail-skeleton-bar--short"></span>
+			</div>
+			<div class="diluxone-mail-finding diluxone-mail-finding--skeleton">
+				<span class="diluxone-mail-skeleton-bar diluxone-mail-skeleton-bar--label"></span>
+				<span class="diluxone-mail-skeleton-bar diluxone-mail-skeleton-bar--title"></span>
+				<span class="diluxone-mail-skeleton-bar"></span>
+			</div>
+			<div class="diluxone-mail-finding diluxone-mail-finding--skeleton">
+				<span class="diluxone-mail-skeleton-bar diluxone-mail-skeleton-bar--label"></span>
+				<span class="diluxone-mail-skeleton-bar diluxone-mail-skeleton-bar--title"></span>
+				<span class="diluxone-mail-skeleton-bar diluxone-mail-skeleton-bar--short"></span>
+			</div>
+		</div>
+
+		<p class="diluxone-mail-skeleton-fallback">
+			<noscript><?php esc_html_e( 'This page needs JavaScript to load the diagnosis in the background.', 'diluxone-mail' ); ?></noscript>
+			<a href="<?php echo esc_url( (string) $data['wait_url'] ); ?>"><?php esc_html_e( 'Run it now and wait for the page instead', 'diluxone-mail' ); ?></a>
+		</p>
+	</div>
+	<?php
+	diluxone_mail_view( 'admin-dns-options', $data );
+
 	return;
 endif;
 
@@ -160,54 +211,4 @@ $diluxone_mail_levels = array(
 <h2>MX</h2>
 <p><?php echo esc_html( array() !== $diluxone_mail_r['mx'] ? implode( ' · ', array_map( 'strval', $diluxone_mail_r['mx'] ) ) : __( 'No MX record.', 'diluxone-mail' ) ); ?></p>
 
-<?php $diluxone_mail_f = $data['fields']; ?>
-
-<details class="diluxone-mail-dns-options">
-	<summary><?php esc_html_e( 'Options of the diagnosis', 'diluxone-mail' ); ?></summary>
-
-	<form method="post" action="<?php echo esc_url( (string) $data['action_url'] ); ?>" class="diluxone-mail-form">
-		<?php wp_nonce_field( 'diluxone_mail_settings' ); ?>
-		<input type="hidden" name="action" value="diluxone_mail_save_settings">
-		<input type="hidden" name="scope" value="site">
-		<input type="hidden" name="tab" value="dns">
-
-		<table class="form-table" role="presentation">
-			<tr>
-				<th scope="row"><label for="diluxone_mail_dns_domain"><?php esc_html_e( 'Domain', 'diluxone-mail' ); ?></label></th>
-				<td>
-					<input type="text" class="regular-text code" id="diluxone_mail_dns_domain" name="diluxone_mail_dns_domain" value="<?php echo esc_attr( (string) $diluxone_mail_f['diluxone_mail_dns_domain']['value'] ); ?>" placeholder="<?php echo esc_attr( diluxone_mail_dns_domain() ); ?>" <?php wp_readonly( $diluxone_mail_f['diluxone_mail_dns_domain']['readonly'] ); ?>>
-					<p class="description"><?php esc_html_e( 'Leave empty to use the From address\'s domain, or the site\'s domain if there is none.', 'diluxone-mail' ); ?></p>
-				</td>
-			</tr>
-			<tr>
-				<th scope="row"><label for="diluxone_mail_dns_selectors"><?php esc_html_e( 'Extra DKIM selectors', 'diluxone-mail' ); ?></label></th>
-				<td>
-					<input type="text" class="regular-text code" id="diluxone_mail_dns_selectors" name="diluxone_mail_dns_selectors" value="<?php echo esc_attr( implode( ', ', array_map( 'strval', (array) $diluxone_mail_f['diluxone_mail_dns_selectors']['value'] ) ) ); ?>" <?php wp_readonly( $diluxone_mail_f['diluxone_mail_dns_selectors']['readonly'] ); ?>>
-					<p class="description"><?php esc_html_e( 'Comma-separated. Selectors cannot be listed over DNS; the diagnosis probes the common ones plus your provider\'s plus these.', 'diluxone-mail' ); ?></p>
-				</td>
-			</tr>
-			<tr>
-				<th scope="row"><label for="diluxone_mail_dns_resolver"><?php esc_html_e( 'Resolver', 'diluxone-mail' ); ?></label></th>
-				<td>
-					<select id="diluxone_mail_dns_resolver" name="diluxone_mail_dns_resolver" <?php disabled( $diluxone_mail_f['diluxone_mail_dns_resolver']['readonly'] ); ?>>
-						<option value="auto" <?php selected( $diluxone_mail_f['diluxone_mail_dns_resolver']['value'], 'auto' ); ?>><?php esc_html_e( 'System, falling back to DNS-over-HTTPS', 'diluxone-mail' ); ?></option>
-						<option value="system" <?php selected( $diluxone_mail_f['diluxone_mail_dns_resolver']['value'], 'system' ); ?>><?php esc_html_e( 'System only (dns_get_record)', 'diluxone-mail' ); ?></option>
-						<option value="doh" <?php selected( $diluxone_mail_f['diluxone_mail_dns_resolver']['value'], 'doh' ); ?>><?php esc_html_e( 'DNS-over-HTTPS only', 'diluxone-mail' ); ?></option>
-					</select>
-					<input type="url" class="regular-text code" name="diluxone_mail_dns_doh_endpoint" value="<?php echo esc_attr( (string) $diluxone_mail_f['diluxone_mail_dns_doh_endpoint']['value'] ); ?>" <?php wp_readonly( $diluxone_mail_f['diluxone_mail_dns_doh_endpoint']['readonly'] ); ?>>
-					<p class="description"><?php esc_html_e( 'Many hosts disable dns_get_record(). The DoH endpoint must answer the JSON format; Cloudflare and Google both do.', 'diluxone-mail' ); ?></p>
-				</td>
-			</tr>
-			<tr>
-				<th scope="row"><label for="diluxone_mail_dns_cache_hours"><?php esc_html_e( 'Cache results for', 'diluxone-mail' ); ?></label></th>
-				<td>
-					<input type="number" min="1" max="168" class="small-text" id="diluxone_mail_dns_cache_hours" name="diluxone_mail_dns_cache_hours" value="<?php echo esc_attr( (string) $diluxone_mail_f['diluxone_mail_dns_cache_hours']['value'] ); ?>" <?php wp_readonly( $diluxone_mail_f['diluxone_mail_dns_cache_hours']['readonly'] ); ?>> <?php esc_html_e( 'hours', 'diluxone-mail' ); ?>
-				</td>
-			</tr>
-		</table>
-
-		<?php if ( $data['editable'] ) : ?>
-			<?php submit_button( __( 'Save options', 'diluxone-mail' ), 'secondary' ); ?>
-		<?php endif; ?>
-	</form>
-</details>
+<?php diluxone_mail_view( 'admin-dns-options', $data ); ?>

@@ -353,6 +353,10 @@ function diluxone_mail_admin_styles( string $hook ): void {
 		DILUXONE_MAIL_PROVIDER_PAGE,
 		DILUXONE_MAIL_SETTINGS,
 		'diluxone-mail-network',
+		// Deliverability has a form of its own, and is also where the
+		// diagnosis is fetched from behind the skeleton. Without the script
+		// there, that skeleton is all anybody ever sees.
+		'diluxone-mail-dns',
 	);
 
 	$here = false;

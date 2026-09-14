@@ -20,6 +20,40 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
+ * A domain's report, only if it is already known.
+ *
+ * Two screens ask this and neither may pay for it. The Overview counts the
+ * findings it already has and says nothing when there are none yet; the
+ * deliverability screen draws the shape of the answer and lets the browser
+ * fetch it.
+ *
+ * The diagnosis walks the SPF tree, probes every selector and asks for DMARC,
+ * and over DNS-over-HTTPS that is seconds, not milliseconds. Nothing on the
+ * page renders while it runs, so the screen answers a click with a white
+ * page. This is what lets it answer with the page instead: the screen asks
+ * for what is known, draws, and the browser goes and gets the rest.
+ *
+ * @return array<string, mixed>|null
+ */
+function diluxone_mail_diagnosis_cached( string $domain ): ?array {
+	$domain = strtolower( trim( $domain ) );
+
+	if ( '' === $domain ) {
+		return null;
+	}
+
+	$cached = get_site_transient( 'diluxone_mail_diagnosis_' . md5( $domain ) );
+
+	if ( ! is_array( $cached ) ) {
+		return null;
+	}
+
+	$cached['cached'] = true;
+
+	return $cached;
+}
+
+/**
  * A domain's report.
  *
  * @param bool $fresh Ignore the cache.

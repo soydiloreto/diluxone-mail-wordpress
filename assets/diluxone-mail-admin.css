@@ -391,3 +391,73 @@ body.diluxone-mail-panel-open {
 	padding: 16px 20px;
 	max-width: none;
 }
+
+/* ── The diagnosis, while it is being fetched ────────────────────────
+   The shape of the answer rather than a spinner: the cards that are
+   about to be there are already there, in grey, so the wait happens
+   where the reading will and the layout does not jump when it lands.
+   The shimmer is what says "working" — a static grey block reads as a
+   page that failed to load. */
+.diluxone-mail-finding--skeleton {
+	border-left-color: #dcdcde;
+}
+
+.diluxone-mail-skeleton-bar {
+	display: block;
+	height: 12px;
+	margin: 8px 0;
+	border-radius: 3px;
+	background: linear-gradient( 90deg, #f0f0f1 25%, #e4e4e7 37%, #f0f0f1 63% );
+	background-size: 400% 100%;
+	animation: diluxone-mail-shimmer 1.4s ease-in-out infinite;
+}
+
+.diluxone-mail-skeleton-bar--label {
+	width: 64px;
+	height: 14px;
+}
+
+.diluxone-mail-skeleton-bar--title {
+	width: 45%;
+	height: 15px;
+}
+
+.diluxone-mail-skeleton-bar--short {
+	width: 70%;
+}
+
+.diluxone-mail-skeleton-fallback {
+	color: #646970;
+	font-size: 12px;
+}
+
+/* Only when the fetch failed. Until then the link is there but quiet:
+   offering "wait instead" in bold while the thing is working is
+   telling somebody their page is broken when it is not. */
+.diluxone-mail-skeleton-fallback a {
+	color: #646970;
+}
+
+.diluxone-mail-skeleton.is-stuck .diluxone-mail-skeleton-bar {
+	animation: none;
+	background: #f0f0f1;
+}
+
+.diluxone-mail-skeleton.is-stuck .diluxone-mail-skeleton-fallback a {
+	color: #d63638;
+	font-weight: 600;
+}
+
+@keyframes diluxone-mail-shimmer {
+	0% { background-position: 100% 50%; }
+	100% { background-position: 0 50%; }
+}
+
+/* Somebody who has asked their system not to animate gets the grey
+   cards without the sweep. The status line above them already says
+   what is happening in words. */
+@media ( prefers-reduced-motion: reduce ) {
+	.diluxone-mail-skeleton-bar {
+		animation: none;
+	}
+}

@@ -247,8 +247,48 @@
 		( start || close || dialog ).focus();
 	}
 
+	/**
+	 * The deliverability diagnosis, fetched after the page is on screen.
+	 *
+	 * The screen renders the shape of the answer and this goes and gets it.
+	 * What comes back is only whether it worked: the report is in the site's
+	 * cache by then, and reloading renders it through the same template that
+	 * has always rendered it. A second renderer here would be a copy of that
+	 * template that drifts from it the first time either one changes.
+	 */
+	function diagnosis() {
+		var skeleton = document.querySelector( '[data-diluxone-mail-diagnose]' );
+
+		if ( ! skeleton || ! window.fetch || ! window.ajaxurl ) {
+			return;
+		}
+
+		var body = new FormData();
+		body.append( 'action', 'diluxone_mail_diagnose' );
+		body.append( '_wpnonce', skeleton.dataset.diluxoneMailDiagnose );
+
+		fetch( window.ajaxurl, { method: 'POST', body: body, credentials: 'same-origin' } )
+			.then( function ( response ) {
+				return response.json();
+			} )
+			.then( function ( result ) {
+				if ( ! result || ! result.success ) {
+					throw new Error( 'diagnosis failed' );
+				}
+
+				window.location.reload();
+			} )
+			.catch( function () {
+				// Whatever went wrong, the fallback link already on the page
+				// does the same job the slow way. Saying so beats a skeleton
+				// that shimmers forever.
+				skeleton.classList.add( 'is-stuck' );
+			} );
+	}
+
 	method();
 	credentials();
 	order();
 	panel();
+	diagnosis();
 }() );

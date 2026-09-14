@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-14T02:32:02+00:00\n"
+"POT-Creation-Date: 2026-09-14T02:47:24+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -53,9 +53,10 @@ msgstr "API"
 msgid "SMTP"
 msgstr "SMTP"
 
-#: includes/admin-connections.php:95 includes/admin-dns.php:42
-#: includes/admin-log.php:62 includes/admin-settings.php:198
-#: includes/admin-settings.php:523 includes/observer.php:300
+#: includes/admin-connections.php:95 includes/admin-dns.php:78
+#: includes/admin-dns.php:103 includes/admin-log.php:62
+#: includes/admin-settings.php:198 includes/admin-settings.php:523
+#: includes/observer.php:300
 msgid "You are not allowed to do this."
 msgstr "No tenés permiso para hacer esto."
 
@@ -103,11 +104,15 @@ msgstr ""
 " así que sólo se usa si ese no acepta un mensaje. Arrastralo arriba de todo "
 "para cambiarlo."
 
-#: includes/admin-dns.php:16 includes/admin.php:84
+#: includes/admin-dns.php:31 includes/admin.php:84
 #: templates/admin-overview.php:60 templates/admin-overview.php:232
 #: templates/admin-overview.php:281
 msgid "Deliverability"
 msgstr "Entregabilidad"
+
+#: includes/admin-dns.php:86
+msgid "There is no domain to diagnose."
+msgstr "No hay dominio para diagnosticar."
 
 #: includes/admin-log.php:27 includes/admin.php:83
 #: templates/admin-overview.php:59 templates/admin-overview.php:212
@@ -127,7 +132,7 @@ msgstr "Ese mensaje ya no está en el historial."
 msgid "Network settings"
 msgstr "Ajustes de la red"
 
-#: includes/admin-overview.php:104 includes/admin.php:80
+#: includes/admin-overview.php:87 includes/admin.php:80
 msgid "Overview"
 msgstr "Resumen"
 
@@ -514,11 +519,11 @@ msgctxt "a provider named after its sender"
 msgid "%1$s — %2$s"
 msgstr "%1$s — %2$s"
 
-#: includes/diagnostics.php:166
+#: includes/diagnostics.php:200
 msgid "There is no SPF record"
 msgstr "No hay registro SPF"
 
-#: includes/diagnostics.php:166
+#: includes/diagnostics.php:200
 msgid ""
 "Receivers have no way to know which servers may send mail for this domain, "
 "and most of them treat that as a bad sign. Publish a TXT record starting "
@@ -528,17 +533,17 @@ msgstr ""
 "por este dominio, y la mayoría lo toma como mala señal. Publicá un registro "
 "TXT que empiece con v=spf1, liste a tu proveedor y termine en -all."
 
-#: includes/diagnostics.php:169
+#: includes/diagnostics.php:203
 msgid "The SPF record is invalid"
 msgstr "El registro SPF es inválido"
 
 #. translators: %d: number of lookups
-#: includes/diagnostics.php:177
+#: includes/diagnostics.php:211
 #, php-format
 msgid "SPF uses %d DNS lookups; the limit is 10"
 msgstr "El SPF gasta %d lookups de DNS; el límite es 10"
 
-#: includes/diagnostics.php:178
+#: includes/diagnostics.php:212
 msgid ""
 "Going over the limit does not degrade SPF gracefully: receivers return a "
 "permanent error and the whole record stops counting, as if it did not exist."
@@ -551,12 +556,12 @@ msgstr ""
 " el proveedor documente direcciones estables."
 
 #. translators: %d: number of lookups
-#: includes/diagnostics.php:185 includes/diagnostics.php:193
+#: includes/diagnostics.php:219 includes/diagnostics.php:227
 #, php-format
 msgid "SPF uses %d of the 10 allowed DNS lookups"
 msgstr "El SPF gasta %d de los 10 lookups de DNS permitidos"
 
-#: includes/diagnostics.php:186
+#: includes/diagnostics.php:220
 msgid ""
 "One more provider and it will break. Look at the tree below for includes you"
 " can remove."
@@ -564,15 +569,15 @@ msgstr ""
 "Un proveedor más y se rompe. Mirá en el árbol de abajo qué includes podés "
 "sacar."
 
-#: includes/diagnostics.php:194
+#: includes/diagnostics.php:228
 msgid "Within the limit."
 msgstr "Dentro del límite."
 
-#: includes/diagnostics.php:199
+#: includes/diagnostics.php:233
 msgid "SPF ends with +all"
 msgstr "El SPF termina en +all"
 
-#: includes/diagnostics.php:199
+#: includes/diagnostics.php:233
 msgid ""
 "That authorises every server on the internet to send as this domain. It is "
 "the same as having no SPF, and worse in the eyes of most receivers. Change "
@@ -582,11 +587,11 @@ msgstr ""
 " lo mismo que no tener SPF, y peor a los ojos de la mayoría de los "
 "receptores. Cambialo a -all."
 
-#: includes/diagnostics.php:201
+#: includes/diagnostics.php:235
 msgid "SPF does not end with -all or ~all"
 msgstr "El SPF no termina en -all ni en ~all"
 
-#: includes/diagnostics.php:201
+#: includes/diagnostics.php:235
 msgid ""
 "Without a failing qualifier at the end, mail from unlisted servers is "
 "neither accepted nor rejected — receivers treat the record as saying "
@@ -599,13 +604,13 @@ msgstr ""
 "legítimos están listados, o ~all mientras lo verificás."
 
 #. translators: %s: provider name
-#: includes/diagnostics.php:218
+#: includes/diagnostics.php:252
 #, php-format
 msgid "%s is not authorised in the SPF record"
 msgstr "%s no está autorizado en el registro SPF"
 
 #. translators: 1: provider name, 2: include to add
-#: includes/diagnostics.php:221
+#: includes/diagnostics.php:255
 #, php-format
 msgid ""
 "This site sends through %1$s, but the SPF record does not include it, so "
@@ -617,13 +622,13 @@ msgstr ""
 "Agregá include:%2$s al registro."
 
 #. translators: %s: provider name
-#: includes/diagnostics.php:235
+#: includes/diagnostics.php:269
 #, php-format
 msgid "SPF authorises %s, which is not the configured transport"
 msgstr "El SPF autoriza a %s, que no es el transporte configurado"
 
 #. translators: %s: include
-#: includes/diagnostics.php:238
+#: includes/diagnostics.php:272
 #, php-format
 msgid ""
 "If nothing else on this domain sends through it any more, remove include:%s "
@@ -634,12 +639,12 @@ msgstr ""
 "10 lookups y deja que ese proveedor mande como vos. Si otro sistema todavía "
 "lo usa, dejalo."
 
-#: includes/diagnostics.php:253
+#: includes/diagnostics.php:287
 msgid "No DKIM selector was found"
 msgstr "No se encontró ningún selector DKIM"
 
 #. translators: %d: number of selectors probed
-#: includes/diagnostics.php:256
+#: includes/diagnostics.php:290
 #, php-format
 msgid ""
 "None of the %d selectors probed exists on this domain. That does not prove "
@@ -655,12 +660,12 @@ msgstr ""
 "proveedor en los ajustes y revalidá."
 
 #. translators: %s: selector
-#: includes/diagnostics.php:267
+#: includes/diagnostics.php:301
 #, php-format
 msgid "Selector %s is revoked"
 msgstr "El selector %s está revocado"
 
-#: includes/diagnostics.php:268
+#: includes/diagnostics.php:302
 msgid ""
 "It exists but carries an empty key, which is the standard way of saying "
 "\"this key no longer signs anything\". If your provider uses it, mail is "
@@ -671,12 +676,12 @@ msgstr ""
 "saliendo con una firma que nadie puede verificar."
 
 #. translators: %s: selector
-#: includes/diagnostics.php:275
+#: includes/diagnostics.php:309
 #, php-format
 msgid "Selector %s uses a 1024-bit key"
 msgstr "El selector %s usa una clave de 1024 bits"
 
-#: includes/diagnostics.php:276
+#: includes/diagnostics.php:310
 msgid ""
 "It works, but 1024 bits is considered weak and some receivers score it down."
 " Most providers can rotate to 2048 from their dashboard."
@@ -685,34 +690,34 @@ msgstr ""
 "penalizan. La mayoría de los proveedores puede rotar a 2048 desde su panel."
 
 #. translators: 1: selector, 2: key size
-#: includes/diagnostics.php:283
+#: includes/diagnostics.php:317
 #, php-format
 msgid "Selector %1$s is published (%2$s)"
 msgstr "El selector %1$s está publicado (%2$s)"
 
 #. translators: 1: selector, 2: key size
-#: includes/diagnostics.php:283
+#: includes/diagnostics.php:317
 msgid "key size unknown"
 msgstr "tamaño de clave desconocido"
 
 #. translators: %s: CNAME target
-#: includes/diagnostics.php:286
+#: includes/diagnostics.php:320
 #, php-format
 msgid "Delegated by CNAME to %s, so the provider rotates the key for you."
 msgstr "Delegado por CNAME a %s, así que el proveedor rota la clave por vos."
 
-#: includes/diagnostics.php:287
+#: includes/diagnostics.php:321
 msgid "Published directly on the domain."
 msgstr "Publicado directamente en el dominio."
 
 #. translators: %s: provider name
-#: includes/diagnostics.php:307
+#: includes/diagnostics.php:341
 #, php-format
 msgid "No DKIM record for %s"
 msgstr "No hay registro DKIM para %s"
 
 #. translators: 1: provider name, 2: selectors
-#: includes/diagnostics.php:310
+#: includes/diagnostics.php:344
 #, php-format
 msgid ""
 "%1$s signs mail with the selector(s) %2$s, and none of them is published on "
@@ -725,11 +730,11 @@ msgstr ""
 "tuyo, y eso no cuenta para la alineación de DMARC. Copiá los registros DKIM "
 "del panel del proveedor a tu DNS."
 
-#: includes/diagnostics.php:319
+#: includes/diagnostics.php:353
 msgid "There is no DMARC record"
 msgstr "No hay registro DMARC"
 
-#: includes/diagnostics.php:319
+#: includes/diagnostics.php:353
 msgid ""
 "Without DMARC, receivers decide on their own what to do when SPF and DKIM do"
 " not add up, and you get no reports about who is sending as your domain. "
@@ -741,15 +746,15 @@ msgstr ""
 "dominio. Empezá con v=DMARC1; p=none; rua=mailto:vos@tudominio para recibir "
 "reportes sin afectar la entrega, y después ajustalo."
 
-#: includes/diagnostics.php:322
+#: includes/diagnostics.php:356
 msgid "The DMARC record is invalid"
 msgstr "El registro DMARC es inválido"
 
-#: includes/diagnostics.php:328
+#: includes/diagnostics.php:362
 msgid "DMARC policy is p=none: monitoring only"
 msgstr "La política DMARC es p=none: sólo monitoreo"
 
-#: includes/diagnostics.php:328
+#: includes/diagnostics.php:362
 msgid ""
 "Receivers report but do nothing. It is the right first step; once the "
 "reports show only legitimate senders, move to p=quarantine."
@@ -757,22 +762,22 @@ msgstr ""
 "Los receptores reportan pero no hacen nada. Es el primer paso correcto; "
 "cuando los reportes muestren sólo remitentes legítimos, pasá a p=quarantine."
 
-#: includes/diagnostics.php:330
+#: includes/diagnostics.php:364
 msgid "rejected"
 msgstr "rechazado"
 
-#: includes/diagnostics.php:330
+#: includes/diagnostics.php:364
 msgid "sent to spam"
 msgstr "mandado a spam"
 
 #. translators: %s: policy
-#: includes/diagnostics.php:337
+#: includes/diagnostics.php:371
 #, php-format
 msgid "DMARC policy is p=%s: alignment is required"
 msgstr "La política DMARC es p=%s: hace falta alineación"
 
 #. translators: %s: what happens to the mail
-#: includes/diagnostics.php:340
+#: includes/diagnostics.php:374
 #, php-format
 msgid ""
 "Mail that fails both SPF and DKIM alignment will be %s. With no transport "
@@ -783,13 +788,13 @@ msgstr ""
 "alinea."
 
 #. translators: %s: policy
-#: includes/diagnostics.php:349
+#: includes/diagnostics.php:383
 #, php-format
 msgid "DMARC policy is p=%s and mail aligns through DKIM"
 msgstr "La política DMARC es p=%s y el correo alinea por DKIM"
 
 #. translators: %s: provider name
-#: includes/diagnostics.php:352
+#: includes/diagnostics.php:386
 #, php-format
 msgid ""
 "SPF alignment usually fails with a third-party provider — the bounce address"
@@ -801,13 +806,13 @@ msgstr ""
 "dominio, y con un mecanismo alineado alcanza."
 
 #. translators: %s: policy
-#: includes/diagnostics.php:361
+#: includes/diagnostics.php:395
 #, php-format
 msgid "DMARC policy is p=%s but nothing aligns"
 msgstr "La política DMARC es p=%s pero nada alinea"
 
 #. translators: 1: provider name, 2: what happens to the mail
-#: includes/diagnostics.php:364
+#: includes/diagnostics.php:398
 #, php-format
 msgid ""
 "With %1$s as the transport, SPF is not aligned (the bounce address belongs "
@@ -821,12 +826,12 @@ msgstr ""
 "arreglo— o bajá la política a p=none hasta que lo hagas."
 
 #. translators: %d: percentage
-#: includes/diagnostics.php:377
+#: includes/diagnostics.php:411
 #, php-format
 msgid "The policy applies to %d%% of mail"
 msgstr "La política se aplica al %d%% del correo"
 
-#: includes/diagnostics.php:378
+#: includes/diagnostics.php:412
 msgid ""
 "pct= below 100 means receivers apply the policy to a sample and let the rest"
 " through. Fine while ramping up; set it to 100 when you are done."
@@ -835,11 +840,11 @@ msgstr ""
 "una muestra y dejan pasar el resto. Está bien mientras se despliega; ponelo "
 "en 100 cuando termines."
 
-#: includes/diagnostics.php:383
+#: includes/diagnostics.php:417
 msgid "DMARC has no report address (rua)"
 msgstr "El DMARC no tiene dirección de reportes (rua)"
 
-#: includes/diagnostics.php:383
+#: includes/diagnostics.php:417
 msgid ""
 "You will never learn who is sending as your domain or what fails. Add "
 "rua=mailto:an-address-you-read."
@@ -848,13 +853,13 @@ msgstr ""
 " rua=mailto:una-dirección-que-leas."
 
 #. translators: %s: address
-#: includes/diagnostics.php:392
+#: includes/diagnostics.php:426
 #, php-format
 msgid "Reports to %s are being discarded"
 msgstr "Los reportes a %s se están descartando"
 
 #. translators: 1: report domain, 2: name of the missing record
-#: includes/diagnostics.php:395
+#: includes/diagnostics.php:429
 #, php-format
 msgid ""
 "That address is on another domain (%1$s), and the standard requires that "
@@ -867,11 +872,11 @@ msgstr ""
 " %2$s con v=DMARC1. Hasta que se publique, los receptores tiran los "
 "reportes."
 
-#: includes/diagnostics.php:406
+#: includes/diagnostics.php:440
 msgid "The domain has no MX record"
 msgstr "El dominio no tiene registro MX"
 
-#: includes/diagnostics.php:406
+#: includes/diagnostics.php:440
 msgid ""
 "Sending still works, but nothing can be received at this domain: replies and"
 " bounces to your From address go nowhere, and some receivers distrust "
@@ -882,26 +887,26 @@ msgstr ""
 "y algunos receptores desconfían de quien no puede recibir."
 
 #. translators: 1: host, 2: target
-#: includes/diagnostics.php:414
+#: includes/diagnostics.php:448
 #, php-format
 msgid "Return-path %1$s points to %2$s"
 msgstr "El return-path %1$s apunta a %2$s"
 
 #. translators: 1: host, 2: target
-#: includes/diagnostics.php:414
+#: includes/diagnostics.php:448
 msgid "The provider's custom bounce domain is set up, so SPF can align too."
 msgstr ""
 "El dominio de rebote propio del proveedor está configurado, así que el SPF "
 "también puede alinear."
 
 #. translators: %s: host
-#: includes/diagnostics.php:416
+#: includes/diagnostics.php:450
 #, php-format
 msgid "Return-path %s does not resolve"
 msgstr "El return-path %s no resuelve"
 
 #. translators: %s: host
-#: includes/diagnostics.php:416
+#: includes/diagnostics.php:450
 msgid ""
 "The provider offers a custom bounce domain that makes SPF align with your "
 "domain. It is optional — DKIM alignment is enough for DMARC — but publishing"
@@ -912,13 +917,13 @@ msgstr ""
 "publicar el CNAME que te da el proveedor mejora la reputación."
 
 #. translators: %s: provider name
-#: includes/diagnostics.php:475
+#: includes/diagnostics.php:509
 #, php-format
 msgid "%s does not look set up for this domain"
 msgstr "%s no parece estar configurado para este dominio"
 
 #. translators: 1: provider name, 2: the domain
-#: includes/diagnostics.php:478
+#: includes/diagnostics.php:512
 #, php-format
 msgid ""
 "Neither %1$s's SPF include nor any of its DKIM selectors is published for "
@@ -1003,7 +1008,7 @@ msgstr "Enviado por"
 msgid "Site"
 msgstr "Sitio"
 
-#: includes/log-list-table.php:135 templates/admin-dns.php:118
+#: includes/log-list-table.php:135 templates/admin-dns.php:169
 msgid "Details"
 msgstr "Detalle"
 
@@ -1289,6 +1294,71 @@ msgstr ""
 "wp_mail() devolvió false sin decir por qué. Puede que otro plugin haya "
 "interceptado el mensaje."
 
+#: templates/admin-dns-options.php:22
+msgid "Options of the diagnosis"
+msgstr "Opciones del diagnóstico"
+
+#: templates/admin-dns-options.php:32 templates/admin-dns.php:131
+#: templates/settings-sender.php:39
+msgid "Domain"
+msgstr "Dominio"
+
+#: templates/admin-dns-options.php:35
+msgid ""
+"Leave empty to use the From address's domain, or the site's domain if there "
+"is none."
+msgstr ""
+"Dejalo vacío para usar el dominio de la dirección de remitente, o el del "
+"sitio si no hay."
+
+#: templates/admin-dns-options.php:39
+msgid "Extra DKIM selectors"
+msgstr "Selectores DKIM extra"
+
+#: templates/admin-dns-options.php:42
+msgid ""
+"Comma-separated. Selectors cannot be listed over DNS; the diagnosis probes "
+"the common ones plus your provider's plus these."
+msgstr ""
+"Separados por coma. Los selectores no se pueden listar por DNS; el "
+"diagnóstico sondea los comunes, los de tu proveedor y éstos."
+
+#: templates/admin-dns-options.php:46
+msgid "Resolver"
+msgstr "Resolver"
+
+#: templates/admin-dns-options.php:49
+msgid "System, falling back to DNS-over-HTTPS"
+msgstr "El del sistema, con caída a DNS-over-HTTPS"
+
+#: templates/admin-dns-options.php:50
+msgid "System only (dns_get_record)"
+msgstr "Sólo el del sistema (dns_get_record)"
+
+#: templates/admin-dns-options.php:51
+msgid "DNS-over-HTTPS only"
+msgstr "Sólo DNS-over-HTTPS"
+
+#: templates/admin-dns-options.php:54
+msgid ""
+"Many hosts disable dns_get_record(). The DoH endpoint must answer the JSON "
+"format; Cloudflare and Google both do."
+msgstr ""
+"Muchos hostings deshabilitan dns_get_record(). El endpoint de DoH tiene que "
+"contestar en formato JSON; Cloudflare y Google lo hacen."
+
+#: templates/admin-dns-options.php:58
+msgid "Cache results for"
+msgstr "Cachear resultados durante"
+
+#: templates/admin-dns-options.php:60
+msgid "hours"
+msgstr "horas"
+
+#: templates/admin-dns-options.php:66
+msgid "Save options"
+msgstr "Guardar opciones"
+
 #: templates/admin-dns.php:19
 msgid ""
 "There is no domain to diagnose. Set a From address or a domain in the "
@@ -1297,190 +1367,144 @@ msgstr ""
 "No hay dominio que diagnosticar. Configurá una dirección de remitente o un "
 "dominio en los ajustes."
 
-#: templates/admin-dns.php:25
+#. translators: %s: domain name
+#: templates/admin-dns.php:39
+#, php-format
+msgid ""
+"Reading the DNS of %s. Each SPF include, DKIM selector and DMARC record is a"
+" separate lookup, so this takes a few seconds the first time."
+msgstr ""
+"Leyendo el DNS de %s. Cada include de SPF, cada selector DKIM y el registro "
+"DMARC son consultas separadas, así que la primera vez tarda unos segundos."
+
+#: templates/admin-dns.php:65
+msgid "This page needs JavaScript to load the diagnosis in the background."
+msgstr ""
+"Esta página necesita JavaScript para cargar el diagnóstico en segundo plano."
+
+#: templates/admin-dns.php:66
+msgid "Run it now and wait for the page instead"
+msgstr "Ejecutarlo ahora y esperar la página"
+
+#: templates/admin-dns.php:76
 msgid "Problem"
 msgstr "Problema"
 
-#: templates/admin-dns.php:26
+#: templates/admin-dns.php:77
 msgid "Warning"
 msgstr "Atención"
 
-#: templates/admin-dns.php:27
+#: templates/admin-dns.php:78
 msgid "Note"
 msgstr "Nota"
 
-#: templates/admin-dns.php:28
+#: templates/admin-dns.php:79
 msgid "OK"
 msgstr "OK"
 
 #. translators: 1: domain, 2: how long ago, 3: resolver
-#: templates/admin-dns.php:35
+#: templates/admin-dns.php:86
 #, php-format
 msgid "Domain %1$s, checked %2$s ago via %3$s."
 msgstr "Dominio %1$s, consultado hace %2$s vía %3$s."
 
 #. translators: %s: provider name
-#: templates/admin-dns.php:45
+#: templates/admin-dns.php:96
 #, php-format
 msgid "Configured transport: %s."
 msgstr "Transporte configurado: %s."
 
-#: templates/admin-dns.php:50
+#: templates/admin-dns.php:101
 msgid "No transport configured here, so provider-specific checks are skipped."
 msgstr ""
 "No hay transporte configurado acá, así que las verificaciones propias del "
 "proveedor se saltan."
 
-#: templates/admin-dns.php:52
+#: templates/admin-dns.php:103
 msgid "Revalidate"
 msgstr "Revalidar"
 
-#: templates/admin-dns.php:67 templates/admin-dns.php:144
+#: templates/admin-dns.php:118 templates/admin-dns.php:195
 msgid "No record."
 msgstr "Sin registro."
 
 #. translators: 1: lookups, 2: limit
-#: templates/admin-dns.php:73
+#: templates/admin-dns.php:124
 #, php-format
 msgid "%1$d of %2$d DNS lookups."
 msgstr "%1$d de %2$d lookups de DNS."
 
-#: templates/admin-dns.php:80 templates/admin-dns.php:176
-#: templates/settings-sender.php:39
-msgid "Domain"
-msgstr "Dominio"
-
-#: templates/admin-dns.php:80
+#: templates/admin-dns.php:131
 msgid "Record"
 msgstr "Registro"
 
-#: templates/admin-dns.php:80
+#: templates/admin-dns.php:131
 msgid "Lookups"
 msgstr "Lookups"
 
-#: templates/admin-dns.php:97
+#: templates/admin-dns.php:148
 msgid "with children"
 msgstr "con los hijos"
 
-#: templates/admin-dns.php:104
+#: templates/admin-dns.php:155
 msgid "Senders declared:"
 msgstr "Remitentes declarados:"
 
-#: templates/admin-dns.php:110
+#: templates/admin-dns.php:161
 msgid "configured transport"
 msgstr "transporte configurado"
 
-#: templates/admin-dns.php:118
+#: templates/admin-dns.php:169
 msgid "Selector"
 msgstr "Selector"
 
-#: templates/admin-dns.php:118
+#: templates/admin-dns.php:169
 msgid "Found"
 msgstr "Encontrado"
 
-#: templates/admin-dns.php:134
+#: templates/admin-dns.php:185
 msgid "revoked"
 msgstr "revocado"
 
-#: templates/admin-dns.php:149
+#: templates/admin-dns.php:200
 msgid "Policy"
 msgstr "Política"
 
-#: templates/admin-dns.php:149
+#: templates/admin-dns.php:200
 msgid "subdomains"
 msgstr "subdominios"
 
-#: templates/admin-dns.php:150
+#: templates/admin-dns.php:201
 msgid "Alignment"
 msgstr "Alineación"
 
-#: templates/admin-dns.php:150
+#: templates/admin-dns.php:201
 msgid "strict"
 msgstr "estricta"
 
-#: templates/admin-dns.php:150
+#: templates/admin-dns.php:201
 msgid "relaxed"
 msgstr "relajada"
 
-#: templates/admin-dns.php:151
+#: templates/admin-dns.php:202
 msgid "Aggregate reports (rua)"
 msgstr "Reportes agregados (rua)"
 
-#: templates/admin-dns.php:152
+#: templates/admin-dns.php:203
 msgid "Forensic reports (ruf)"
 msgstr "Reportes forenses (ruf)"
 
-#: templates/admin-dns.php:154
+#: templates/admin-dns.php:205
 msgid "External report authorisation"
 msgstr "Autorización de reportes externos"
 
-#: templates/admin-dns.php:154
+#: templates/admin-dns.php:205
 msgid "missing"
 msgstr "falta"
 
-#: templates/admin-dns.php:161
+#: templates/admin-dns.php:212
 msgid "No MX record."
 msgstr "Sin registro MX."
-
-#: templates/admin-dns.php:166
-msgid "Options of the diagnosis"
-msgstr "Opciones del diagnóstico"
-
-#: templates/admin-dns.php:179
-msgid ""
-"Leave empty to use the From address's domain, or the site's domain if there "
-"is none."
-msgstr ""
-"Dejalo vacío para usar el dominio de la dirección de remitente, o el del "
-"sitio si no hay."
-
-#: templates/admin-dns.php:183
-msgid "Extra DKIM selectors"
-msgstr "Selectores DKIM extra"
-
-#: templates/admin-dns.php:186
-msgid ""
-"Comma-separated. Selectors cannot be listed over DNS; the diagnosis probes "
-"the common ones plus your provider's plus these."
-msgstr ""
-"Separados por coma. Los selectores no se pueden listar por DNS; el "
-"diagnóstico sondea los comunes, los de tu proveedor y éstos."
-
-#: templates/admin-dns.php:190
-msgid "Resolver"
-msgstr "Resolver"
-
-#: templates/admin-dns.php:193
-msgid "System, falling back to DNS-over-HTTPS"
-msgstr "El del sistema, con caída a DNS-over-HTTPS"
-
-#: templates/admin-dns.php:194
-msgid "System only (dns_get_record)"
-msgstr "Sólo el del sistema (dns_get_record)"
-
-#: templates/admin-dns.php:195
-msgid "DNS-over-HTTPS only"
-msgstr "Sólo DNS-over-HTTPS"
-
-#: templates/admin-dns.php:198
-msgid ""
-"Many hosts disable dns_get_record(). The DoH endpoint must answer the JSON "
-"format; Cloudflare and Google both do."
-msgstr ""
-"Muchos hostings deshabilitan dns_get_record(). El endpoint de DoH tiene que "
-"contestar en formato JSON; Cloudflare y Google lo hacen."
-
-#: templates/admin-dns.php:202
-msgid "Cache results for"
-msgstr "Cachear resultados durante"
-
-#: templates/admin-dns.php:204
-msgid "hours"
-msgstr "horas"
-
-#: templates/admin-dns.php:210
-msgid "Save options"
-msgstr "Guardar opciones"
 
 #: templates/admin-log-detail.php:14
 msgid "Back to the log"

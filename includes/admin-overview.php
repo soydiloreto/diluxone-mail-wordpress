@@ -17,23 +17,6 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The diagnosis, but only if it is already in the cache.
- *
- * @return array<string, mixed>|null
- */
-function diluxone_mail_diagnosis_cached( string $domain ): ?array {
-	$domain = strtolower( trim( $domain ) );
-
-	if ( '' === $domain ) {
-		return null;
-	}
-
-	$cached = get_site_transient( 'diluxone_mail_diagnosis_' . md5( $domain ) );
-
-	return is_array( $cached ) ? $cached : null;
-}
-
-/**
  * How many findings of each level the cached diagnosis holds.
  *
  * @param array<string, mixed>|null $report
