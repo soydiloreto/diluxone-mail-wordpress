@@ -49,11 +49,188 @@ class ApiTest extends AdminTestCase {
 		);
 	}
 
+	/** A message with one of everything, for the shape tests. */
+	private function mensaje(): array {
+		return array(
+			'from'      => 'hello@x.test',
+			'from_name' => 'X',
+			'to'        => array( 'ana@x.test' ),
+			'cc'        => array( 'copia@x.test' ),
+			'bcc'       => array( 'oculta@x.test' ),
+			'reply_to'  => 'respuestas@x.test',
+			'subject'   => 'Hola',
+			'body'      => '<p>hola</p>',
+			'html'      => true,
+			'headers'   => array( 'X-Origen' => 'tienda' ),
+			'files'     => array(
+				array(
+					'name'    => 'a.pdf',
+					'type'    => 'application/pdf',
+					'content' => 'YQ==',
+				),
+			),
+		);
+	}
+
+	public function test_every_provider_is_handed_the_shape_it_asks_for(): void {
+		$m = $this->mensaje();
+
+		$sendgrid = \diluxone_mail_api_body_sendgrid( $m );
+		$this->assertSame( array( array( 'email' => 'ana@x.test' ) ), $sendgrid['personalizations'][0]['to'] );
+		$this->assertSame( array( array( 'email' => 'oculta@x.test' ) ), $sendgrid['personalizations'][0]['bcc'] );
+		$this->assertSame( 'text/html', $sendgrid['content'][0]['type'] );
+		$this->assertSame( 'respuestas@x.test', $sendgrid['reply_to']['email'] );
+		$this->assertSame( 'a.pdf', $sendgrid['attachments'][0]['filename'] );
+
+		$postmark = \diluxone_mail_api_body_postmark( $m );
+		$this->assertSame( 'X <hello@x.test>', $postmark['From'] );
+		$this->assertSame( 'ana@x.test', $postmark['To'] );
+		$this->assertSame( 'oculta@x.test', $postmark['Bcc'] );
+		$this->assertSame( '<p>hola</p>', $postmark['HtmlBody'] );
+		$this->assertArrayNotHasKey( 'TextBody', $postmark );
+		// A server can have several streams and a send without one is refused.
+		$this->assertSame( 'outbound', $postmark['MessageStream'] );
+		$this->assertSame( array( 'Name' => 'X-Origen', 'Value' => 'tienda' ), $postmark['Headers'][0] );
+
+		$brevo = \diluxone_mail_api_body_brevo( $m );
+		$this->assertSame( array( 'email' => 'hello@x.test', 'name' => 'X' ), $brevo['sender'] );
+		$this->assertSame( '<p>hola</p>', $brevo['htmlContent'] );
+		$this->assertSame( 'respuestas@x.test', $brevo['replyTo']['email'] );
+		$this->assertSame( 'a.pdf', $brevo['attachment'][0]['name'] );
+
+		$resend = \diluxone_mail_api_body_resend( $m );
+		$this->assertSame( 'X <hello@x.test>', $resend['from'] );
+		$this->assertSame( array( 'ana@x.test' ), $resend['to'] );
+		$this->assertSame( 'respuestas@x.test', $resend['reply_to'] );
+
+		$mailjet = \diluxone_mail_api_body_mailjet( $m );
+		$this->assertCount( 1, $mailjet['Messages'] );
+		$this->assertSame( array( 'Email' => 'hello@x.test', 'Name' => 'X' ), $mailjet['Messages'][0]['From'] );
+		$this->assertSame( '<p>hola</p>', $mailjet['Messages'][0]['HTMLPart'] );
+		$this->assertSame( 'a.pdf', $mailjet['Messages'][0]['Attachments'][0]['Filename'] );
+	}
+
+	public function test_a_message_with_nothing_extra_carries_nothing_extra(): void {
+		$m = array_merge(
+			$this->mensaje(),
+			array(
+				'cc'        => array(),
+				'bcc'       => array(),
+				'reply_to'  => '',
+				'headers'   => array(),
+				'files'     => array(),
+				'from_name' => '',
+				'html'      => false,
+			)
+		);
+
+		// An empty list is not the same as none, and several of these providers
+		// refuse a key whose value is an empty array.
+		foreach ( array( 'sendgrid', 'brevo', 'resend' ) as $proveedor ) {
+			$body = call_user_func( 'diluxone_mail_api_body_' . $proveedor, $m );
+
+			$this->assertArrayNotHasKey( 'cc', $body, $proveedor );
+			$this->assertArrayNotHasKey( 'bcc', $body, $proveedor );
+		}
+
+		$this->assertArrayNotHasKey( 'Cc', \diluxone_mail_api_body_postmark( $m ) );
+		$this->assertArrayNotHasKey( 'Cc', \diluxone_mail_api_body_mailjet( $m )['Messages'][0] );
+		// And the sender is just the address when nobody named it.
+		$this->assertSame( 'hello@x.test', \diluxone_mail_api_body_resend( $m )['from'] );
+		$this->assertSame( 'hello@x.test', \diluxone_mail_api_body_postmark( $m )['From'] );
+	}
+
+	public function test_the_complaint_is_found_whichever_way_it_is_spelled(): void {
+		// One shape per provider, all of them a sentence under a key whose name
+		// is a matter of taste.
+		$this->assertSame( 'Does not contain a valid address.', \diluxone_mail_api_error_common( array( 'errors' => array( array( 'message' => 'Does not contain a valid address.' ) ) ), 'crudo' ) );
+		$this->assertStringContainsString( 'sender signature', \diluxone_mail_api_error_common( array( 'ErrorCode' => 300, 'Message' => 'No sender signature found.' ), 'crudo' ) );
+		$this->assertSame( 'Key not found', \diluxone_mail_api_error_common( array( 'code' => 'unauthorized', 'message' => 'Key not found' ), 'crudo' ) );
+		$this->assertSame( 'Domain is not verified.', \diluxone_mail_api_error_common( array( 'statusCode' => 403, 'name' => 'validation_error', 'message' => 'Domain is not verified.' ), 'crudo' ) );
+		$this->assertSame( 'Invalid email', \diluxone_mail_api_error_common( array( 'Messages' => array( array( 'Errors' => array( array( 'ErrorMessage' => 'Invalid email' ) ) ) ) ), 'crudo' ) );
+
+		// Nothing it recognises: the body, which is worse to read and better
+		// than silence.
+		$this->assertSame( 'crudo', \diluxone_mail_api_error_common( array( 'algo' => array( 'raro' => true ) ), 'crudo' ) );
+	}
+
+	public function test_a_provider_with_two_credentials_takes_them_as_one(): void {
+		$request = \diluxone_mail_api_request( 'mailjet', $this->mensaje(), 'clave:secreto' );
+
+		$this->assertSame( 'https://api.mailjet.com/v3.1/send', $request['url'] );
+		$this->assertSame( 'Basic ' . base64_encode( 'clave:secreto' ), $request['args']['headers']['Authorization'] );
+	}
+
+	public function test_resend_says_which_domains_are_finished(): void {
+		$GLOBALS['_test_wp_remote_get'] = array(
+			'response' => array( 'code' => 200 ),
+			'body'     => (string) wp_json_encode(
+				array(
+					'data' => array(
+						array( 'name' => 'listo.test', 'status' => 'verified' ),
+						array( 'name' => 'a-medias.test', 'status' => 'pending' ),
+					),
+				)
+			),
+		);
+
+		$listed = \diluxone_mail_api_domains_resend( 'tok' );
+
+		$this->assertTrue( $listed['ok'] );
+		$this->assertTrue( $listed['domains'][0]['usable'] );
+		$this->assertFalse( $listed['domains'][1]['usable'] );
+		$this->assertStringContainsString( 'pending', $listed['domains'][1]['note'] );
+	}
+
 	public function test_only_some_providers_have_an_api(): void {
-		$this->assertTrue( \diluxone_mail_provider_has_api( 'mailtrap_sending' ) );
-		$this->assertFalse( \diluxone_mail_provider_has_api( 'ses' ) );
-		$this->assertFalse( \diluxone_mail_provider_has_api( 'custom' ) );
+		foreach ( array( 'mailtrap_sending', 'sendgrid', 'postmark', 'brevo', 'resend', 'mailjet' ) as $con ) {
+			$this->assertTrue( \diluxone_mail_provider_has_api( $con ), $con );
+		}
+
+		// The ones that sign every request or need a consent screen are a
+		// different kind of work and stay on SMTP.
+		foreach ( array( 'ses', 'azure_acs', 'm365', 'google', 'custom', 'mailpit' ) as $sin ) {
+			$this->assertFalse( \diluxone_mail_provider_has_api( $sin ), $sin );
+		}
+
 		$this->assertSame( array(), \diluxone_mail_api_provider( 'ses' ) );
+	}
+
+	public function test_every_api_provider_is_described_completely(): void {
+		foreach ( \diluxone_mail_api_providers() as $slug => $api ) {
+			// A provider is only reachable if every part of the description is
+			// there: half of one is a fatal at send time, on somebody's site.
+			foreach ( array( 'send_url', 'auth', 'build', 'error', 'ok_status', 'key_label', 'key_hint', 'docs' ) as $parte ) {
+				$this->assertArrayHasKey( $parte, $api, $slug . '/' . $parte );
+			}
+
+			$this->assertTrue( is_callable( $api['build'] ), $slug );
+			$this->assertTrue( is_callable( $api['error'] ), $slug );
+			$this->assertStringStartsWith( 'https://', (string) $api['send_url'], $slug );
+			// And it is a provider the SMTP list knows, or the first step
+			// offers something the second one cannot set up.
+			$this->assertArrayHasKey( $slug, \diluxone_mail_providers(), $slug );
+		}
+	}
+
+	public function test_every_api_provider_builds_a_request_that_carries_the_message(): void {
+		foreach ( array_keys( \diluxone_mail_api_providers() ) as $slug ) {
+			$request = \diluxone_mail_api_request( $slug, $this->mensaje(), 'clave:secreto' );
+
+			$this->assertStringStartsWith( 'https://', $request['url'], $slug );
+			$this->assertSame( 'application/json', $request['args']['headers']['Content-Type'], $slug );
+			// However it authenticates, the credential is in the request —
+			// base64 for the one that speaks HTTP Basic, plain for the rest.
+			$cabeceras = (string) wp_json_encode( $request['args']['headers'] );
+
+			$this->assertTrue(
+				false !== strpos( $cabeceras, 'clave' ) || false !== strpos( $cabeceras, base64_encode( 'clave:secreto' ) ),
+				$slug
+			);
+			// And so is the message.
+			$this->assertStringContainsString( 'ana@x.test', $request['args']['body'], $slug );
+			$this->assertStringContainsString( 'Hola', $request['args']['body'], $slug );
+		}
 	}
 
 	public function test_it_only_sends_over_the_api_when_everything_lines_up(): void {

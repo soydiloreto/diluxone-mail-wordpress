@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-14T01:29:17+00:00\n"
+"POT-Creation-Date: 2026-09-14T01:38:14+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: diluxone-mail\n"
@@ -49,7 +49,7 @@ msgstr ""
 #: includes/admin-dns.php:42
 #: includes/admin-log.php:62
 #: includes/admin-settings.php:198
-#: includes/admin-settings.php:520
+#: includes/admin-settings.php:523
 #: includes/observer.php:300
 msgid "You are not allowed to do this."
 msgstr ""
@@ -159,6 +159,9 @@ msgstr ""
 
 #: includes/admin-tabs.php:52
 #: includes/admin-tabs.php:317
+#: includes/api-providers.php:50
+#: includes/api-providers.php:70
+#: includes/api-providers.php:81
 #: templates/settings-api.php:36
 msgid "API key"
 msgstr ""
@@ -343,34 +346,73 @@ msgstr ""
 msgid "Sending Domains → your domain → Integration, on the API tab. Careful with the box beside it: the SMTP credentials shown there include a password that looks exactly like a token and is not one — that one works over SMTP, with the username \"api\", and nowhere else."
 msgstr ""
 
-#: includes/api-providers.php:251
+#: includes/api-providers.php:51
+msgid "Settings → API Keys, with at least Mail Send permission. It is shown once when it is created and never again."
+msgstr ""
+
+#: includes/api-providers.php:60
+msgid "Server token"
+msgstr ""
+
+#: includes/api-providers.php:61
+msgid "The server's token, on its API Tokens tab. Not the account token, which manages servers and cannot send."
+msgstr ""
+
+#: includes/api-providers.php:71
+msgid "SMTP & API → API keys. Not the SMTP password from the tab beside it, which only works over SMTP."
+msgstr ""
+
+#: includes/api-providers.php:82
+msgid "API Keys, with sending access. It begins with re_."
+msgstr ""
+
+#: includes/api-providers.php:91
+msgid "API key and secret"
+msgstr ""
+
+#: includes/api-providers.php:95
+msgid "Both, joined by a colon: the API key, then \":\", then the secret key. Account Settings → API Key Management."
+msgstr ""
+
+#: includes/api-providers.php:305
 msgid "There is no key to check."
 msgstr ""
 
-#: includes/api-providers.php:312
+#: includes/api-providers.php:366
 msgid "The provider does not recognise this key. What was pasted has the shape of an SMTP password — thirty-two hexadecimal characters — and that is a different credential: it works over SMTP together with a username, never over the API. The API token is in the same panel, usually on a tab of its own."
 msgstr ""
 
-#: includes/api-providers.php:315
+#: includes/api-providers.php:369
 msgid "The provider does not recognise this key. Check that it is the API token of the sending domain, and not one from a testing or sandbox environment, which belongs to a different endpoint."
 msgstr ""
 
-#: includes/api-providers.php:374
+#: includes/api-providers.php:428
 msgid "the DNS is not verified yet"
 msgstr ""
 
-#: includes/api-providers.php:376
+#: includes/api-providers.php:430
 msgid "demo domain, allowance spent"
 msgstr ""
 
-#: includes/api-providers.php:378
+#: includes/api-providers.php:432
 msgid "demo domain: it only delivers to the address the account was registered with"
 msgstr ""
 
 #. translators: %d: HTTP status code
-#: includes/api-providers.php:426
+#: includes/api-providers.php:480
 #, php-format
 msgid "The provider answered HTTP %d."
+msgstr ""
+
+#. translators: %s: the status the provider reports for a domain
+#: includes/api-providers.php:820
+#, php-format
+msgid "not ready: %s"
+msgstr ""
+
+#. translators: %s: the status the provider reports for a domain
+#: includes/api-providers.php:820
+msgid "unknown"
 msgstr ""
 
 #: includes/api-transport.php:123

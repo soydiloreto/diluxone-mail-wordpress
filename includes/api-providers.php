@@ -41,6 +41,60 @@ function diluxone_mail_api_providers(): array {
 			'key_hint'  => __( 'Sending Domains → your domain → Integration, on the API tab. Careful with the box beside it: the SMTP credentials shown there include a password that looks exactly like a token and is not one — that one works over SMTP, with the username "api", and nowhere else.', 'diluxone-mail' ),
 			'docs'      => 'https://docs.mailtrap.io/developers/email-api/introduction',
 		),
+		'sendgrid'         => array(
+			'send_url'  => 'https://api.sendgrid.com/v3/mail/send',
+			'auth'      => 'bearer',
+			'build'     => 'diluxone_mail_api_body_sendgrid',
+			'error'     => 'diluxone_mail_api_error_common',
+			'ok_status' => array( 202 ),
+			'key_label' => __( 'API key', 'diluxone-mail' ),
+			'key_hint'  => __( 'Settings → API Keys, with at least Mail Send permission. It is shown once when it is created and never again.', 'diluxone-mail' ),
+			'docs'      => 'https://www.twilio.com/docs/sendgrid/api-reference/mail-send/mail-send',
+		),
+		'postmark'         => array(
+			'send_url'  => 'https://api.postmarkapp.com/email',
+			'auth'      => 'X-Postmark-Server-Token',
+			'build'     => 'diluxone_mail_api_body_postmark',
+			'error'     => 'diluxone_mail_api_error_common',
+			'ok_status' => array( 200 ),
+			'key_label' => __( 'Server token', 'diluxone-mail' ),
+			'key_hint'  => __( 'The server\'s token, on its API Tokens tab. Not the account token, which manages servers and cannot send.', 'diluxone-mail' ),
+			'docs'      => 'https://postmarkapp.com/developer/api/email-api',
+		),
+		'brevo'            => array(
+			'send_url'  => 'https://api.brevo.com/v3/smtp/email',
+			'auth'      => 'api-key',
+			'build'     => 'diluxone_mail_api_body_brevo',
+			'error'     => 'diluxone_mail_api_error_common',
+			'ok_status' => array( 201 ),
+			'key_label' => __( 'API key', 'diluxone-mail' ),
+			'key_hint'  => __( 'SMTP & API → API keys. Not the SMTP password from the tab beside it, which only works over SMTP.', 'diluxone-mail' ),
+			'docs'      => 'https://developers.brevo.com/reference/sendtransacemail',
+		),
+		'resend'           => array(
+			'send_url'  => 'https://api.resend.com/emails',
+			'auth'      => 'bearer',
+			'build'     => 'diluxone_mail_api_body_resend',
+			'error'     => 'diluxone_mail_api_error_common',
+			'ok_status' => array( 200 ),
+			'domains'   => 'diluxone_mail_api_domains_resend',
+			'key_label' => __( 'API key', 'diluxone-mail' ),
+			'key_hint'  => __( 'API Keys, with sending access. It begins with re_.', 'diluxone-mail' ),
+			'docs'      => 'https://resend.com/docs/api-reference/emails/send-email',
+		),
+		'mailjet'          => array(
+			'send_url'  => 'https://api.mailjet.com/v3.1/send',
+			'auth'      => 'basic',
+			'build'     => 'diluxone_mail_api_body_mailjet',
+			'error'     => 'diluxone_mail_api_error_common',
+			'ok_status' => array( 200 ),
+			'key_label' => __( 'API key and secret', 'diluxone-mail' ),
+			// Mailjet authenticates with a pair, and the plugin keeps one
+			// credential per provider. Joined by a colon is how every HTTP
+			// client spells a pair, and how Mailjet's own examples show it.
+			'key_hint'  => __( 'Both, joined by a colon: the API key, then ":", then the secret key. Account Settings → API Key Management.', 'diluxone-mail' ),
+			'docs'      => 'https://dev.mailjet.com/email/guides/send-api-v31/',
+		),
 	);
 
 	/**
@@ -431,5 +485,345 @@ function diluxone_mail_api_get( string $url, string $key ): array {
 		'ok'    => true,
 		'data'  => $decoded,
 		'error' => '',
+	);
+}
+
+/**
+ * SendGrid's body.
+ *
+ * Recipients live inside a "personalization" rather than at the top level:
+ * their model is one message sent in several versions, and a plain send is
+ * the case where there is one version.
+ *
+ * @param array<string, mixed> $message
+ * @return array<string, mixed>
+ */
+function diluxone_mail_api_body_sendgrid( array $message ): array {
+	$to = array( 'to' => array_map( static fn( string $email ): array => array( 'email' => $email ), $message['to'] ) );
+
+	foreach ( array( 'cc', 'bcc' ) as $kind ) {
+		if ( array() !== $message[ $kind ] ) {
+			$to[ $kind ] = array_map( static fn( string $email ): array => array( 'email' => $email ), $message[ $kind ] );
+		}
+	}
+
+	$body = array(
+		'personalizations' => array( $to ),
+		'from'             => array_filter(
+			array(
+				'email' => $message['from'],
+				'name'  => $message['from_name'],
+			)
+		),
+		'subject'          => $message['subject'],
+		'content'          => array(
+			array(
+				'type'  => $message['html'] ? 'text/html' : 'text/plain',
+				'value' => $message['body'],
+			),
+		),
+	);
+
+	if ( '' !== $message['reply_to'] ) {
+		$body['reply_to'] = array( 'email' => $message['reply_to'] );
+	}
+
+	if ( array() !== $message['headers'] ) {
+		$body['headers'] = $message['headers'];
+	}
+
+	if ( array() !== $message['files'] ) {
+		$body['attachments'] = array_map(
+			static fn( array $file ): array => array(
+				'filename'    => $file['name'],
+				'type'        => $file['type'],
+				'content'     => $file['content'],
+				'disposition' => 'attachment',
+			),
+			$message['files']
+		);
+	}
+
+	return $body;
+}
+
+/**
+ * Postmark's body.
+ *
+ * Capitalised keys, recipients as one comma-separated string, and a message
+ * stream that has to be named: a server can have several and a send with no
+ * stream is refused.
+ *
+ * @param array<string, mixed> $message
+ * @return array<string, mixed>
+ */
+function diluxone_mail_api_body_postmark( array $message ): array {
+	$body = array(
+		'From'          => '' === $message['from_name'] ? $message['from'] : $message['from_name'] . ' <' . $message['from'] . '>',
+		'To'            => implode( ',', $message['to'] ),
+		'Subject'       => $message['subject'],
+		'MessageStream' => 'outbound',
+	);
+
+	$body[ $message['html'] ? 'HtmlBody' : 'TextBody' ] = $message['body'];
+
+	$copias = array(
+		'cc'  => 'Cc',
+		'bcc' => 'Bcc',
+	);
+
+	foreach ( $copias as $kind => $key ) {
+		if ( array() !== $message[ $kind ] ) {
+			$body[ $key ] = implode( ',', $message[ $kind ] );
+		}
+	}
+
+	if ( '' !== $message['reply_to'] ) {
+		$body['ReplyTo'] = $message['reply_to'];
+	}
+
+	foreach ( $message['headers'] as $name => $value ) {
+		$body['Headers'][] = array(
+			'Name'  => $name,
+			'Value' => $value,
+		);
+	}
+
+	foreach ( $message['files'] as $file ) {
+		$body['Attachments'][] = array(
+			'Name'        => $file['name'],
+			'Content'     => $file['content'],
+			'ContentType' => $file['type'],
+		);
+	}
+
+	return $body;
+}
+
+/**
+ * Brevo's body.
+ *
+ * @param array<string, mixed> $message
+ * @return array<string, mixed>
+ */
+function diluxone_mail_api_body_brevo( array $message ): array {
+	$body = array(
+		'sender'  => array_filter(
+			array(
+				'email' => $message['from'],
+				'name'  => $message['from_name'],
+			)
+		),
+		'to'      => array_map( static fn( string $email ): array => array( 'email' => $email ), $message['to'] ),
+		'subject' => $message['subject'],
+	);
+
+	$body[ $message['html'] ? 'htmlContent' : 'textContent' ] = $message['body'];
+
+	foreach ( array( 'cc', 'bcc' ) as $kind ) {
+		if ( array() !== $message[ $kind ] ) {
+			$body[ $kind ] = array_map( static fn( string $email ): array => array( 'email' => $email ), $message[ $kind ] );
+		}
+	}
+
+	if ( '' !== $message['reply_to'] ) {
+		$body['replyTo'] = array( 'email' => $message['reply_to'] );
+	}
+
+	if ( array() !== $message['headers'] ) {
+		$body['headers'] = $message['headers'];
+	}
+
+	foreach ( $message['files'] as $file ) {
+		$body['attachment'][] = array(
+			'name'    => $file['name'],
+			'content' => $file['content'],
+		);
+	}
+
+	return $body;
+}
+
+/**
+ * Resend's body.
+ *
+ * The sender is one string with the name in it, the way a mail header spells
+ * it, rather than an object.
+ *
+ * @param array<string, mixed> $message
+ * @return array<string, mixed>
+ */
+function diluxone_mail_api_body_resend( array $message ): array {
+	$body = array(
+		'from'    => '' === $message['from_name'] ? $message['from'] : $message['from_name'] . ' <' . $message['from'] . '>',
+		'to'      => $message['to'],
+		'subject' => $message['subject'],
+	);
+
+	$body[ $message['html'] ? 'html' : 'text' ] = $message['body'];
+
+	foreach ( array( 'cc', 'bcc' ) as $kind ) {
+		if ( array() !== $message[ $kind ] ) {
+			$body[ $kind ] = $message[ $kind ];
+		}
+	}
+
+	if ( '' !== $message['reply_to'] ) {
+		$body['reply_to'] = $message['reply_to'];
+	}
+
+	if ( array() !== $message['headers'] ) {
+		$body['headers'] = $message['headers'];
+	}
+
+	foreach ( $message['files'] as $file ) {
+		$body['attachments'][] = array(
+			'filename' => $file['name'],
+			'content'  => $file['content'],
+		);
+	}
+
+	return $body;
+}
+
+/**
+ * Mailjet's body.
+ *
+ * A list of messages, always, even when there is one.
+ *
+ * @param array<string, mixed> $message
+ * @return array<string, mixed>
+ */
+function diluxone_mail_api_body_mailjet( array $message ): array {
+	$one = array(
+		'From'    => array_filter(
+			array(
+				'Email' => $message['from'],
+				'Name'  => $message['from_name'],
+			)
+		),
+		'To'      => array_map( static fn( string $email ): array => array( 'Email' => $email ), $message['to'] ),
+		'Subject' => $message['subject'],
+	);
+
+	$one[ $message['html'] ? 'HTMLPart' : 'TextPart' ] = $message['body'];
+
+	$copias = array(
+		'cc'  => 'Cc',
+		'bcc' => 'Bcc',
+	);
+
+	foreach ( $copias as $kind => $key ) {
+		if ( array() !== $message[ $kind ] ) {
+			$one[ $key ] = array_map( static fn( string $email ): array => array( 'Email' => $email ), $message[ $kind ] );
+		}
+	}
+
+	if ( '' !== $message['reply_to'] ) {
+		$one['ReplyTo'] = array( 'Email' => $message['reply_to'] );
+	}
+
+	if ( array() !== $message['headers'] ) {
+		$one['Headers'] = $message['headers'];
+	}
+
+	foreach ( $message['files'] as $file ) {
+		$one['Attachments'][] = array(
+			'ContentType'   => $file['type'],
+			'Filename'      => $file['name'],
+			'Base64Content' => $file['content'],
+		);
+	}
+
+	return array( 'Messages' => array( $one ) );
+}
+
+/**
+ * What a provider said went wrong, whichever way it spells it.
+ *
+ * Five providers, five shapes, and all of them a sentence somewhere under a
+ * key whose name is a matter of taste. Rather than five readers that each know
+ * one house style, this walks the response for the first string that reads
+ * like an explanation — and falls back to the raw body, which is worse to read
+ * and better than nothing.
+ *
+ * @param array<string, mixed> $decoded
+ */
+function diluxone_mail_api_error_common( array $decoded, string $raw ): string {
+	$said = diluxone_mail_api_error_walk( $decoded );
+
+	return array() === $said ? $raw : implode( ' ', array_unique( $said ) );
+}
+
+/**
+ * Every sentence a decoded response carries, in the order it carries them.
+ *
+ * @param mixed $value
+ * @return array<int, string>
+ */
+function diluxone_mail_api_error_walk( $value, int $depth = 0 ): array {
+	if ( $depth > 6 || ! is_array( $value ) ) {
+		return array();
+	}
+
+	$keys = array( 'message', 'Message', 'ErrorMessage', 'error', 'detail', 'Detail', 'ErrorCode' );
+	$said = array();
+
+	foreach ( $value as $key => $item ) {
+		if ( is_string( $item ) && '' !== $item && in_array( (string) $key, $keys, true ) ) {
+			$said[] = $item;
+			continue;
+		}
+
+		$said = array_merge( $said, diluxone_mail_api_error_walk( $item, $depth + 1 ) );
+	}
+
+	return $said;
+}
+
+/**
+ * The domains Resend will accept mail from.
+ *
+ * One call, and a status per domain: anything but `verified` is a domain whose
+ * DNS is not finished, which the provider refuses to send from.
+ *
+ * @return array{ok: bool, domains: array<int, array{name: string, usable: bool, note: string}>, error: string}
+ */
+function diluxone_mail_api_domains_resend( string $key ): array {
+	$listed = diluxone_mail_api_get( 'https://api.resend.com/domains', $key );
+
+	if ( ! $listed['ok'] ) {
+		return array(
+			'ok'      => false,
+			'domains' => array(),
+			'error'   => $listed['error'],
+		);
+	}
+
+	$domains = array();
+
+	foreach ( (array) ( $listed['data']['data'] ?? array() ) as $row ) {
+		$name = (string) ( $row['name'] ?? '' );
+
+		if ( '' === $name ) {
+			continue;
+		}
+
+		$status = (string) ( $row['status'] ?? '' );
+
+		$domains[] = array(
+			'name'   => $name,
+			'usable' => 'verified' === $status,
+			'note'   => 'verified' === $status
+				? ''
+				/* translators: %s: the status the provider reports for a domain */
+				: sprintf( __( 'not ready: %s', 'diluxone-mail' ), '' === $status ? __( 'unknown', 'diluxone-mail' ) : $status ),
+		);
+	}
+
+	return array(
+		'ok'      => true,
+		'domains' => $domains,
+		'error'   => '',
 	);
 }
