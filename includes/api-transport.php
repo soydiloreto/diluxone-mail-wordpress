@@ -199,6 +199,32 @@ function diluxone_mail_api_send( $pre, array $atts ) {
 add_filter( 'pre_wp_mail', 'diluxone_mail_api_send', 20, 2 );
 
 /**
+ * Puts the transport back if something swept the hook.
+ *
+ * `remove_all_filters( 'pre_wp_mail' )` is a line that appears in plenty of
+ * snippets and development plugins, aimed at some other plugin that
+ * short-circuits mail. It takes this one with it, and the symptom is the worst
+ * kind: the API send silently does not happen and the message leaves over SMTP
+ * with credentials that belong to the other method — or with none.
+ *
+ * This is not a fight over the hook. It runs on `wp_mail`, which WordPress
+ * applies before `pre_wp_mail`, and it only restores a callback of our own
+ * that is missing. Anything else on that hook is left exactly as it was found,
+ * including whatever was removed by whoever did the sweeping.
+ *
+ * @param array<string, mixed> $atts
+ * @return array<string, mixed>
+ */
+function diluxone_mail_api_keep_hook( array $atts ): array {
+	if ( diluxone_mail_api_active() && ! has_filter( 'pre_wp_mail', 'diluxone_mail_api_send' ) ) {
+		add_filter( 'pre_wp_mail', 'diluxone_mail_api_send', 20, 2 );
+	}
+
+	return $atts;
+}
+add_filter( 'wp_mail', 'diluxone_mail_api_keep_hook', PHP_INT_MIN );
+
+/**
  * What the provider answered, for the log's response column.
  *
  * The SMTP path reads the server's last reply off PHPMailer. This is the same

@@ -105,7 +105,15 @@ function diluxone_mail_phpmailer_init( $phpmailer ): void {
 	$phpmailer->SMTPSecure  = in_array( $encryption, array( 'tls', 'ssl' ), true ) ? $encryption : '';
 	$phpmailer->SMTPAutoTLS = (bool) $profile['autotls'];
 
-	$auth = (bool) $profile['auth'] && (bool) diluxone_mail_option( 'diluxone_mail_auth' ) && '' !== $config['user'];
+	// A password is as necessary as a username. Authenticating with an empty
+	// one is not a login attempt that fails, it is a malformed exchange: the
+	// server reads the blank line as another command and answers something
+	// about syntax, which sends whoever reads the transcript looking for a
+	// problem in the wrong place.
+	$auth = (bool) $profile['auth']
+		&& (bool) diluxone_mail_option( 'diluxone_mail_auth' )
+		&& '' !== $config['user']
+		&& '' !== $config['pass'];
 
 	$phpmailer->SMTPAuth = $auth;
 

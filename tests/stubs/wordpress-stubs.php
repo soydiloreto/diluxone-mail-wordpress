@@ -555,6 +555,12 @@ if (!function_exists('add_filter')) {
 if (!function_exists('add_action')) {
 	function add_action(string $hook, $callback, int $priority = 10, int $args = 1): bool { return add_filter($hook, $callback, $priority, $args); }
 }
+if (!function_exists('remove_all_filters')) {
+	function remove_all_filters(string $hook, $priority = false): bool {
+		unset($GLOBALS['wp_filter'][$hook]);
+		return true;
+	}
+}
 if (!function_exists('remove_filter')) {
 	function remove_filter(string $hook, $callback, int $priority = 10): bool {
 		unset($GLOBALS['wp_filter'][$hook]->callbacks[$priority][_test_hook_id($callback)]);
@@ -565,7 +571,19 @@ if (!function_exists('remove_action')) {
 	function remove_action(string $hook, $callback, int $priority = 10): bool { return remove_filter($hook, $callback, $priority); }
 }
 if (!function_exists('has_filter')) {
-	function has_filter(string $hook, $callback = false): bool { return isset($GLOBALS['wp_filter'][$hook]) && [] !== array_filter($GLOBALS['wp_filter'][$hook]->callbacks); }
+	/**
+	 * With a callback it answers about that one, like the real has_filter():
+	 * code that restores its own hook asks precisely that question, and a
+	 * double that answers "somebody is on this hook" tests nothing.
+	 */
+	function has_filter(string $hook, $callback = false): bool {
+		if (!isset($GLOBALS['wp_filter'][$hook])) return false;
+		$callbacks = array_filter($GLOBALS['wp_filter'][$hook]->callbacks);
+		if (false === $callback) return [] !== $callbacks;
+		$id = _test_hook_id($callback);
+		foreach ($callbacks as $list) { if (isset($list[$id])) return true; }
+		return false;
+	}
 }
 if (!function_exists('do_action')) {
 	function do_action(string $hook, ...$args): void {

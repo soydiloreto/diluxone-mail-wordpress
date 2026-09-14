@@ -97,4 +97,28 @@ class MailerTest extends TestCase {
 
 		$this->assertSame( array(), get_object_vars( $obj ) );
 	}
+
+	public function test_an_empty_password_is_not_an_authentication_attempt(): void {
+		\update_option( 'diluxone_mail_provider', 'mailjet' );
+		\update_option( 'diluxone_mail_host', 'smtp.x.test' );
+		\update_option( 'diluxone_mail_auth', 1 );
+		\update_option( 'diluxone_mail_user', 'api' );
+		\update_option( 'diluxone_mail_mode', 'transport' );
+
+		$m = new \PHPMailer\PHPMailer\PHPMailer();
+		\diluxone_mail_phpmailer_init( $m );
+
+		// With a username and no password the server is handed a blank line
+		// where the credential goes and answers about syntax, which reads as a
+		// problem with the server.
+		$this->assertFalse( $m->SMTPAuth );
+
+		\update_option( 'diluxone_mail_pass', \diluxone_mail_encrypt( 'secreta' ) );
+
+		$m = new \PHPMailer\PHPMailer\PHPMailer();
+		\diluxone_mail_phpmailer_init( $m );
+
+		$this->assertTrue( $m->SMTPAuth );
+		$this->assertSame( 'secreta', $m->Password );
+	}
 }

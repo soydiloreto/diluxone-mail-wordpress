@@ -15,6 +15,7 @@ class ApiTest extends AdminTestCase {
 	 * send, and only afterwards does `pre_wp_mail` decide who delivers it.
 	 */
 	private function enganchar(): void {
+		\add_filter( 'wp_mail', 'diluxone_mail_api_keep_hook', PHP_INT_MIN );
 		\add_filter( 'wp_mail', 'diluxone_mail_capture', PHP_INT_MAX );
 		\add_filter( 'pre_wp_mail', 'diluxone_mail_maybe_suppress', 1, 2 );
 		\add_filter( 'pre_wp_mail', 'diluxone_mail_api_send', 20, 2 );
@@ -551,6 +552,48 @@ class ApiTest extends AdminTestCase {
 
 		$this->redirect_of( 'diluxone_mail_save_settings' );
 		$this->assertSame( 'otra@x.test', \get_option( 'diluxone_mail_from' ) );
+	}
+
+	public function test_the_transport_comes_back_when_something_sweeps_the_hook(): void {
+		$this->por_api();
+		$this->responde( 200 );
+
+		// What a development plugin aimed at somebody else's interceptor does,
+		// and which takes this plugin's transport with it.
+		\remove_all_filters( 'pre_wp_mail' );
+		$this->assertFalse( \has_filter( 'pre_wp_mail', 'diluxone_mail_api_send' ) );
+
+		// The send still goes out over the API, and over nothing else.
+		$this->assertTrue( \wp_mail( 'ana@x.test', 'Hola', 'texto' ) );
+		$this->assertSame( 'https://send.api.mailtrap.io/api/send', $GLOBALS['_test_http'][0]['url'] );
+		$this->assertSame( array(), $GLOBALS['_test_wp_mail_calls'] );
+	}
+
+	public function test_nothing_else_on_that_hook_is_put_back(): void {
+		$this->por_api();
+		$this->responde( 200 );
+
+		$ajeno = static fn( $pre ) => $pre;
+		\add_filter( 'pre_wp_mail', $ajeno, 30 );
+		\remove_all_filters( 'pre_wp_mail' );
+
+		\wp_mail( 'ana@x.test', 'Hola', 'texto' );
+
+		// Only our own callback is restored: whoever swept the hook swept it
+		// for a reason, and that reason is not ours to overrule.
+		$this->assertTrue( \has_filter( 'pre_wp_mail', 'diluxone_mail_api_send' ) );
+		$this->assertFalse( \has_filter( 'pre_wp_mail', $ajeno ) );
+	}
+
+	public function test_over_smtp_the_hook_is_left_where_it_was_put(): void {
+		$this->enganchar();
+		\update_option( 'diluxone_mail_mode', 'transport' );
+		\remove_all_filters( 'pre_wp_mail' );
+
+		\wp_mail( 'ana@x.test', 'Hola', 'texto' );
+
+		// Nothing to restore when the API is not the way this site sends.
+		$this->assertFalse( \has_filter( 'pre_wp_mail', 'diluxone_mail_api_send' ) );
 	}
 
 	public function test_the_first_step_offers_both_methods(): void {
