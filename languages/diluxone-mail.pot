@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-14T00:14:54+00:00\n"
+"POT-Creation-Date: 2026-09-14T00:22:26+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: diluxone-mail\n"
@@ -256,20 +256,24 @@ msgstr ""
 msgid "This site fixes this from code: whatever is chosen here, it stays as it is."
 msgstr ""
 
-#: includes/api-providers.php:43
+#: includes/api-providers.php:39
 msgid "API token"
 msgstr ""
 
-#: includes/api-providers.php:44
-msgid "The token of the sending domain, from Sending Domains → your domain → Integration. Not a token from the general API Tokens page, and not an Email Testing one."
+#: includes/api-providers.php:40
+msgid "Sending Domains → your domain → Integration, on the API tab. Careful with the box beside it: the SMTP credentials shown there include a password that looks exactly like a token and is not one — that one works over SMTP, with the username \"api\", and nowhere else."
 msgstr ""
 
-#: includes/api-providers.php:248
+#: includes/api-providers.php:250
 msgid "There is no key to check."
 msgstr ""
 
-#: includes/api-providers.php:282
-msgid "The provider does not recognise this key."
+#: includes/api-providers.php:311
+msgid "The provider does not recognise this key. What was pasted has the shape of an SMTP password — thirty-two hexadecimal characters — and that is a different credential: it works over SMTP together with a username, never over the API. The API token is in the same panel, usually on a tab of its own."
+msgstr ""
+
+#: includes/api-providers.php:314
+msgid "The provider does not recognise this key. Check that it is the API token of the sending domain, and not one from a testing or sandbox environment, which belongs to a different endpoint."
 msgstr ""
 
 #: includes/api-transport.php:123

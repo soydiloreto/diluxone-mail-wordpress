@@ -31,18 +31,14 @@ defined( 'ABSPATH' ) || exit;
 function diluxone_mail_api_providers(): array {
 	$providers = array(
 		'mailtrap_sending' => array(
-			'send_url'   => 'https://send.api.mailtrap.io/api/send',
-			'auth'       => 'bearer',
-			'build'      => 'diluxone_mail_api_body_mailtrap',
-			'error'      => 'diluxone_mail_api_error_mailtrap',
-			'ok_status'  => array( 200 ),
-			// A cheap authenticated call, used to tell a working key from a
-			// wrong one before anything is stored. The same token authenticates
-			// the whole Mailtrap API, not only the send endpoint.
-			'verify_url' => 'https://mailtrap.io/api/accounts',
-			'key_label'  => __( 'API token', 'diluxone-mail' ),
-			'key_hint'   => __( 'The token of the sending domain, from Sending Domains → your domain → Integration. Not a token from the general API Tokens page, and not an Email Testing one.', 'diluxone-mail' ),
-			'docs'       => 'https://docs.mailtrap.io/developers/email-api/introduction',
+			'send_url'  => 'https://send.api.mailtrap.io/api/send',
+			'auth'      => 'bearer',
+			'build'     => 'diluxone_mail_api_body_mailtrap',
+			'error'     => 'diluxone_mail_api_error_mailtrap',
+			'ok_status' => array( 200 ),
+			'key_label' => __( 'API token', 'diluxone-mail' ),
+			'key_hint'  => __( 'Sending Domains → your domain → Integration, on the API tab. Careful with the box beside it: the SMTP credentials shown there include a password that looks exactly like a token and is not one — that one works over SMTP, with the username "api", and nowhere else.', 'diluxone-mail' ),
+			'docs'      => 'https://docs.mailtrap.io/developers/email-api/introduction',
 		),
 	);
 
@@ -239,7 +235,13 @@ function diluxone_mail_api_error_mailtrap( array $decoded, string $raw ): string
  * @return array{ok: bool, checked: bool, error: string}
  */
 function diluxone_mail_api_verify( string $provider, string $key ): array {
-	$api = diluxone_mail_api_provider( $provider );
+	if ( ! diluxone_mail_provider_has_api( $provider ) ) {
+		return array(
+			'ok'      => true,
+			'checked' => false,
+			'error'   => '',
+		);
+	}
 
 	if ( '' === $key ) {
 		return array(
@@ -249,19 +251,22 @@ function diluxone_mail_api_verify( string $provider, string $key ): array {
 		);
 	}
 
-	if ( ! isset( $api['verify_url'] ) ) {
-		return array(
-			'ok'      => true,
-			'checked' => false,
-			'error'   => '',
-		);
-	}
-
-	$response = wp_remote_get(
-		(string) $api['verify_url'],
-		array(
-			'headers' => array( 'Authorization' => 'Bearer ' . $key ),
-			'timeout' => 15,
+	// The send endpoint itself, with a body that cannot send anything.
+	// A separate "list my account" call looked tidier and was worse: a key
+	// scoped to sending is refused there while working perfectly for mail, and
+	// a plugin that reads that as a wrong key refuses to store a key that
+	// works. Asking the endpoint that will carry the messages is the only
+	// check whose answer means what it says — authentication is decided before
+	// the payload is looked at, so an empty one is enough to ask the question.
+	$request  = diluxone_mail_api_request( $provider, diluxone_mail_api_message( array() ), $key );
+	$response = wp_remote_post(
+		$request['url'],
+		array_merge(
+			$request['args'],
+			array(
+				'body'    => '{}',
+				'timeout' => 15,
+			)
 		)
 	);
 
@@ -279,13 +284,32 @@ function diluxone_mail_api_verify( string $provider, string $key ): array {
 		return array(
 			'ok'      => false,
 			'checked' => true,
-			'error'   => __( 'The provider does not recognise this key.', 'diluxone-mail' ),
+			'error'   => diluxone_mail_api_key_advice( $key ),
 		);
 	}
 
+	// Anything else got past the door. A 422 over an empty body is the
+	// endpoint complaining about the message, which it only bothers to do for
+	// a request it accepted.
 	return array(
 		'ok'      => true,
-		'checked' => $status >= 200 && $status < 300,
+		'checked' => $status < 500,
 		'error'   => '',
 	);
+}
+
+/**
+ * Why a key was refused, in the words of the mistake almost everybody makes.
+ *
+ * Providers show the API token and the SMTP password in the same panel, often
+ * side by side and in the same shape, and only one of them opens the API. A
+ * refusal that says "the provider does not recognise this key" is true and
+ * useless: this says which credential to go back for.
+ */
+function diluxone_mail_api_key_advice( string $key ): string {
+	if ( 1 === preg_match( '/^[0-9a-f]{32}$/i', $key ) ) {
+		return __( 'The provider does not recognise this key. What was pasted has the shape of an SMTP password — thirty-two hexadecimal characters — and that is a different credential: it works over SMTP together with a username, never over the API. The API token is in the same panel, usually on a tab of its own.', 'diluxone-mail' );
+	}
+
+	return __( 'The provider does not recognise this key. Check that it is the API token of the sending domain, and not one from a testing or sandbox environment, which belongs to a different endpoint.', 'diluxone-mail' );
 }

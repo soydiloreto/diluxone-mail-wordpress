@@ -232,10 +232,7 @@ class ApiTest extends AdminTestCase {
 		\update_option( 'diluxone_mail_provider', 'mailtrap_sending' );
 		\update_option( 'diluxone_mail_transport', 'api' );
 
-		$GLOBALS['_test_wp_remote_get'] = array(
-			'response' => array( 'code' => 401 ),
-			'body'     => '',
-		);
+		$this->responde( 401, '{"errors":["Unauthorized"]}' );
 
 		$_POST = array( 'scope' => 'site', 'tab' => 'server', 'diluxone_mail_api_key' => 'mala' );
 		$url   = $this->redirect_of( 'diluxone_mail_api_key_action' );
@@ -244,10 +241,9 @@ class ApiTest extends AdminTestCase {
 		$this->assertFalse( \get_option( 'diluxone_mail_api_key' ) );
 		$this->assertFalse( \diluxone_mail_connection_verified() );
 
-		$GLOBALS['_test_wp_remote_get'] = array(
-			'response' => array( 'code' => 200 ),
-			'body'     => '[]',
-		);
+		// An empty body is not a message, so the endpoint complains about the
+		// payload — which it only does once the key got it through the door.
+		$this->responde( 422, '{"errors":["\'from\' is required"]}' );
 
 		$_POST = array( 'scope' => 'site', 'tab' => 'server', 'diluxone_mail_api_key' => 'buena' );
 		$url   = $this->redirect_of( 'diluxone_mail_api_key_action' );
@@ -374,38 +370,46 @@ class ApiTest extends AdminTestCase {
 	}
 
 	public function test_checking_a_key_answers_three_different_things(): void {
-		$GLOBALS['_test_wp_remote_get'] = array( 'response' => array( 'code' => 200 ), 'body' => '[]' );
-		$bien                           = \diluxone_mail_api_verify( 'mailtrap_sending', 'tok' );
+		// The endpoint complains about the empty payload, which means the key
+		// itself was accepted.
+		$this->responde( 422, '{"errors":["\'from\' is required"]}' );
+		$bien = \diluxone_mail_api_verify( 'mailtrap_sending', 'tok' );
 		$this->assertTrue( $bien['ok'] );
 		$this->assertTrue( $bien['checked'] );
 
-		$GLOBALS['_test_wp_remote_get'] = array( 'response' => array( 'code' => 403 ), 'body' => '' );
-		$mal                            = \diluxone_mail_api_verify( 'mailtrap_sending', 'tok' );
+		$this->responde( 403, '' );
+		$mal = \diluxone_mail_api_verify( 'mailtrap_sending', 'tok' );
 		$this->assertFalse( $mal['ok'] );
 		$this->assertTrue( $mal['checked'] );
 
-		// The endpoint moved, or the provider is having a bad day: not a
-		// refusal, and said so.
-		$GLOBALS['_test_wp_remote_get'] = array( 'response' => array( 'code' => 500 ), 'body' => '' );
-		$quien_sabe                     = \diluxone_mail_api_verify( 'mailtrap_sending', 'tok' );
+		// The provider is having a bad day: not a refusal, and said so.
+		$this->responde( 500, '' );
+		$quien_sabe = \diluxone_mail_api_verify( 'mailtrap_sending', 'tok' );
 		$this->assertTrue( $quien_sabe['ok'] );
 		$this->assertFalse( $quien_sabe['checked'] );
 
+		// No network either: same answer.
+		$GLOBALS['_test_wp_remote_post'] = new \WP_Error( 'http_request_failed', 'cURL error 28' );
+		$sin_red                         = \diluxone_mail_api_verify( 'mailtrap_sending', 'tok' );
+		$this->assertTrue( $sin_red['ok'] );
+		$this->assertFalse( $sin_red['checked'] );
+
 		$this->assertFalse( \diluxone_mail_api_verify( 'mailtrap_sending', '' )['ok'] );
+		// A provider with no API at all is not checked and not refused.
+		$this->assertTrue( \diluxone_mail_api_verify( 'ses', 'tok' )['ok'] );
+	}
 
-		// A provider with nothing cheap to call cannot be checked at all.
-		\add_filter(
-			'diluxone_mail_api_providers',
-			static function ( array $providers ): array {
-				unset( $providers['mailtrap_sending']['verify_url'] );
+	public function test_a_refused_key_is_told_which_credential_it_probably_is(): void {
+		// Thirty-two hexadecimal characters is the shape of an SMTP password,
+		// which providers show next to the API token and which is the thing
+		// almost everybody pastes by mistake.
+		$smtp = \diluxone_mail_api_key_advice( 'b9e706b69f6b348823d8f51c167d148a' );
+		$this->assertStringContainsString( 'SMTP password', $smtp );
+		$this->assertStringContainsString( 'username', $smtp );
 
-				return $providers;
-			}
-		);
-
-		$sin_chequeo = \diluxone_mail_api_verify( 'mailtrap_sending', 'tok' );
-		$this->assertTrue( $sin_chequeo['ok'] );
-		$this->assertFalse( $sin_chequeo['checked'] );
+		$otra = \diluxone_mail_api_key_advice( 'algo-que-no-tiene-esa-forma' );
+		$this->assertStringNotContainsString( 'SMTP password', $otra );
+		$this->assertStringContainsString( 'sandbox', $otra );
 	}
 
 	public function test_a_key_in_the_environment_is_read_and_never_written(): void {

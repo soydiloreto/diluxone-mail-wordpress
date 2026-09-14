@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-14T00:14:52+00:00\n"
+"POT-Creation-Date: 2026-09-14T00:22:24+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -288,27 +288,48 @@ msgid ""
 msgstr ""
 "Este sitio lo fija desde el código: lo que se elija acá, queda como está."
 
-#: includes/api-providers.php:43
+#: includes/api-providers.php:39
 msgid "API token"
 msgstr "Token de API"
 
-#: includes/api-providers.php:44
+#: includes/api-providers.php:40
 msgid ""
-"The token of the sending domain, from Sending Domains → your domain → "
-"Integration. Not a token from the general API Tokens page, and not an Email "
-"Testing one."
+"Sending Domains → your domain → Integration, on the API tab. Careful with "
+"the box beside it: the SMTP credentials shown there include a password that "
+"looks exactly like a token and is not one — that one works over SMTP, with "
+"the username \"api\", and nowhere else."
 msgstr ""
-"El token del dominio de envío, en Sending Domains → tu dominio → "
-"Integration. No uno de la página general de API Tokens, ni uno de Email "
-"Testing."
+"Sending Domains → tu dominio → Integration, en la pestaña API. Ojo con la "
+"caja de al lado: las credenciales SMTP que muestra incluyen una contraseña "
+"que parece igual a un token y no lo es — esa funciona por SMTP, con el "
+"usuario «api», y en ningún otro lado."
 
-#: includes/api-providers.php:248
+#: includes/api-providers.php:250
 msgid "There is no key to check."
 msgstr "No hay clave que verificar."
 
-#: includes/api-providers.php:282
-msgid "The provider does not recognise this key."
-msgstr "El proveedor no reconoce esta clave."
+#: includes/api-providers.php:311
+msgid ""
+"The provider does not recognise this key. What was pasted has the shape of "
+"an SMTP password — thirty-two hexadecimal characters — and that is a "
+"different credential: it works over SMTP together with a username, never "
+"over the API. The API token is in the same panel, usually on a tab of its "
+"own."
+msgstr ""
+"El proveedor no reconoce esta clave. Lo que pegaste tiene la forma de una "
+"contraseña SMTP —treinta y dos caracteres hexadecimales— y esa es otra "
+"credencial: funciona por SMTP junto con un usuario, nunca por la API. El "
+"token de API está en el mismo panel, casi siempre en una pestaña aparte."
+
+#: includes/api-providers.php:314
+msgid ""
+"The provider does not recognise this key. Check that it is the API token of "
+"the sending domain, and not one from a testing or sandbox environment, which"
+" belongs to a different endpoint."
+msgstr ""
+"El proveedor no reconoce esta clave. Fijate que sea el token de API del "
+"dominio de envío, y no uno de un entorno de pruebas o sandbox, que "
+"corresponde a otro endpoint."
 
 #: includes/api-transport.php:123
 msgid "There is no valid From address to send with."
@@ -2151,6 +2172,18 @@ msgstr "Todavía nada."
 #: templates/user-profile.php:65
 msgid "See all in the mail log"
 msgstr "Ver todo en el historial de correo"
+
+#~ msgid ""
+#~ "The token of the sending domain, from Sending Domains → your domain → "
+#~ "Integration. Not a token from the general API Tokens page, and not an Email "
+#~ "Testing one."
+#~ msgstr ""
+#~ "El token del dominio de envío, en Sending Domains → tu dominio → "
+#~ "Integration. No uno de la página general de API Tokens, ni uno de Email "
+#~ "Testing."
+
+#~ msgid "The provider does not recognise this key."
+#~ msgstr "El proveedor no reconoce esta clave."
 
 #~ msgid ""
 #~ "Four steps: pick the provider, prove the server accepts the credentials, say"
