@@ -23,6 +23,13 @@ defined( 'ABSPATH' ) || exit;
 function diluxone_mail_send_test( string $to ): array {
 	$to = sanitize_email( $to );
 
+	// A test message is about one provider by definition, so the list is not
+	// walked when it fails. Retrying through the next one would answer a
+	// question nobody asked and report success for a provider that refused.
+	$was_failing_over = diluxone_mail_failing_over();
+
+	diluxone_mail_failing_over( true );
+
 	if ( '' === $to || ! is_email( $to ) ) {
 		return array(
 			'ok'         => false,
@@ -64,6 +71,7 @@ function diluxone_mail_send_test( string $to ): array {
 
 	remove_action( 'wp_mail_failed', $capture );
 	diluxone_mail_debug_enabled( false );
+	diluxone_mail_failing_over( $was_failing_over );
 
 	if ( ! $ok && '' === $error ) {
 		$error = __( 'wp_mail() returned false without saying why. Another plugin may have intercepted the message.', 'diluxone-mail' );
@@ -106,6 +114,12 @@ function diluxone_mail_test_action(): void {
 	$scope = diluxone_mail_posted_scope();
 
 	diluxone_mail_settings_authorize( $scope );
+
+	// The message goes out through the provider being set up, not through
+	// whichever one happens to be first: pressing Send test on the fourth step
+	// of one provider and having it leave through another answers nothing and
+	// ticks the wrong record.
+	diluxone_mail_focus_editing();
 
 	$to = sanitize_email( wp_unslash( $_POST['diluxone_mail_test_to'] ?? '' ) );
 

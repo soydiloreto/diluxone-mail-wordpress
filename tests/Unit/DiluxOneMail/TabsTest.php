@@ -285,6 +285,50 @@ class TabsTest extends AdminTestCase {
 		$this->assertStringNotContainsString( 'tab=', $url );
 	}
 
+	public function test_the_test_message_goes_through_the_provider_being_set_up(): void {
+		// The one that sends the site's mail, and a second one being set up.
+		$this->configured();
+
+		$otro = $this->conexion(
+			array(
+				'diluxone_mail_provider' => 'mailpit',
+				'diluxone_mail_host'     => 'mailpit',
+				'diluxone_mail_from'     => 'dev@x.test',
+			)
+		);
+
+		$_POST    = array( 'scope' => 'site', 'connection' => $otro, 'diluxone_mail_test_to' => 'a@x.test' );
+		$_REQUEST = $_POST;
+
+		$this->redirect_of( 'diluxone_mail_test_action' );
+
+		// Pressing Send test on the fourth step of one provider and having the
+		// message leave through another answers nothing.
+		$this->assertSame( $otro, \diluxone_mail_active_id() );
+		// And what it proved was proved about that one: the mark is a
+		// fingerprint, and an empty one is no mark at all.
+		$this->assertNotSame( '', (string) ( \diluxone_mail_connection( $otro )['verified']['message'] ?? '' ) );
+		$this->assertSame( '', (string) ( \diluxone_mail_connection( \diluxone_mail_default_id() )['verified']['message'] ?? '' ) );
+	}
+
+	public function test_a_test_message_is_not_retried_through_the_next_provider(): void {
+		$this->conexion( array( 'diluxone_mail_provider' => 'mailjet', 'diluxone_mail_host' => 'uno', 'diluxone_mail_from' => 'a@x.test' ) );
+		$this->conexion( array( 'diluxone_mail_provider' => 'sendgrid', 'diluxone_mail_host' => 'dos', 'diluxone_mail_from' => 'a@x.test' ) );
+
+		\update_option( 'diluxone_mail_mode', 'transport' );
+		\add_action( 'wp_mail_failed', 'diluxone_mail_failover', 20 );
+
+		$GLOBALS['_test_wp_mail_fails'] = 'nope';
+
+		$resultado = \diluxone_mail_send_test( 'a@x.test' );
+
+		$this->assertFalse( $resultado['ok'] );
+		// One attempt: a test is about the provider you are testing.
+		$this->assertCount( 1, $GLOBALS['_test_wp_mail_calls'] );
+		// And the guard is left as it was found.
+		$this->assertFalse( \diluxone_mail_failing_over() );
+	}
+
 	public function test_a_failed_send_does_not_mark_the_step(): void {
 		$this->configured();
 		$GLOBALS['_test_wp_mail_fails'] = 'no route to host';
