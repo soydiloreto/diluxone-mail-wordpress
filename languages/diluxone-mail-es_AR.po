@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-14T00:04:37+00:00\n"
+"POT-Creation-Date: 2026-09-14T00:14:52+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -90,14 +90,17 @@ msgstr "Estado"
 
 #: includes/admin-tabs.php:37 includes/log-list-table.php:48
 #: templates/admin-log-detail.php:37 templates/settings-profile.php:51
+#: templates/settings-profile.php:66
 msgid "Provider"
 msgstr "Proveedor"
 
-#: includes/admin-tabs.php:51 templates/settings-api.php:35
+#: includes/admin-tabs.php:51 includes/admin-tabs.php:282
+#: templates/settings-api.php:35
 msgid "API key"
 msgstr "Clave de API"
 
-#: includes/admin-tabs.php:51 templates/settings-server.php:69
+#: includes/admin-tabs.php:51 includes/admin-tabs.php:280
+#: templates/settings-server.php:69
 msgid "SMTP server"
 msgstr "Servidor SMTP"
 
@@ -162,7 +165,7 @@ msgstr ""
 "mensaje enviado desde una dirección que no verificó."
 
 #. translators: 1: step number, 2: name of the step
-#: includes/admin-tabs.php:254
+#: includes/admin-tabs.php:263 includes/admin-tabs.php:275
 #, php-format
 msgctxt "numbered step in the settings screen"
 msgid "%1$d. %2$s"
@@ -1669,7 +1672,7 @@ msgstr ""
 "Se guarda cifrada con una clave derivada de las salts de WordPress de este "
 "sitio, y no se vuelve a mostrar."
 
-#: templates/settings-api.php:62 templates/settings-profile.php:81
+#: templates/settings-api.php:62 templates/settings-profile.php:95
 msgid "Provider documentation"
 msgstr "Documentación del proveedor"
 
@@ -1768,13 +1771,13 @@ msgstr "Guardar"
 
 #: templates/settings-profile.php:21
 msgid ""
-"Four steps: pick the provider, prove the server accepts the credentials, say"
-" who the mail comes from, and send a message to check it arrives. Each one "
-"opens the next."
+"Four steps: pick how this site sends and through whom, prove the provider "
+"accepts the credentials, say who the mail comes from, and send a message to "
+"check it arrives. Each one opens the next."
 msgstr ""
-"Cuatro pasos: elegir el proveedor, probar que el servidor acepta las "
-"credenciales, decir de quién viene el correo, y mandar un mensaje para "
-"comprobar que llega. Cada uno habilita el siguiente."
+"Cuatro pasos: elegir cómo envía el sitio y por medio de quién, probar que el"
+" proveedor acepta las credenciales, decir de quién viene el correo, y mandar"
+" un mensaje para comprobar que llega. Cada uno habilita el siguiente."
 
 #: templates/settings-profile.php:30
 msgid "How this site sends"
@@ -1811,35 +1814,44 @@ msgstr ""
 "que muchos lo hacen. Cuando rechazan un envío te dan el motivo en palabras "
 "en vez de un error numerado."
 
-#: templates/settings-profile.php:52
+#: templates/settings-profile.php:54
 msgid ""
-"Only the providers with an API here are listed. The rest send over SMTP, "
-"which is the other option above."
+"This only saves you typing: choosing a profile fills in the host, the port, "
+"the encryption and — where the provider imposes one — the username, all "
+"checked against the provider's documentation. Nothing else about the send "
+"changes, and any server not on the list works through \"Other SMTP server\"."
 msgstr ""
-"Se listan sólo los proveedores que tienen API acá. El resto envía por SMTP, "
-"que es la otra opción de arriba."
+"Esto sólo te ahorra tipear: elegir un perfil completa el servidor, el "
+"puerto, el cifrado y —cuando el proveedor lo impone— el usuario, todo "
+"verificado contra la documentación del proveedor. No cambia nada más del "
+"envío, y cualquier servidor que no esté en la lista funciona con «Otro "
+"servidor SMTP»."
 
-#: templates/settings-profile.php:53
+#: templates/settings-profile.php:58
 msgid ""
-"Choosing a profile fills in the host, port, encryption and — where the "
-"provider imposes one — the username. Every value here was checked against "
-"the provider's documentation. You then paste the credential on the next tab."
+"Here the provider is the transport, not a shortcut: the message is handed to"
+" this one over HTTPS. Only the providers with an API are listed — the rest "
+"send over SMTP, which is the other option above."
 msgstr ""
-"Elegir un perfil completa el servidor, el puerto, el cifrado y —cuando el "
-"proveedor lo impone— el usuario. Cada valor de acá se verificó contra la "
-"documentación del proveedor. La credencial la pegás en la solapa siguiente."
+"Acá el proveedor es el transporte, no un atajo: el mensaje se le entrega a "
+"este por HTTPS. Se listan sólo los proveedores que tienen API; el resto "
+"envía por SMTP, que es la otra opción de arriba."
 
-#: templates/settings-profile.php:57
+#: templates/settings-profile.php:65
 msgid "Profile"
 msgstr "Perfil"
 
-#: templates/settings-profile.php:60
+#: templates/settings-profile.php:71
 msgid "— choose —"
 msgstr "— elegir —"
 
-#: templates/settings-profile.php:77
+#: templates/settings-profile.php:89
 msgid "Use this profile"
 msgstr "Usar este perfil"
+
+#: templates/settings-profile.php:90
+msgid "Use this provider"
+msgstr "Usar este proveedor"
 
 #: templates/settings-sender.php:23
 msgid "From address"
@@ -2139,6 +2151,31 @@ msgstr "Todavía nada."
 #: templates/user-profile.php:65
 msgid "See all in the mail log"
 msgstr "Ver todo en el historial de correo"
+
+#~ msgid ""
+#~ "Four steps: pick the provider, prove the server accepts the credentials, say"
+#~ " who the mail comes from, and send a message to check it arrives. Each one "
+#~ "opens the next."
+#~ msgstr ""
+#~ "Cuatro pasos: elegir el proveedor, probar que el servidor acepta las "
+#~ "credenciales, decir de quién viene el correo, y mandar un mensaje para "
+#~ "comprobar que llega. Cada uno habilita el siguiente."
+
+#~ msgid ""
+#~ "Only the providers with an API here are listed. The rest send over SMTP, "
+#~ "which is the other option above."
+#~ msgstr ""
+#~ "Se listan sólo los proveedores que tienen API acá. El resto envía por SMTP, "
+#~ "que es la otra opción de arriba."
+
+#~ msgid ""
+#~ "Choosing a profile fills in the host, port, encryption and — where the "
+#~ "provider imposes one — the username. Every value here was checked against "
+#~ "the provider's documentation. You then paste the credential on the next tab."
+#~ msgstr ""
+#~ "Elegir un perfil completa el servidor, el puerto, el cifrado y —cuando el "
+#~ "proveedor lo impone— el usuario. Cada valor de acá se verificó contra la "
+#~ "documentación del proveedor. La credencial la pegás en la solapa siguiente."
 
 #~ msgid ""
 #~ "The password never comes back to the browser. It is redacted from the log, "

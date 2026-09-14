@@ -440,4 +440,32 @@ class ApiTest extends AdminTestCase {
 		$this->assertStringContainsString( 'data-api="1"', $html );
 		$this->assertStringContainsString( 'data-api="0"', $html );
 	}
+
+	public function test_the_whole_first_step_carries_both_methods_at_once(): void {
+		$html = $this->render( 'diluxone_mail_screen_settings' );
+
+		// Both versions of every piece that differs are in the page, with the
+		// one that does not apply hidden. Nothing waits for a round-trip to
+		// stop describing the method that was not chosen.
+		$this->assertStringContainsString( 'diluxone-mail-when-smtp', $html );
+		$this->assertStringContainsString( 'diluxone-mail-when-api', $html );
+		$this->assertStringContainsString( 'Use this profile', $html );
+		$this->assertStringContainsString( 'Use this provider', $html );
+		// Including the name of the second step, in the row of tabs.
+		$this->assertStringContainsString( 'SMTP server', $html );
+		$this->assertStringContainsString( 'API key', $html );
+
+		// Stored as SMTP: the SMTP half is the one showing.
+		$this->assertMatchesRegularExpression( '/class="diluxone-mail-when-api" hidden/', $html );
+		$this->assertDoesNotMatchRegularExpression( '/class="diluxone-mail-when-smtp" hidden/', $html );
+
+		\update_option( 'diluxone_mail_transport', 'api' );
+		\update_option( 'diluxone_mail_provider', 'mailtrap_sending' );
+		$_GET['tab'] = 'profile';
+
+		$html = $this->render( 'diluxone_mail_screen_settings' );
+
+		$this->assertMatchesRegularExpression( '/class="diluxone-mail-when-smtp" hidden/', $html );
+		$this->assertDoesNotMatchRegularExpression( '/class="diluxone-mail-when-api" hidden/', $html );
+	}
 }

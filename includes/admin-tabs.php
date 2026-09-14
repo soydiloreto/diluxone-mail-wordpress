@@ -244,6 +244,15 @@ function diluxone_mail_tabs_nav( string $current, string $scope ): void {
 	$tabs     = diluxone_mail_settings_tabs( $scope );
 	$progress = diluxone_mail_settings_progress();
 
+	// The only markup a label may carry: the second step's two names, one of
+	// them hidden.
+	$allowed = array(
+		'span' => array(
+			'class'  => array(),
+			'hidden' => array(),
+		),
+	);
+
 	echo '<nav class="nav-tab-wrapper diluxone-mail-tabs">';
 
 	foreach ( $tabs as $slug => $tab ) {
@@ -251,10 +260,29 @@ function diluxone_mail_tabs_nav( string $current, string $scope ): void {
 		$done  = 0 !== $tab['step'] && ( $progress[ $slug ] ?? false );
 		$label = 0 !== $tab['step']
 			/* translators: 1: step number, 2: name of the step */
-			? sprintf( _x( '%1$d. %2$s', 'numbered step in the settings screen', 'diluxone-mail' ), $tab['step'], $tab['label'] )
-			: $tab['label'];
+			? sprintf( esc_html( _x( '%1$d. %2$s', 'numbered step in the settings screen', 'diluxone-mail' ) ), (int) $tab['step'], esc_html( (string) $tab['label'] ) )
+			: esc_html( (string) $tab['label'] );
 
 		$classes = 'nav-tab';
+
+		// The second step carries both of its names, and the one on screen is
+		// decided by a radio button on the first step. Rendering only the
+		// stored one leaves the tab describing the method the person has just
+		// stopped choosing, until a round-trip catches up.
+		if ( 'server' === $slug ) {
+			$label = sprintf(
+				/* translators: 1: step number, 2: name of the step */
+				esc_html( _x( '%1$d. %2$s', 'numbered step in the settings screen', 'diluxone-mail' ) ),
+				(int) $tab['step'],
+				sprintf(
+					'<span class="diluxone-mail-when-smtp"%1$s>%2$s</span><span class="diluxone-mail-when-api"%3$s>%4$s</span>',
+					'smtp' === diluxone_mail_transport_kind() ? '' : ' hidden',
+					esc_html__( 'SMTP server', 'diluxone-mail' ),
+					'api' === diluxone_mail_transport_kind() ? '' : ' hidden',
+					esc_html__( 'API key', 'diluxone-mail' )
+				)
+			);
+		}
 
 		if ( $slug === $current ) {
 			$classes .= ' nav-tab-active';
@@ -279,7 +307,7 @@ function diluxone_mail_tabs_nav( string $current, string $scope ): void {
 				'<span class="%1$s" aria-disabled="true" title="%2$s">%3$s</span>',
 				esc_attr( $classes ),
 				esc_attr( diluxone_mail_tab_blocked_reason( $after ) ),
-				esc_html( $label ) . ' <span aria-hidden="true">&#128274;</span>'
+				wp_kses( $label, $allowed ) . ' <span aria-hidden="true">&#128274;</span>'
 			);
 
 			continue;
@@ -289,7 +317,7 @@ function diluxone_mail_tabs_nav( string $current, string $scope ): void {
 			'<a href="%1$s" class="%2$s">%3$s</a>',
 			esc_url( diluxone_mail_tab_url( $slug, $scope ) ),
 			esc_attr( $classes ),
-			esc_html( $label ) . ( $done ? ' <span aria-hidden="true">&#10003;</span>' : '' )
+			wp_kses( $label, $allowed ) . ( $done ? ' <span aria-hidden="true">&#10003;</span>' : '' )
 		);
 	}
 

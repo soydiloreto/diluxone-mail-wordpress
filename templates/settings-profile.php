@@ -18,7 +18,7 @@ $diluxone_mail_locked = $data['fields']['diluxone_mail_host']['readonly'] || in_
 ?>
 
 <p class="description diluxone-mail-intro">
-	<?php esc_html_e( 'Four steps: pick the provider, prove the server accepts the credentials, say who the mail comes from, and send a message to check it arrives. Each one opens the next.', 'diluxone-mail' ); ?>
+	<?php esc_html_e( 'Four steps: pick how this site sends and through whom, prove the provider accepts the credentials, say who the mail comes from, and send a message to check it arrives. Each one opens the next.', 'diluxone-mail' ); ?>
 </p>
 
 <form method="post" action="<?php echo esc_url( (string) $data['action_url'] ); ?>" class="diluxone-mail-form">
@@ -49,12 +49,23 @@ $diluxone_mail_locked = $data['fields']['diluxone_mail_host']['readonly'] || in_
 	</table>
 
 	<h2><?php esc_html_e( 'Provider', 'diluxone-mail' ); ?></h2>
-	<p class="description diluxone-mail-api-only" hidden><?php esc_html_e( 'Only the providers with an API here are listed. The rest send over SMTP, which is the other option above.', 'diluxone-mail' ); ?></p>
-	<p class="description"><?php esc_html_e( 'Choosing a profile fills in the host, port, encryption and — where the provider imposes one — the username. Every value here was checked against the provider\'s documentation. You then paste the credential on the next tab.', 'diluxone-mail' ); ?></p>
+
+	<p class="description diluxone-mail-when-smtp" <?php echo 'smtp' === $data['transport_kind'] ? '' : 'hidden'; ?>>
+		<?php esc_html_e( 'This only saves you typing: choosing a profile fills in the host, the port, the encryption and — where the provider imposes one — the username, all checked against the provider\'s documentation. Nothing else about the send changes, and any server not on the list works through "Other SMTP server".', 'diluxone-mail' ); ?>
+	</p>
+
+	<p class="description diluxone-mail-when-api" <?php echo 'api' === $data['transport_kind'] ? '' : 'hidden'; ?>>
+		<?php esc_html_e( 'Here the provider is the transport, not a shortcut: the message is handed to this one over HTTPS. Only the providers with an API are listed — the rest send over SMTP, which is the other option above.', 'diluxone-mail' ); ?>
+	</p>
 
 	<table class="form-table" role="presentation">
 		<tr>
-			<th scope="row"><label for="diluxone_mail_provider"><?php esc_html_e( 'Profile', 'diluxone-mail' ); ?></label></th>
+			<th scope="row">
+				<label for="diluxone_mail_provider">
+					<span class="diluxone-mail-when-smtp" <?php echo 'smtp' === $data['transport_kind'] ? '' : 'hidden'; ?>><?php esc_html_e( 'Profile', 'diluxone-mail' ); ?></span>
+					<span class="diluxone-mail-when-api" <?php echo 'api' === $data['transport_kind'] ? '' : 'hidden'; ?>><?php esc_html_e( 'Provider', 'diluxone-mail' ); ?></span>
+				</label>
+			</th>
 			<td>
 				<select name="diluxone_mail_provider" id="diluxone_mail_provider" <?php disabled( $diluxone_mail_locked ); ?>>
 					<option value=""><?php esc_html_e( '— choose —', 'diluxone-mail' ); ?></option>
@@ -74,7 +85,10 @@ $diluxone_mail_locked = $data['fields']['diluxone_mail_host']['readonly'] || in_
 					</optgroup>
 				</select>
 				<?php if ( ! $diluxone_mail_locked ) : ?>
-					<?php submit_button( __( 'Use this profile', 'diluxone-mail' ), 'primary', 'apply', false ); ?>
+					<button type="submit" name="apply" class="button button-primary">
+						<span class="diluxone-mail-when-smtp" <?php echo 'smtp' === $data['transport_kind'] ? '' : 'hidden'; ?>><?php esc_html_e( 'Use this profile', 'diluxone-mail' ); ?></span>
+						<span class="diluxone-mail-when-api" <?php echo 'api' === $data['transport_kind'] ? '' : 'hidden'; ?>><?php esc_html_e( 'Use this provider', 'diluxone-mail' ); ?></span>
+					</button>
 				<?php endif; ?>
 				<?php diluxone_mail_source_caption( array_merge( $data['provider'], array( 'label' => diluxone_mail_source_label( $data['provider']['source'], $data['provider']['origin'] ) ) ) ); ?>
 				<?php if ( '' !== (string) $data['profile']['docs'] ) : ?>

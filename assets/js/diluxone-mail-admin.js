@@ -44,15 +44,16 @@
 		return;
 	}
 
-	var onlyApi = document.querySelector( '.diluxone-mail-api-only' );
-
 	/**
-	 * Over HTTPS only some providers can be reached, and offering the rest is
-	 * offering a configuration that would quietly fall back to SMTP. The ones
-	 * without an API are taken out of the list rather than left there to be
-	 * chosen and refused on the next screen.
+	 * Everything on this step that is about one method and not the other.
+	 *
+	 * Which method is chosen is a radio button, and until it is submitted the
+	 * server knows nothing about it — so a screen that only renames itself on
+	 * the next page load spends the whole first step describing the method the
+	 * person just stopped choosing. The second tab carries both of its names
+	 * and is renamed by the same two classes.
 	 */
-	function filter() {
+	function follow() {
 		var api = document.getElementById( 'diluxone_mail_transport_api' );
 		var on = api && api.checked;
 
@@ -61,6 +62,9 @@
 				return;
 			}
 
+			// Over HTTPS only some providers can be reached, and offering the
+			// rest is offering a configuration that would fall back to SMTP
+			// without the screen saying so.
 			var supported = ! on || '1' === option.dataset.api;
 
 			option.hidden = ! supported;
@@ -71,14 +75,18 @@
 			}
 		} );
 
-		if ( onlyApi ) {
-			onlyApi.hidden = ! on;
-		}
+		Array.prototype.forEach.call( document.querySelectorAll( '.diluxone-mail-when-api' ), function ( el ) {
+			el.hidden = ! on;
+		} );
+
+		Array.prototype.forEach.call( document.querySelectorAll( '.diluxone-mail-when-smtp' ), function ( el ) {
+			el.hidden = on;
+		} );
 	}
 
 	Array.prototype.forEach.call( method, function ( radio ) {
-		radio.addEventListener( 'change', filter );
+		radio.addEventListener( 'change', follow );
 	} );
 
-	filter();
+	follow();
 }() );

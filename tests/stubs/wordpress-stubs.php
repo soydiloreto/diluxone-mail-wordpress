@@ -481,6 +481,16 @@ if (!function_exists('wp_remote_retrieve_body')) {
 	}
 }
 
+if (!function_exists('wp_kses')) {
+	/**
+	 * Enough of it for the tests: the real one strips what is not allowed, and
+	 * what the plugin passes through it is markup it built itself.
+	 */
+	function wp_kses(string $string, $allowed = [], $protocols = []): string {
+		return $string;
+	}
+}
+
 if (!function_exists('is_wp_error')) {
 	function is_wp_error($thing): bool {
 		return $thing instanceof \WP_Error;

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-14T00:05:17+00:00\n"
+"POT-Creation-Date: 2026-09-14T00:14:54+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: diluxone-mail\n"
@@ -94,15 +94,18 @@ msgstr ""
 #: includes/log-list-table.php:48
 #: templates/admin-log-detail.php:37
 #: templates/settings-profile.php:51
+#: templates/settings-profile.php:66
 msgid "Provider"
 msgstr ""
 
 #: includes/admin-tabs.php:51
+#: includes/admin-tabs.php:282
 #: templates/settings-api.php:35
 msgid "API key"
 msgstr ""
 
 #: includes/admin-tabs.php:51
+#: includes/admin-tabs.php:280
 #: templates/settings-server.php:69
 msgid "SMTP server"
 msgstr ""
@@ -150,7 +153,8 @@ msgid "Set the From address first: a provider will not deliver a message sent fr
 msgstr ""
 
 #. translators: 1: step number, 2: name of the step
-#: includes/admin-tabs.php:254
+#: includes/admin-tabs.php:263
+#: includes/admin-tabs.php:275
 #, php-format
 msgctxt "numbered step in the settings screen"
 msgid "%1$d. %2$s"
@@ -1391,7 +1395,7 @@ msgid "Stored encrypted with a key derived from this site's WordPress salts, and
 msgstr ""
 
 #: templates/settings-api.php:62
-#: templates/settings-profile.php:81
+#: templates/settings-profile.php:95
 msgid "Provider documentation"
 msgstr ""
 
@@ -1467,7 +1471,7 @@ msgid "Save"
 msgstr ""
 
 #: templates/settings-profile.php:21
-msgid "Four steps: pick the provider, prove the server accepts the credentials, say who the mail comes from, and send a message to check it arrives. Each one opens the next."
+msgid "Four steps: pick how this site sends and through whom, prove the provider accepts the credentials, say who the mail comes from, and send a message to check it arrives. Each one opens the next."
 msgstr ""
 
 #: templates/settings-profile.php:30
@@ -1494,24 +1498,28 @@ msgstr ""
 msgid "over HTTPS, with an API key instead of a server. Only some providers, and it is the way out when the host blocks the SMTP ports — which many do. When a send is refused you get the reason in words instead of a numbered error."
 msgstr ""
 
-#: templates/settings-profile.php:52
-msgid "Only the providers with an API here are listed. The rest send over SMTP, which is the other option above."
+#: templates/settings-profile.php:54
+msgid "This only saves you typing: choosing a profile fills in the host, the port, the encryption and — where the provider imposes one — the username, all checked against the provider's documentation. Nothing else about the send changes, and any server not on the list works through \"Other SMTP server\"."
 msgstr ""
 
-#: templates/settings-profile.php:53
-msgid "Choosing a profile fills in the host, port, encryption and — where the provider imposes one — the username. Every value here was checked against the provider's documentation. You then paste the credential on the next tab."
+#: templates/settings-profile.php:58
+msgid "Here the provider is the transport, not a shortcut: the message is handed to this one over HTTPS. Only the providers with an API are listed — the rest send over SMTP, which is the other option above."
 msgstr ""
 
-#: templates/settings-profile.php:57
+#: templates/settings-profile.php:65
 msgid "Profile"
 msgstr ""
 
-#: templates/settings-profile.php:60
+#: templates/settings-profile.php:71
 msgid "— choose —"
 msgstr ""
 
-#: templates/settings-profile.php:77
+#: templates/settings-profile.php:89
 msgid "Use this profile"
+msgstr ""
+
+#: templates/settings-profile.php:90
+msgid "Use this provider"
 msgstr ""
 
 #: templates/settings-sender.php:23
