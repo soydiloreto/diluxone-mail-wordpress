@@ -74,6 +74,17 @@ abstract class AdminTestCase extends TestCase {
 		// asked for one, and the failure lands somewhere else entirely.
 		unset( $GLOBALS['_test_wp_remote_get'], $GLOBALS['_test_wp_remote_post'] );
 
+		// And the environment, which is not a global anybody can reset by
+		// emptying an array: a variable a test exported to prove a credential
+		// is never printed outlives the whole class, and the next test case
+		// that reads the configuration without extending this one — the
+		// mailer's does — finds a password it never set and quietly changes
+		// what it was measuring. Clearing them in setUp was half of it; a
+		// variable has to be gone when the class that set it ends.
+		foreach ( \diluxone_mail_config_fields() as $suffix ) {
+			putenv( 'DILUXONE_MAIL_' . $suffix );
+		}
+
 		$GLOBALS['_test_multisite'] = false;
 		$GLOBALS['_test_can']       = true;
 		$GLOBALS['_test_blog_id']   = 1;
