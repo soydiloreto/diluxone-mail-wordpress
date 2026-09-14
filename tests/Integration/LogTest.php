@@ -114,6 +114,11 @@ class LogTest extends IntegrationTestCase {
 		$columns = (array) $wpdb->get_col( 'SHOW COLUMNS FROM ' . diluxone_mail_detail_table() );
 		$this->assertNotContains( 'body', $columns );
 		$this->assertNotContains( 'body_type', $columns );
+
+		// And the log says which of the site's providers carried each message,
+		// not only what kind of provider it was.
+		$log = (array) $wpdb->get_col( 'SHOW COLUMNS FROM ' . diluxone_mail_log_table() );
+		$this->assertContains( 'connection', $log );
 	}
 
 	public function test_the_extended_log_stores_the_headers(): void {

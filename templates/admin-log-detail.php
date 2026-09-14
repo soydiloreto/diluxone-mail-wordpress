@@ -34,7 +34,7 @@ $diluxone_mail_detail = $data['detail'];
 		<?php if ( '' !== (string) $diluxone_mail_row['response'] ) : ?>
 			<tr><th scope="row"><?php esc_html_e( 'Server response', 'diluxone-mail' ); ?></th><td><code><?php echo esc_html( (string) $diluxone_mail_row['response'] ); ?></code></td></tr>
 		<?php endif; ?>
-		<tr><th scope="row"><?php esc_html_e( 'Provider', 'diluxone-mail' ); ?></th><td><?php echo esc_html( 'observer' === (string) $diluxone_mail_row['provider'] ? __( 'another plugin', 'diluxone-mail' ) : (string) diluxone_mail_provider( (string) $diluxone_mail_row['provider'] )['name'] ); ?></td></tr>
+		<tr><th scope="row"><?php esc_html_e( 'Provider', 'diluxone-mail' ); ?></th><td><?php echo esc_html( diluxone_mail_log_carrier( $diluxone_mail_row ) ); ?></td></tr>
 		<tr><th scope="row"><?php esc_html_e( 'Sent by', 'diluxone-mail' ); ?></th><td><code><?php echo esc_html( (string) $diluxone_mail_row['source'] ); ?></code></td></tr>
 		<tr><th scope="row"><?php esc_html_e( 'Message-ID', 'diluxone-mail' ); ?></th><td><code><?php echo esc_html( (string) $diluxone_mail_row['message_id'] ); ?></code></td></tr>
 		<?php if ( array() !== $data['headers'] ) : ?>

@@ -244,6 +244,7 @@ function diluxone_mail_capture( array $atts ): array {
 			'subject'     => (string) ( $atts['subject'] ?? '' ),
 			'status'      => 'pending',
 			'provider'    => diluxone_mail_transport_active() ? $cfg['provider'] : 'observer',
+			'connection'  => diluxone_mail_transport_active() ? diluxone_mail_active_id() : '',
 			'source'      => diluxone_mail_caller(),
 			'headers'     => $extended ? (string) wp_json_encode( diluxone_mail_header_lines( $atts['headers'] ?? '' ) ) : '',
 			'attachments' => $extended ? (string) wp_json_encode( array_values( $attachments ) ) : '',

@@ -98,6 +98,52 @@ class FailoverTest extends AdminTestCase {
 		$this->assertFalse( \diluxone_mail_failing_over() );
 	}
 
+	public function test_the_log_says_which_provider_each_attempt_went_through(): void {
+		list( $uno, $dos ) = $this->dos();
+
+		$GLOBALS['_test_wp_mail_fails'] = 'nope';
+
+		\wp_mail( 'ana@x.test', 'Hola', 'texto' );
+
+		$filas = array_map(
+			static fn( array $llamada ): array => $llamada['args'],
+			$this->db->of( 'insert' )
+		);
+
+		// Two rows, and they are not the same provider: which one refused and
+		// which one was tried next is the question a log with a failover in it
+		// has to answer.
+		$this->assertCount( 2, $filas );
+		$this->assertSame( $uno, $filas[0]['connection'] );
+		$this->assertSame( $dos, $filas[1]['connection'] );
+	}
+
+	public function test_a_row_is_named_after_the_provider_the_site_named(): void {
+		$id = $this->conexion(
+			array(
+				'diluxone_mail_provider' => 'mailjet',
+				'label'                  => 'El de facturación',
+			)
+		);
+
+		$this->assertSame(
+			'El de facturación',
+			\diluxone_mail_log_carrier( array( 'provider' => 'mailjet', 'connection' => $id ) )
+		);
+
+		// A provider removed since: the row still says what kind it was, and
+		// says that it is gone.
+		$this->assertSame(
+			'Mailjet (removed)',
+			\diluxone_mail_log_carrier( array( 'provider' => 'mailjet', 'connection' => 'cn_borrada' ) )
+		);
+
+		// Rows written before any of this existed still read.
+		$this->assertSame( 'Mailjet', \diluxone_mail_log_carrier( array( 'provider' => 'mailjet' ) ) );
+		$this->assertSame( 'another plugin', \diluxone_mail_log_carrier( array( 'provider' => 'observer' ) ) );
+		$this->assertSame( '—', \diluxone_mail_log_carrier( array() ) );
+	}
+
 	public function test_with_nobody_underneath_there_is_nothing_to_try(): void {
 		$this->conexion(
 			array(

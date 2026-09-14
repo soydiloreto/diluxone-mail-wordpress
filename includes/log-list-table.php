@@ -112,13 +112,7 @@ class DiluxOne_Mail_Log_Table extends WP_List_Table {
 
 				return sprintf( '<span class="diluxone-mail-status diluxone-mail-status--%s">%s</span>', esc_attr( $status ), esc_html( $text ) );
 			case 'provider':
-				$key = (string) $item['provider'];
-
-				if ( 'observer' === $key ) {
-					return esc_html__( 'another plugin', 'diluxone-mail' );
-				}
-
-				return esc_html( '' !== $key ? (string) diluxone_mail_provider( $key )['name'] : '—' );
+				return esc_html( diluxone_mail_log_carrier( $item ) );
 			case 'source':
 				return esc_html( str_replace( array( 'plugin:', 'theme:' ), '', (string) $item['source'] ) );
 			case 'site_id':

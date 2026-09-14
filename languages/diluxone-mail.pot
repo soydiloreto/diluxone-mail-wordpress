@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-14T01:27:48+00:00\n"
+"POT-Creation-Date: 2026-09-14T01:29:17+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: diluxone-mail\n"
@@ -707,69 +707,74 @@ msgstr ""
 msgid "Site"
 msgstr ""
 
-#: includes/log-list-table.php:118
-#: templates/admin-log-detail.php:37
-msgid "another plugin"
-msgstr ""
-
-#: includes/log-list-table.php:141
+#: includes/log-list-table.php:135
 #: templates/admin-dns.php:118
 msgid "Details"
 msgstr ""
 
-#: includes/log-list-table.php:149
+#: includes/log-list-table.php:143
 #: templates/user-profile.php:49
 msgid "(no subject)"
 msgstr ""
 
-#: includes/log-list-table.php:181
+#: includes/log-list-table.php:175
 msgid "Filter by status"
 msgstr ""
 
-#: includes/log-list-table.php:183
+#: includes/log-list-table.php:177
 msgid "All statuses"
 msgstr ""
 
-#: includes/log-list-table.php:189
+#: includes/log-list-table.php:183
 msgid "All sites"
 msgstr ""
 
-#: includes/log-list-table.php:191
+#: includes/log-list-table.php:185
 msgid "Filter"
 msgstr ""
 
-#: includes/log-list-table.php:198
+#: includes/log-list-table.php:192
 msgid "No messages logged yet."
 msgstr ""
 
-#: includes/log.php:80
+#: includes/log.php:86
 #: templates/admin-overview.php:90
 msgid "Sending"
 msgstr ""
 
-#: includes/log.php:81
+#: includes/log.php:87
 msgid "Sent"
 msgstr ""
 
-#: includes/log.php:82
+#: includes/log.php:88
 #: templates/admin-status.php:89
 msgid "Failed"
 msgstr ""
 
-#: includes/log.php:83
+#: includes/log.php:89
 msgid "Handed to another plugin"
 msgstr ""
 
-#: includes/log.php:84
+#: includes/log.php:90
 msgid "Not sent (suppressed)"
 msgstr ""
 
-#: includes/log.php:88
+#: includes/log.php:94
 msgid "Bounced"
 msgstr ""
 
-#: includes/log.php:89
+#: includes/log.php:95
 msgid "Marked as spam"
+msgstr ""
+
+#: includes/log.php:559
+msgid "another plugin"
+msgstr ""
+
+#. translators: %s: the kind of provider a message went through
+#: includes/log.php:576
+#, php-format
+msgid "%s (removed)"
 msgstr ""
 
 #. translators: %s: names of the detected plugins

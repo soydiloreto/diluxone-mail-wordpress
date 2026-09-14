@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-14T01:27:45+00:00\n"
+"POT-Creation-Date: 2026-09-14T01:29:15+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -921,65 +921,71 @@ msgstr "Enviado por"
 msgid "Site"
 msgstr "Sitio"
 
-#: includes/log-list-table.php:118 templates/admin-log-detail.php:37
-msgid "another plugin"
-msgstr "otro plugin"
-
-#: includes/log-list-table.php:141 templates/admin-dns.php:118
+#: includes/log-list-table.php:135 templates/admin-dns.php:118
 msgid "Details"
 msgstr "Detalle"
 
-#: includes/log-list-table.php:149 templates/user-profile.php:49
+#: includes/log-list-table.php:143 templates/user-profile.php:49
 msgid "(no subject)"
 msgstr "(sin asunto)"
 
-#: includes/log-list-table.php:181
+#: includes/log-list-table.php:175
 msgid "Filter by status"
 msgstr "Filtrar por estado"
 
-#: includes/log-list-table.php:183
+#: includes/log-list-table.php:177
 msgid "All statuses"
 msgstr "Todos los estados"
 
-#: includes/log-list-table.php:189
+#: includes/log-list-table.php:183
 msgid "All sites"
 msgstr "Todos los sitios"
 
-#: includes/log-list-table.php:191
+#: includes/log-list-table.php:185
 msgid "Filter"
 msgstr "Filtrar"
 
-#: includes/log-list-table.php:198
+#: includes/log-list-table.php:192
 msgid "No messages logged yet."
 msgstr "Todavía no hay mensajes registrados."
 
-#: includes/log.php:80 templates/admin-overview.php:90
+#: includes/log.php:86 templates/admin-overview.php:90
 msgid "Sending"
 msgstr "Enviando"
 
-#: includes/log.php:81
+#: includes/log.php:87
 msgid "Sent"
 msgstr "Enviado"
 
-#: includes/log.php:82 templates/admin-status.php:89
+#: includes/log.php:88 templates/admin-status.php:89
 msgid "Failed"
 msgstr "Falló"
 
-#: includes/log.php:83
+#: includes/log.php:89
 msgid "Handed to another plugin"
 msgstr "Entregado a otro plugin"
 
-#: includes/log.php:84
+#: includes/log.php:90
 msgid "Not sent (suppressed)"
 msgstr "No enviado (suprimido)"
 
-#: includes/log.php:88
+#: includes/log.php:94
 msgid "Bounced"
 msgstr "Rebotado"
 
-#: includes/log.php:89
+#: includes/log.php:95
 msgid "Marked as spam"
 msgstr "Marcado como spam"
+
+#: includes/log.php:559
+msgid "another plugin"
+msgstr "otro plugin"
+
+#. translators: %s: the kind of provider a message went through
+#: includes/log.php:576
+#, php-format
+msgid "%s (removed)"
+msgstr "%s (eliminado)"
 
 #. translators: %s: names of the detected plugins
 #: includes/observer.php:287

@@ -23,6 +23,12 @@
  *     webhooks arrive, marking the right row will be an UPDATE by address and
  *     not a correction of the data model.
  *
+ * The `provider` column says what kind of provider carried the message —
+ * `mailjet`, `mailtrap_sending`, `observer`. `connection` says which of the
+ * site's own it was, because a site can have two accounts with the same
+ * provider and a failover writes two rows in a row: without it the log cannot
+ * answer which one refused and which one took it.
+ *
  * The second stores each message's detail — the SMTP dialogue with the
  * provider, if the site turned the extended log on — one row per message. It
  * is separate for three reasons: it has its own retention, shorter, because it
@@ -68,7 +74,7 @@ defined( 'ABSPATH' ) || exit;
  * update over FTP or through git — which never fires activation — create the
  * new column anyway.
  */
-const DILUXONE_MAIL_DB_VERSION = 3;
+const DILUXONE_MAIL_DB_VERSION = 4;
 
 /**
  * The states a row can be in, with their human-readable names.
@@ -138,6 +144,7 @@ function diluxone_mail_install(): void {
 		error text NOT NULL,
 		response text NOT NULL,
 		provider varchar(50) NOT NULL DEFAULT '',
+		connection varchar(32) NOT NULL DEFAULT '',
 		source varchar(191) NOT NULL DEFAULT '',
 		headers longtext NOT NULL,
 		attachments text NOT NULL,
@@ -238,12 +245,13 @@ function diluxone_mail_log_insert( array $rows ): void {
 				'error'       => (string) ( $row['error'] ?? '' ),
 				'response'    => (string) ( $row['response'] ?? '' ),
 				'provider'    => (string) ( $row['provider'] ?? '' ),
+				'connection'  => (string) ( $row['connection'] ?? '' ),
 				'source'      => (string) ( $row['source'] ?? '' ),
 				'headers'     => (string) ( $row['headers'] ?? '' ),
 				'attachments' => (string) ( $row['attachments'] ?? '' ),
 				'message_id'  => (string) ( $row['message_id'] ?? '' ),
 			),
-			array( '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
+			array( '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
 		);
 	}
 }
@@ -531,4 +539,39 @@ function diluxone_mail_log_delete_by_email( string $email ): int {
 	$deleted = (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE email = %s', $log, $email ) );
 
 	return $deleted;
+}
+
+/**
+ * What to call the provider a logged message went through.
+ *
+ * The name the site gave it when there is one, because two accounts with the
+ * same provider are two different answers to "where did this go", and a
+ * failover writes one row for each. A connection that has since been removed
+ * falls back to the kind of provider it was: the row is a record of what
+ * happened, and what happened does not stop having happened.
+ *
+ * @param array<string, mixed> $row
+ */
+function diluxone_mail_log_carrier( array $row ): string {
+	$kind = (string) ( $row['provider'] ?? '' );
+
+	if ( 'observer' === $kind ) {
+		return __( 'another plugin', 'diluxone-mail' );
+	}
+
+	$id         = (string) ( $row['connection'] ?? '' );
+	$connection = '' === $id ? array() : diluxone_mail_connection( $id );
+
+	if ( array() !== $connection ) {
+		return diluxone_mail_connection_label( $connection );
+	}
+
+	if ( '' === $kind ) {
+		return '—';
+	}
+
+	$name = (string) diluxone_mail_provider( $kind )['name'];
+
+	/* translators: %s: the kind of provider a message went through */
+	return '' === $id ? $name : sprintf( __( '%s (removed)', 'diluxone-mail' ), $name );
 }
