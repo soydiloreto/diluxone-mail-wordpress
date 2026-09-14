@@ -44,7 +44,11 @@ function diluxone_mail_settings_tabs( string $scope = 'site' ): array {
 		// is what makes "it was never saved without working" true rather
 		// than merely encouraged by the layout of the screen.
 		'server'  => array(
-			'label'  => __( 'SMTP server', 'diluxone-mail' ),
+			// The second step is the same step either way — prove the provider
+			// accepts us — and it is named after whichever thing is being
+			// proved, because "SMTP server" on a screen with no server is a
+			// label that teaches the wrong thing.
+			'label'  => 'api' === diluxone_mail_transport_kind() ? __( 'API key', 'diluxone-mail' ) : __( 'SMTP server', 'diluxone-mail' ),
 			'step'   => 2,
 			'needs'  => 'profile',
 			'groups' => array(),
@@ -117,9 +121,13 @@ function diluxone_mail_settings_progress(): array {
 function diluxone_mail_tab_blocked_reason( string $tab ): string {
 	switch ( $tab ) {
 		case 'server':
-			return __( 'Choose a provider profile first: it fills in the host, the port and the encryption this tab asks for.', 'diluxone-mail' );
+			return 'api' === diluxone_mail_transport_kind()
+				? __( 'Choose how this site sends and which provider first: the key belongs to one of them.', 'diluxone-mail' )
+				: __( 'Choose a provider profile first: it fills in the host, the port and the encryption this tab asks for.', 'diluxone-mail' );
 		case 'sender':
-			return __( 'The SMTP server has to answer first. Test the connection on the previous tab; until it does, there is nothing to send from.', 'diluxone-mail' );
+			return 'api' === diluxone_mail_transport_kind()
+				? __( 'The provider has to accept the key first. Check it on the previous tab; until it does, there is nothing to send with.', 'diluxone-mail' )
+				: __( 'The SMTP server has to answer first. Test the connection on the previous tab; until it does, there is nothing to send from.', 'diluxone-mail' );
 		case 'test':
 			return __( 'Set the From address first: a provider will not deliver a message sent from an address it has not verified.', 'diluxone-mail' );
 		default:

@@ -446,7 +446,26 @@ if (!function_exists('trailingslashit')) {
 
 if (!function_exists('wp_remote_get')) {
 	function wp_remote_get($url, array $args = []) {
+		$GLOBALS['_test_http'][] = ['method' => 'GET', 'url' => $url, 'args' => $args];
+
 		return $GLOBALS['_test_wp_remote_get'] ?? new \WP_Error('http', 'no network in tests');
+	}
+}
+
+if (!function_exists('wp_remote_post')) {
+	function wp_remote_post($url, array $args = []) {
+		$GLOBALS['_test_http'][] = ['method' => 'POST', 'url' => $url, 'args' => $args];
+
+		return $GLOBALS['_test_wp_remote_post'] ?? new \WP_Error('http', 'no network in tests');
+	}
+}
+
+if (!function_exists('wp_check_filetype')) {
+	function wp_check_filetype($file, $mimes = null): array {
+		$ext = strtolower((string) pathinfo($file, PATHINFO_EXTENSION));
+		$map = ['pdf' => 'application/pdf', 'txt' => 'text/plain', 'png' => 'image/png'];
+
+		return ['ext' => $ext ?: false, 'type' => $map[$ext] ?? false];
 	}
 }
 

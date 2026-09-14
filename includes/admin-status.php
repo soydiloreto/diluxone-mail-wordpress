@@ -24,7 +24,7 @@ function diluxone_mail_status(): array {
 		$v = diluxone_mail_config_value( $field );
 
 		$config[ $field ] = array(
-			'value' => 'pass' === $field ? ( '' !== $v['value'] ? '***' : '' ) : $v['value'],
+			'value' => in_array( $field, array( 'pass', 'api_key' ), true ) ? ( '' !== $v['value'] ? '***' : '' ) : $v['value'],
 			'label' => diluxone_mail_source_label( $v['source'], $v['origin'] ),
 		);
 	}

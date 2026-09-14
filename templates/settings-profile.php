@@ -27,7 +27,29 @@ $diluxone_mail_locked = $data['fields']['diluxone_mail_host']['readonly'] || in_
 	<input type="hidden" name="scope" value="<?php echo esc_attr( (string) $data['scope'] ); ?>">
 	<input type="hidden" name="tab" value="profile">
 
+	<h2><?php esc_html_e( 'How this site sends', 'diluxone-mail' ); ?></h2>
+	<table class="form-table" role="presentation">
+		<tr>
+			<th scope="row"><?php esc_html_e( 'Method', 'diluxone-mail' ); ?></th>
+			<td>
+				<fieldset>
+					<label>
+						<input type="radio" name="diluxone_mail_transport" id="diluxone_mail_transport_smtp" value="smtp" <?php checked( $data['transport_kind'], 'smtp' ); ?>>
+						<strong><?php esc_html_e( 'SMTP', 'diluxone-mail' ); ?></strong> —
+						<?php esc_html_e( 'the provider\'s mail server. Works with every provider here, and with any other one: choosing a profile only fills the server in for you.', 'diluxone-mail' ); ?>
+					</label><br>
+					<label>
+						<input type="radio" name="diluxone_mail_transport" id="diluxone_mail_transport_api" value="api" <?php checked( $data['transport_kind'], 'api' ); ?>>
+						<strong><?php esc_html_e( 'The provider\'s API', 'diluxone-mail' ); ?></strong> —
+						<?php esc_html_e( 'over HTTPS, with an API key instead of a server. Only some providers, and it is the way out when the host blocks the SMTP ports — which many do. When a send is refused you get the reason in words instead of a numbered error.', 'diluxone-mail' ); ?>
+					</label>
+				</fieldset>
+			</td>
+		</tr>
+	</table>
+
 	<h2><?php esc_html_e( 'Provider', 'diluxone-mail' ); ?></h2>
+	<p class="description diluxone-mail-api-only" hidden><?php esc_html_e( 'Only the providers with an API here are listed. The rest send over SMTP, which is the other option above.', 'diluxone-mail' ); ?></p>
 	<p class="description"><?php esc_html_e( 'Choosing a profile fills in the host, port, encryption and — where the provider imposes one — the username. Every value here was checked against the provider\'s documentation. You then paste the credential on the next tab.', 'diluxone-mail' ); ?></p>
 
 	<table class="form-table" role="presentation">
@@ -47,7 +69,7 @@ $diluxone_mail_locked = $data['fields']['diluxone_mail_host']['readonly'] || in_
 							printf( '<optgroup label="%s">', esc_attr( $diluxone_mail_group ) );
 						endif;
 						?>
-						<option value="<?php echo esc_attr( $diluxone_mail_key ); ?>" <?php selected( $data['provider']['value'], $diluxone_mail_key ); ?>><?php echo esc_html( (string) $diluxone_mail_p['name'] ); ?></option>
+						<option value="<?php echo esc_attr( $diluxone_mail_key ); ?>" data-api="<?php echo in_array( $diluxone_mail_key, $data['api_providers'], true ) ? '1' : '0'; ?>" <?php selected( $data['provider']['value'], $diluxone_mail_key ); ?>><?php echo esc_html( (string) $diluxone_mail_p['name'] ); ?></option>
 					<?php endforeach; ?>
 					</optgroup>
 				</select>

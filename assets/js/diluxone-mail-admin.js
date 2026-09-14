@@ -36,4 +36,49 @@
 
 	auth.addEventListener( 'change', apply );
 	apply();
+
+	var method = document.getElementsByName( 'diluxone_mail_transport' );
+	var picker = document.getElementById( 'diluxone_mail_provider' );
+
+	if ( ! method.length || ! picker ) {
+		return;
+	}
+
+	var onlyApi = document.querySelector( '.diluxone-mail-api-only' );
+
+	/**
+	 * Over HTTPS only some providers can be reached, and offering the rest is
+	 * offering a configuration that would quietly fall back to SMTP. The ones
+	 * without an API are taken out of the list rather than left there to be
+	 * chosen and refused on the next screen.
+	 */
+	function filter() {
+		var api = document.getElementById( 'diluxone_mail_transport_api' );
+		var on = api && api.checked;
+
+		Array.prototype.forEach.call( picker.options, function ( option ) {
+			if ( '' === option.value ) {
+				return;
+			}
+
+			var supported = ! on || '1' === option.dataset.api;
+
+			option.hidden = ! supported;
+			option.disabled = ! supported;
+
+			if ( ! supported && option.selected ) {
+				picker.value = '';
+			}
+		} );
+
+		if ( onlyApi ) {
+			onlyApi.hidden = ! on;
+		}
+	}
+
+	Array.prototype.forEach.call( method, function ( radio ) {
+		radio.addEventListener( 'change', filter );
+	} );
+
+	filter();
 }() );

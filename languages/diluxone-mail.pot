@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-13T23:47:30+00:00\n"
+"POT-Creation-Date: 2026-09-14T00:05:17+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: diluxone-mail\n"
@@ -45,7 +45,7 @@ msgstr ""
 
 #: includes/admin-dns.php:42
 #: includes/admin-log.php:62
-#: includes/admin-settings.php:151
+#: includes/admin-settings.php:157
 #: includes/observer.php:300
 msgid "You are not allowed to do this."
 msgstr ""
@@ -76,7 +76,7 @@ msgstr ""
 msgid "Overview"
 msgstr ""
 
-#: includes/admin-settings.php:133
+#: includes/admin-settings.php:139
 #: includes/admin.php:67
 #: templates/admin-overview.php:56
 msgid "Settings"
@@ -93,51 +93,64 @@ msgstr ""
 #: includes/admin-tabs.php:37
 #: includes/log-list-table.php:48
 #: templates/admin-log-detail.php:37
-#: templates/settings-profile.php:30
+#: templates/settings-profile.php:51
 msgid "Provider"
 msgstr ""
 
-#: includes/admin-tabs.php:47
-#: templates/settings-server.php:61
+#: includes/admin-tabs.php:51
+#: templates/settings-api.php:35
+msgid "API key"
+msgstr ""
+
+#: includes/admin-tabs.php:51
+#: templates/settings-server.php:69
 msgid "SMTP server"
 msgstr ""
 
-#: includes/admin-tabs.php:53
+#: includes/admin-tabs.php:57
 #: templates/settings-sender.php:20
 msgid "Sender"
 msgstr ""
 
-#: includes/admin-tabs.php:59
+#: includes/admin-tabs.php:63
 msgid "Test message"
 msgstr ""
 
-#: includes/admin-tabs.php:65
+#: includes/admin-tabs.php:69
 msgid "Sending behaviour"
 msgstr ""
 
-#: includes/admin-tabs.php:71
+#: includes/admin-tabs.php:75
 msgid "Log and privacy"
 msgstr ""
 
-#: includes/admin-tabs.php:80
+#: includes/admin-tabs.php:84
 #: templates/settings-sites.php:18
 msgid "Sites"
 msgstr ""
 
-#: includes/admin-tabs.php:120
+#: includes/admin-tabs.php:125
+msgid "Choose how this site sends and which provider first: the key belongs to one of them."
+msgstr ""
+
+#: includes/admin-tabs.php:126
 msgid "Choose a provider profile first: it fills in the host, the port and the encryption this tab asks for."
 msgstr ""
 
-#: includes/admin-tabs.php:122
+#: includes/admin-tabs.php:129
+msgid "The provider has to accept the key first. Check it on the previous tab; until it does, there is nothing to send with."
+msgstr ""
+
+#: includes/admin-tabs.php:130
 msgid "The SMTP server has to answer first. Test the connection on the previous tab; until it does, there is nothing to send from."
 msgstr ""
 
-#: includes/admin-tabs.php:124
+#: includes/admin-tabs.php:132
 msgid "Set the From address first: a provider will not deliver a message sent from an address it has not verified."
 msgstr ""
 
 #. translators: 1: step number, 2: name of the step
-#: includes/admin-tabs.php:246
+#: includes/admin-tabs.php:254
 #, php-format
 msgctxt "numbered step in the settings screen"
 msgid "%1$d. %2$s"
@@ -180,47 +193,89 @@ msgid "The server answered, but this PHP cannot encrypt the password (openssl wi
 msgstr ""
 
 #: includes/admin.php:161
-msgid "The server did not accept the connection, so nothing was saved. What went wrong is below."
+msgid "That provider has no API here, only its SMTP server. Choose SMTP, or a provider that does."
 msgstr ""
 
 #: includes/admin.php:162
-msgid "Test message sent."
+msgid "The provider recognised the key. It is saved."
 msgstr ""
 
 #: includes/admin.php:163
+msgid "The key is saved. The provider could not be asked whether it is valid, so the test message is what will tell you."
+msgstr ""
+
+#: includes/admin.php:164
+msgid "The provider does not recognise that key, so nothing was saved."
+msgstr ""
+
+#: includes/admin.php:165
+msgid "The server did not accept the connection, so nothing was saved. What went wrong is below."
+msgstr ""
+
+#: includes/admin.php:166
+msgid "Test message sent."
+msgstr ""
+
+#: includes/admin.php:167
 msgid "This site's settings are fixed by the network and cannot be changed here."
 msgstr ""
 
 #. translators: %s: name of the constant
-#: includes/admin.php:182
+#: includes/admin.php:186
 #, php-format
 msgid "defined by the environment — PHP constant %s"
 msgstr ""
 
 #. translators: %s: name of the variable
-#: includes/admin.php:185
+#: includes/admin.php:189
 #, php-format
 msgid "defined by the environment — variable %s"
 msgstr ""
 
-#: includes/admin.php:187
+#: includes/admin.php:191
 msgid "stored, but it can no longer be decrypted — type it again"
 msgstr ""
 
-#: includes/admin.php:189
+#: includes/admin.php:193
 msgid "set by the network"
 msgstr ""
 
-#: includes/admin.php:191
+#: includes/admin.php:195
 msgid "set on this site"
 msgstr ""
 
-#: includes/admin.php:193
+#: includes/admin.php:197
 msgid "default value"
 msgstr ""
 
-#: includes/admin.php:238
+#: includes/admin.php:242
 msgid "This site fixes this from code: whatever is chosen here, it stays as it is."
+msgstr ""
+
+#: includes/api-providers.php:43
+msgid "API token"
+msgstr ""
+
+#: includes/api-providers.php:44
+msgid "The token of the sending domain, from Sending Domains → your domain → Integration. Not a token from the general API Tokens page, and not an Email Testing one."
+msgstr ""
+
+#: includes/api-providers.php:248
+msgid "There is no key to check."
+msgstr ""
+
+#: includes/api-providers.php:282
+msgid "The provider does not recognise this key."
+msgstr ""
+
+#: includes/api-transport.php:123
+msgid "There is no valid From address to send with."
+msgstr ""
+
+#. translators: 1: HTTP status code, 2: what the provider answered
+#: includes/api-transport.php:156
+#, php-format
+msgid "The provider refused the message (HTTP %1$d): %2$s"
 msgstr ""
 
 #: includes/diagnostics.php:157
@@ -757,11 +812,11 @@ msgstr ""
 msgid "Anything else"
 msgstr ""
 
-#: includes/test-connection.php:169
+#: includes/test-connection.php:176
 msgid "There is no host to connect to. Choose a provider profile, or type the server's address."
 msgstr ""
 
-#: includes/test-connection.php:212
+#: includes/test-connection.php:219
 msgid "The server did not accept the connection and gave no reason. The dialogue below is everything it said."
 msgstr ""
 
@@ -1005,7 +1060,7 @@ msgid "The content of the message is not stored. What a mail log would keep is e
 msgstr ""
 
 #: templates/admin-log-detail.php:52
-#: templates/settings-server.php:39
+#: templates/settings-server.php:47
 #: templates/settings-test.php:39
 msgid "SMTP conversation"
 msgstr ""
@@ -1307,6 +1362,43 @@ msgstr ""
 msgid "schema"
 msgstr ""
 
+#: templates/settings-api.php:23
+msgid "The key was not accepted, so nothing was saved."
+msgstr ""
+
+#. translators: %s: provider name
+#: templates/settings-api.php:40
+#, php-format
+msgid "Messages go out over HTTPS to %s. There is no server, no port and no SMTP password: one key does all of it, and the provider answers in words when it refuses a message."
+msgstr ""
+
+#: templates/settings-api.php:48
+msgid "Key"
+msgstr ""
+
+#: templates/settings-api.php:54
+#: templates/settings-server.php:132
+msgid "stored — leave empty to keep it"
+msgstr ""
+
+#: templates/settings-api.php:54
+#: templates/settings-server.php:132
+msgid "not set"
+msgstr ""
+
+#: templates/settings-api.php:60
+msgid "Stored encrypted with a key derived from this site's WordPress salts, and never shown again."
+msgstr ""
+
+#: templates/settings-api.php:62
+#: templates/settings-profile.php:81
+msgid "Provider documentation"
+msgstr ""
+
+#: templates/settings-api.php:70
+msgid "Check the key and save"
+msgstr ""
+
 #: templates/settings-logging.php:27
 msgid "Log"
 msgstr ""
@@ -1378,24 +1470,48 @@ msgstr ""
 msgid "Four steps: pick the provider, prove the server accepts the credentials, say who the mail comes from, and send a message to check it arrives. Each one opens the next."
 msgstr ""
 
-#: templates/settings-profile.php:31
-msgid "Choosing a profile fills in the host, port, encryption and — where the provider imposes one — the username. Every value here was checked against the provider's documentation. You then paste the credential on the next tab."
+#: templates/settings-profile.php:30
+msgid "How this site sends"
 msgstr ""
 
-#: templates/settings-profile.php:35
-msgid "Profile"
+#: templates/settings-profile.php:33
+msgid "Method"
 msgstr ""
 
 #: templates/settings-profile.php:38
+msgid "SMTP"
+msgstr ""
+
+#: templates/settings-profile.php:39
+msgid "the provider's mail server. Works with every provider here, and with any other one: choosing a profile only fills the server in for you."
+msgstr ""
+
+#: templates/settings-profile.php:43
+msgid "The provider's API"
+msgstr ""
+
+#: templates/settings-profile.php:44
+msgid "over HTTPS, with an API key instead of a server. Only some providers, and it is the way out when the host blocks the SMTP ports — which many do. When a send is refused you get the reason in words instead of a numbered error."
+msgstr ""
+
+#: templates/settings-profile.php:52
+msgid "Only the providers with an API here are listed. The rest send over SMTP, which is the other option above."
+msgstr ""
+
+#: templates/settings-profile.php:53
+msgid "Choosing a profile fills in the host, port, encryption and — where the provider imposes one — the username. Every value here was checked against the provider's documentation. You then paste the credential on the next tab."
+msgstr ""
+
+#: templates/settings-profile.php:57
+msgid "Profile"
+msgstr ""
+
+#: templates/settings-profile.php:60
 msgid "— choose —"
 msgstr ""
 
-#: templates/settings-profile.php:55
+#: templates/settings-profile.php:77
 msgid "Use this profile"
-msgstr ""
-
-#: templates/settings-profile.php:59
-msgid "Provider documentation"
 msgstr ""
 
 #: templates/settings-sender.php:23
@@ -1459,104 +1575,96 @@ msgid "Only for the case where another plugin hooks pre_wp_mail and returns with
 msgstr ""
 
 #. translators: %s: seconds
-#: templates/settings-server.php:28
+#: templates/settings-server.php:36
 #, php-format
 msgid "The server answered in %ss and accepted the credentials."
 msgstr ""
 
-#: templates/settings-server.php:33
+#: templates/settings-server.php:41
 msgid "The server did not accept the connection, so nothing was saved."
 msgstr ""
 
-#: templates/settings-server.php:49
+#: templates/settings-server.php:57
 msgid "The stored password can no longer be decrypted."
 msgstr ""
 
-#: templates/settings-server.php:50
+#: templates/settings-server.php:58
 msgid "It is encrypted with a key derived from this site's WordPress salts, and those have changed since it was saved — a new wp-config.php, a restored copy, a rotation. Nothing is broken and nothing leaked: type the password again and test the connection."
 msgstr ""
 
-#: templates/settings-server.php:63
+#: templates/settings-server.php:71
 msgid "These values are saved by testing them. The button opens a session against the server, upgrades to TLS, authenticates and hangs up — no message is sent and no mailbox is needed. If it fails, nothing is stored and you get the server's own words for why."
 msgstr ""
 
-#: templates/settings-server.php:68
+#: templates/settings-server.php:76
 msgid "Host"
 msgstr ""
 
-#: templates/settings-server.php:73
+#: templates/settings-server.php:81
 msgid "Replace the region in the host with the one your SES identity lives in."
 msgstr ""
 
-#: templates/settings-server.php:76
+#: templates/settings-server.php:84
 msgid "The profile assumes the mailbox runs next to PHP. Under Docker, DDEV, Lando or wp-env it does not: the host is the name of that service on the compose network — usually \"mailpit\" or \"mailhog\" — and \"localhost\" there means this container, where nothing is listening."
 msgstr ""
 
-#: templates/settings-server.php:81
+#: templates/settings-server.php:89
 msgid "Port"
 msgstr ""
 
-#: templates/settings-server.php:88
+#: templates/settings-server.php:96
 msgid "Encryption"
 msgstr ""
 
-#: templates/settings-server.php:91
+#: templates/settings-server.php:99
 msgid "STARTTLS (usually port 587)"
 msgstr ""
 
-#: templates/settings-server.php:92
+#: templates/settings-server.php:100
 msgid "SSL/TLS from the start (usually port 465)"
 msgstr ""
 
-#: templates/settings-server.php:93
+#: templates/settings-server.php:101
 msgid "None (local servers only)"
 msgstr ""
 
-#: templates/settings-server.php:99
+#: templates/settings-server.php:107
 msgid "Authentication"
 msgstr ""
 
-#: templates/settings-server.php:101
+#: templates/settings-server.php:109
 msgid "The server requires a username and password"
 msgstr ""
 
-#: templates/settings-server.php:103
+#: templates/settings-server.php:111
 msgid "Local profiles never authenticate and never try to upgrade to TLS, whatever the server offers. That is what makes Mailpit and MailHog work out of the box."
 msgstr ""
 
-#: templates/settings-server.php:108
+#: templates/settings-server.php:116
 msgid "Username"
 msgstr ""
 
-#: templates/settings-server.php:118
+#: templates/settings-server.php:126
 msgid "Password"
 msgstr ""
 
-#: templates/settings-server.php:124
-msgid "stored — leave empty to keep it"
-msgstr ""
-
-#: templates/settings-server.php:124
-msgid "not set"
-msgstr ""
-
-#: templates/settings-server.php:129
+#: templates/settings-server.php:137
 msgid "The password never comes back to the browser. It is stored encrypted with a key derived from this site's WordPress salts, and it is redacted from the log, the status screen and any SMTP transcript."
 msgstr ""
 
-#: templates/settings-server.php:131
+#: templates/settings-server.php:139
 msgid "Better still, keep it out of the database altogether: define it in wp-config.php and the plugin reads it from there and never stores it."
 msgstr ""
 
-#: templates/settings-server.php:137
+#: templates/settings-server.php:145
 msgid "Timeout"
 msgstr ""
 
-#: templates/settings-server.php:139
+#: templates/settings-server.php:147
 msgid "seconds"
 msgstr ""
 
-#: templates/settings-server.php:145
+#: templates/settings-server.php:153
 msgid "Test connection and save"
 msgstr ""
 

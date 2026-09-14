@@ -334,6 +334,15 @@ function diluxone_mail_watch_pre_wp_mail( $pre, array $atts ) {
 		return $pre;
 	}
 
+	// Our own API transport answers this hook too, and it is not another
+	// plugin taking the mail away. It leaves a mark on the way out and this
+	// consumes it, so a second send in the same request is judged on its own.
+	if ( diluxone_mail_api_answered() ) {
+		diluxone_mail_api_answered( false );
+
+		return $pre;
+	}
+
 	$current = diluxone_mail_current();
 
 	if ( null !== $current ) {
@@ -375,6 +384,17 @@ add_action( 'phpmailer_init', 'diluxone_mail_stamp_message_id', PHP_INT_MAX );
  */
 function diluxone_mail_last_smtp_reply(): string {
 	global $phpmailer;
+
+	// An API send has no SMTP dialogue; what it has is the status and body the
+	// provider answered, which is the same kind of evidence and belongs in the
+	// same column.
+	$api = diluxone_mail_api_reply();
+
+	if ( '' !== $api ) {
+		diluxone_mail_api_reply( '' );
+
+		return $api;
+	}
 
 	if ( ! $phpmailer instanceof PHPMailer\PHPMailer\PHPMailer ) {
 		return '';

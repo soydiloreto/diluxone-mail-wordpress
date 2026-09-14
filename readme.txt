@@ -97,6 +97,25 @@ in as an administrator would be able to take over accounts without knowing a
 single password. An earlier version of this plugin could be told to store
 bodies; updating removes the column and everything that was in it.
 
+= SMTP or the provider's API? =
+
+Both, and you choose on the first step. **SMTP** works with every provider
+listed and with any other one: picking a profile only fills in the host, the
+port and the encryption for you, and "Other SMTP server" is there for anything
+not on the list.
+
+**The provider's API** goes out over HTTPS with a key instead of a server. Two
+reasons to prefer it: plenty of hosts block outbound ports 587 and 465, and on
+those SMTP simply does not work while HTTPS does; and when a message is
+refused, an API answers with a sentence — the domain is not verified, the
+sender is not allowed — where SMTP answers `535` and leaves you guessing.
+
+Not every provider has one here. The API path covers the providers whose send
+is one header and one JSON body; the ones that sign every request (Amazon SES,
+Azure Communication Services) or need an OAuth consent screen (Microsoft 365,
+Gmail) stay on SMTP. Choosing the API of a provider that has none is refused on
+the spot rather than falling back quietly.
+
 = Where does the SMTP password end up? =
 
 Encrypted, with AES-256-GCM and a key derived from your site's own WordPress

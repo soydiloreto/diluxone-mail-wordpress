@@ -36,9 +36,11 @@ function diluxone_mail_connection_fingerprint( ?array $config = null ): string {
 		// absent key, which cast to 0 and never changed — so turning
 		// authentication off left the connection looking verified when it was
 		// exactly the thing that had changed.
-		$config            = diluxone_mail_config();
-		$config['auth']    = (int) diluxone_mail_option( 'diluxone_mail_auth' );
-		$config['timeout'] = (int) diluxone_mail_option( 'diluxone_mail_timeout' );
+		$config              = diluxone_mail_config();
+		$config['auth']      = (int) diluxone_mail_option( 'diluxone_mail_auth' );
+		$config['timeout']   = (int) diluxone_mail_option( 'diluxone_mail_timeout' );
+		$config['transport'] = diluxone_mail_transport_kind();
+		$config['api_key']   = diluxone_mail_api_key();
 	}
 
 	return hash(
@@ -46,6 +48,11 @@ function diluxone_mail_connection_fingerprint( ?array $config = null ): string {
 		implode(
 			"\0",
 			array(
+				// The way it sends takes part too: the same server with the
+				// same credentials is not the same configuration once the
+				// messages stop going through it.
+				(string) ( $config['transport'] ?? 'smtp' ),
+				'' === (string) ( $config['api_key'] ?? '' ) ? '' : hash( 'sha256', (string) $config['api_key'] ),
 				(string) ( $config['host'] ?? '' ),
 				(string) (int) ( $config['port'] ?? 0 ),
 				(string) ( $config['encryption'] ?? '' ),

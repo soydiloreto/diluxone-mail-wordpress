@@ -37,6 +37,9 @@ function diluxone_mail_option_defaults(): array {
 		// Empty means nobody has configured anything yet, which is different
 		// from having picked "generic SMTP" by hand. The list lives in
 		// providers.php.
+		// How this site sends: the provider's HTTP API, or its SMTP server.
+		'diluxone_mail_transport'                 => 'smtp',
+		'diluxone_mail_api_key'                   => '',
 		'diluxone_mail_provider'                  => '',
 		'diluxone_mail_host'                      => '',
 		'diluxone_mail_port'                      => 587,

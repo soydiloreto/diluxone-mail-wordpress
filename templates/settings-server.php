@@ -14,6 +14,14 @@
 
 defined( 'ABSPATH' ) || exit;
 
+// The API path is a different second step: a key, not a server. Same place in
+// the sequence, same rule about not storing what was not checked.
+if ( 'api' === $data['transport_kind'] ) {
+	diluxone_mail_view( 'settings-api', $data );
+
+	return;
+}
+
 $diluxone_mail_f = $data['fields'];
 $diluxone_mail_c = $data['connection'];
 ?>

@@ -29,7 +29,9 @@ defined( 'ABSPATH' ) || exit;
  */
 function diluxone_mail_settings_fields(): array {
 	return array(
+		'method'    => array( 'diluxone_mail_transport' ),
 		'transport' => array( 'diluxone_mail_host', 'diluxone_mail_port', 'diluxone_mail_encryption', 'diluxone_mail_auth', 'diluxone_mail_user', 'diluxone_mail_pass', 'diluxone_mail_timeout' ),
+		'api'       => array( 'diluxone_mail_api_key' ),
 		'from'      => array( 'diluxone_mail_from', 'diluxone_mail_from_name', 'diluxone_mail_force_from' ),
 		'mode'      => array( 'diluxone_mail_mode', 'diluxone_mail_unhook_pre_wp_mail' ),
 		'log'       => array( 'diluxone_mail_log_enabled', 'diluxone_mail_log_retention_days', 'diluxone_mail_log_extended', 'diluxone_mail_log_detail_retention_days' ),
@@ -68,6 +70,10 @@ function diluxone_mail_settings_data( string $scope ): array {
 		'pass_unreadable' => 'unreadable' === diluxone_mail_config_value( 'pass' )['source'],
 		'allow_override'  => (bool) get_site_option( 'diluxone_mail_network_allow_override', 0 ),
 		'verified'        => diluxone_mail_connection_verified(),
+		'transport_kind'  => diluxone_mail_transport_kind(),
+		'api'             => diluxone_mail_api_provider( (string) $provider['value'] ),
+		'api_providers'   => array_keys( diluxone_mail_api_providers() ),
+		'has_api_key'     => '' !== diluxone_mail_api_key(),
 		'connection'      => is_array( $attempt ) ? $attempt : null,
 		'test'            => diluxone_mail_test_result_take(),
 		'action_url'      => admin_url( 'admin-post.php' ),
@@ -264,9 +270,21 @@ function diluxone_mail_apply_provider(): void {
 		diluxone_mail_settings_redirect( $scope, 'not-allowed', 'profile' );
 	}
 
-	$key = sanitize_key( wp_unslash( $_POST['diluxone_mail_provider'] ?? '' ) );
+	$key    = sanitize_key( wp_unslash( $_POST['diluxone_mail_provider'] ?? '' ) );
+	$method = 'api' === sanitize_key( wp_unslash( $_POST['diluxone_mail_transport'] ?? '' ) ) ? 'api' : 'smtp';
 
-	diluxone_mail_save_options( diluxone_mail_provider_defaults( $key ), $scope );
+	// Choosing the API of a provider that has none is not a state to store:
+	// the send would fall back to SMTP and the screen would be describing
+	// something that is not happening.
+	if ( 'api' === $method && ! diluxone_mail_provider_has_api( $key ) ) {
+		diluxone_mail_settings_redirect( $scope, 'no-api', 'profile' );
+	}
+
+	diluxone_mail_save_options(
+		array_merge( diluxone_mail_provider_defaults( $key ), array( 'diluxone_mail_transport' => $method ) ),
+		$scope
+	);
+
 	diluxone_mail_settings_redirect( $scope, 'profile-applied', 'server' );
 }
 add_action( 'admin_post_diluxone_mail_apply_provider', 'diluxone_mail_apply_provider' );
@@ -334,6 +352,82 @@ function diluxone_mail_connection_action(): void {
 add_action( 'admin_post_diluxone_mail_connection', 'diluxone_mail_connection_action' );
 
 /**
+ * Step two when the provider is reached over HTTP: the key.
+ *
+ * Same rule as the SMTP side — nothing is stored that was not checked first —
+ * with one honest difference. A provider that answers "I do not know this key"
+ * is a refusal and nothing is written. A provider that cannot be asked at all
+ * is not: the key is stored and the screen says it could not be verified,
+ * because refusing over a check we were unable to make would be inventing a
+ * problem.
+ */
+function diluxone_mail_api_key_action(): void {
+	check_admin_referer( 'diluxone_mail_settings' );
+
+	$scope = diluxone_mail_posted_scope();
+
+	diluxone_mail_settings_authorize( $scope );
+
+	if ( 'site' === $scope && ! diluxone_mail_site_override_allowed() ) {
+		diluxone_mail_settings_redirect( $scope, 'not-allowed', 'server' );
+	}
+
+	// A key is not sanitised: every character is valid and touching it breaks
+	// it. Empty means "keep the one you have".
+	$key = isset( $_POST['diluxone_mail_api_key'] ) ? trim( (string) wp_unslash( $_POST['diluxone_mail_api_key'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- See above.
+	$key = '' !== $key ? $key : diluxone_mail_api_key();
+
+	$provider = (string) diluxone_mail_config()['provider'];
+	$result   = diluxone_mail_api_verify( $provider, $key );
+
+	if ( ! $result['ok'] ) {
+		set_transient(
+			'diluxone_mail_attempt_' . get_current_user_id(),
+			array(
+				'ok'         => false,
+				'error'      => $result['error'],
+				'transcript' => '',
+				'seconds'    => 0.0,
+				'fields'     => array(),
+			),
+			5 * MINUTE_IN_SECONDS
+		);
+
+		diluxone_mail_settings_redirect( $scope, 'key-refused', 'server' );
+	}
+
+	if ( ! diluxone_mail_store_api_key( $key, $scope ) ) {
+		diluxone_mail_settings_redirect( $scope, 'no-crypto', 'server' );
+	}
+
+	diluxone_mail_verified( 'connection' );
+	diluxone_mail_settings_redirect( $scope, $result['checked'] ? 'key-ok' : 'key-unchecked', 'sender' );
+}
+add_action( 'admin_post_diluxone_mail_api_key', 'diluxone_mail_api_key_action' );
+
+/** The API key, encrypted like the SMTP password and for the same reasons. */
+function diluxone_mail_store_api_key( string $key, string $scope ): bool {
+	if ( '' === $key || diluxone_mail_option_from_environment( 'diluxone_mail_api_key' ) ) {
+		return true;
+	}
+
+	$encrypted = diluxone_mail_encrypt( $key );
+
+	if ( '' === $encrypted ) {
+		return false;
+	}
+
+	if ( 'network' === $scope ) {
+		update_site_option( 'diluxone_mail_api_key', $encrypted );
+		return true;
+	}
+
+	update_option( 'diluxone_mail_api_key', $encrypted );
+
+	return true;
+}
+
+/**
  * Stores the password as it is.
  *
  * Save_options() would run it through sanitize_textarea_field(), which strips
@@ -387,7 +481,7 @@ function diluxone_mail_save_settings(): void {
 			// The transport group is never saved from here: it is saved by
 			// the connection test, which is the only thing that knows the
 			// values work.
-			if ( 'diluxone_mail_pass' === $key ) {
+			if ( in_array( $key, array( 'diluxone_mail_pass', 'diluxone_mail_api_key' ), true ) ) {
 				continue;
 			}
 

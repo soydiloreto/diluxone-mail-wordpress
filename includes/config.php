@@ -41,6 +41,7 @@ function diluxone_mail_config_fields(): array {
 		'port'       => 'PORT',
 		'user'       => 'USER',
 		'pass'       => 'PASS',
+		'api_key'    => 'API_KEY',
 		'encryption' => 'ENCRYPTION',
 		'from'       => 'FROM',
 		'from_name'  => 'FROM_NAME',
@@ -101,7 +102,7 @@ function diluxone_mail_config_value( string $field ): array {
 		// every caller already handles "there is none", and the settings
 		// screen asks for it again rather than letting a send fail with an
 		// authentication error that explains nothing.
-		if ( 'pass' === $field ) {
+		if ( 'pass' === $field || 'api_key' === $field ) {
 			$plain = diluxone_mail_stored_password( (string) $stored['value'] );
 
 			return array(

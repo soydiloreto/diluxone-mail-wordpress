@@ -2,10 +2,9 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability "
-"Diagnostics 1.0.0\n"
+"Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-13T23:47:30+00:00\n"
+"POT-Creation-Date: 2026-09-14T00:04:37+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -37,8 +36,8 @@ msgid ""
 "domain's SPF, DKIM and DMARC records actually let that mail arrive."
 msgstr ""
 "Conectá WordPress a cualquier proveedor SMTP, guardá un historial de cada "
-"mensaje —incluido uno por persona, en su ficha de usuario— y averiguá si los "
-"registros SPF, DKIM y DMARC del dominio dejan llegar ese correo."
+"mensaje —incluido uno por persona, en su ficha de usuario— y averiguá si los"
+" registros SPF, DKIM y DMARC del dominio dejan llegar ese correo."
 
 #. Author of the plugin
 #: diluxone-mail.php
@@ -52,7 +51,7 @@ msgid "Deliverability"
 msgstr "Entregabilidad"
 
 #: includes/admin-dns.php:42 includes/admin-log.php:62
-#: includes/admin-settings.php:151 includes/observer.php:300
+#: includes/admin-settings.php:157 includes/observer.php:300
 msgid "You are not allowed to do this."
 msgstr "No tenés permiso para hacer esto."
 
@@ -78,7 +77,7 @@ msgstr "Ajustes de la red"
 msgid "Overview"
 msgstr "Resumen"
 
-#: includes/admin-settings.php:133 includes/admin.php:67
+#: includes/admin-settings.php:139 includes/admin.php:67
 #: templates/admin-overview.php:56
 msgid "Settings"
 msgstr "Ajustes"
@@ -90,35 +89,47 @@ msgid "Status"
 msgstr "Estado"
 
 #: includes/admin-tabs.php:37 includes/log-list-table.php:48
-#: templates/admin-log-detail.php:37 templates/settings-profile.php:30
+#: templates/admin-log-detail.php:37 templates/settings-profile.php:51
 msgid "Provider"
 msgstr "Proveedor"
 
-#: includes/admin-tabs.php:47 templates/settings-server.php:61
+#: includes/admin-tabs.php:51 templates/settings-api.php:35
+msgid "API key"
+msgstr "Clave de API"
+
+#: includes/admin-tabs.php:51 templates/settings-server.php:69
 msgid "SMTP server"
 msgstr "Servidor SMTP"
 
-#: includes/admin-tabs.php:53 templates/settings-sender.php:20
+#: includes/admin-tabs.php:57 templates/settings-sender.php:20
 msgid "Sender"
 msgstr "Remitente"
 
-#: includes/admin-tabs.php:59
+#: includes/admin-tabs.php:63
 msgid "Test message"
 msgstr "Mensaje de prueba"
 
-#: includes/admin-tabs.php:65
+#: includes/admin-tabs.php:69
 msgid "Sending behaviour"
 msgstr "Cómo se envía"
 
-#: includes/admin-tabs.php:71
+#: includes/admin-tabs.php:75
 msgid "Log and privacy"
 msgstr "Registro y privacidad"
 
-#: includes/admin-tabs.php:80 templates/settings-sites.php:18
+#: includes/admin-tabs.php:84 templates/settings-sites.php:18
 msgid "Sites"
 msgstr "Sitios"
 
-#: includes/admin-tabs.php:120
+#: includes/admin-tabs.php:125
+msgid ""
+"Choose how this site sends and which provider first: the key belongs to one "
+"of them."
+msgstr ""
+"Elegí primero cómo envía el sitio y con qué proveedor: la clave es de uno de"
+" ellos."
+
+#: includes/admin-tabs.php:126
 msgid ""
 "Choose a provider profile first: it fills in the host, the port and the "
 "encryption this tab asks for."
@@ -126,15 +137,23 @@ msgstr ""
 "Elegí primero un perfil de proveedor: completa el servidor, el puerto y el "
 "cifrado que esta solapa te pide."
 
-#: includes/admin-tabs.php:122
+#: includes/admin-tabs.php:129
+msgid ""
+"The provider has to accept the key first. Check it on the previous tab; "
+"until it does, there is nothing to send with."
+msgstr ""
+"Primero el proveedor tiene que aceptar la clave. Verificala en la solapa "
+"anterior; hasta que la acepte, no hay con qué enviar."
+
+#: includes/admin-tabs.php:130
 msgid ""
 "The SMTP server has to answer first. Test the connection on the previous "
 "tab; until it does, there is nothing to send from."
 msgstr ""
-"Primero tiene que contestar el servidor SMTP. Probá la conexión en la solapa "
-"anterior; hasta que conteste, no hay desde dónde enviar."
+"Primero tiene que contestar el servidor SMTP. Probá la conexión en la solapa"
+" anterior; hasta que conteste, no hay desde dónde enviar."
 
-#: includes/admin-tabs.php:124
+#: includes/admin-tabs.php:132
 msgid ""
 "Set the From address first: a provider will not deliver a message sent from "
 "an address it has not verified."
@@ -143,7 +162,7 @@ msgstr ""
 "mensaje enviado desde una dirección que no verificó."
 
 #. translators: 1: step number, 2: name of the step
-#: includes/admin-tabs.php:246
+#: includes/admin-tabs.php:254
 #, php-format
 msgctxt "numbered step in the settings screen"
 msgid "%1$d. %2$s"
@@ -178,7 +197,8 @@ msgstr "Caché de DNS vaciado y diagnóstico vuelto a correr."
 
 #: includes/admin.php:159
 msgid "The server answered and the credentials work. They are saved."
-msgstr "El servidor contestó y las credenciales funcionan. Quedaron guardadas."
+msgstr ""
+"El servidor contestó y las credenciales funcionan. Quedaron guardadas."
 
 #: includes/admin.php:160
 msgid ""
@@ -192,54 +212,110 @@ msgstr ""
 
 #: includes/admin.php:161
 msgid ""
+"That provider has no API here, only its SMTP server. Choose SMTP, or a "
+"provider that does."
+msgstr ""
+"Ese proveedor no tiene API acá, sólo su servidor SMTP. Elegí SMTP, o un "
+"proveedor que sí la tenga."
+
+#: includes/admin.php:162
+msgid "The provider recognised the key. It is saved."
+msgstr "El proveedor reconoció la clave. Quedó guardada."
+
+#: includes/admin.php:163
+msgid ""
+"The key is saved. The provider could not be asked whether it is valid, so "
+"the test message is what will tell you."
+msgstr ""
+"La clave quedó guardada. No se le pudo preguntar al proveedor si es válida, "
+"así que el mensaje de prueba es lo que te lo va a decir."
+
+#: includes/admin.php:164
+msgid "The provider does not recognise that key, so nothing was saved."
+msgstr "El proveedor no reconoce esa clave, así que no se guardó nada."
+
+#: includes/admin.php:165
+msgid ""
 "The server did not accept the connection, so nothing was saved. What went "
 "wrong is below."
 msgstr ""
-"El servidor no aceptó la conexión, así que no se guardó nada. Abajo está qué "
-"falló."
+"El servidor no aceptó la conexión, así que no se guardó nada. Abajo está qué"
+" falló."
 
-#: includes/admin.php:162
+#: includes/admin.php:166
 msgid "Test message sent."
 msgstr "Mensaje de prueba enviado."
 
-#: includes/admin.php:163
+#: includes/admin.php:167
 msgid ""
 "This site's settings are fixed by the network and cannot be changed here."
 msgstr "Los ajustes de este sitio los fija la red y no se pueden cambiar acá."
 
 #. translators: %s: name of the constant
-#: includes/admin.php:182
+#: includes/admin.php:186
 #, php-format
 msgid "defined by the environment — PHP constant %s"
 msgstr "definido por el entorno — constante de PHP %s"
 
 #. translators: %s: name of the variable
-#: includes/admin.php:185
+#: includes/admin.php:189
 #, php-format
 msgid "defined by the environment — variable %s"
 msgstr "definido por el entorno — variable %s"
 
-#: includes/admin.php:187
+#: includes/admin.php:191
 msgid "stored, but it can no longer be decrypted — type it again"
 msgstr "guardada, pero ya no se puede descifrar — escribila de nuevo"
 
-#: includes/admin.php:189
+#: includes/admin.php:193
 msgid "set by the network"
 msgstr "fijado por la red"
 
-#: includes/admin.php:191
+#: includes/admin.php:195
 msgid "set on this site"
 msgstr "fijado en este sitio"
 
-#: includes/admin.php:193
+#: includes/admin.php:197
 msgid "default value"
 msgstr "valor por defecto"
 
-#: includes/admin.php:238
+#: includes/admin.php:242
 msgid ""
 "This site fixes this from code: whatever is chosen here, it stays as it is."
 msgstr ""
 "Este sitio lo fija desde el código: lo que se elija acá, queda como está."
+
+#: includes/api-providers.php:43
+msgid "API token"
+msgstr "Token de API"
+
+#: includes/api-providers.php:44
+msgid ""
+"The token of the sending domain, from Sending Domains → your domain → "
+"Integration. Not a token from the general API Tokens page, and not an Email "
+"Testing one."
+msgstr ""
+"El token del dominio de envío, en Sending Domains → tu dominio → "
+"Integration. No uno de la página general de API Tokens, ni uno de Email "
+"Testing."
+
+#: includes/api-providers.php:248
+msgid "There is no key to check."
+msgstr "No hay clave que verificar."
+
+#: includes/api-providers.php:282
+msgid "The provider does not recognise this key."
+msgstr "El proveedor no reconoce esta clave."
+
+#: includes/api-transport.php:123
+msgid "There is no valid From address to send with."
+msgstr "No hay una dirección de remitente válida con la que enviar."
+
+#. translators: 1: HTTP status code, 2: what the provider answered
+#: includes/api-transport.php:156
+#, php-format
+msgid "The provider refused the message (HTTP %1$d): %2$s"
+msgstr "El proveedor rechazó el mensaje (HTTP %1$d): %2$s"
 
 #: includes/diagnostics.php:157
 msgid "There is no SPF record"
@@ -268,14 +344,14 @@ msgstr "El SPF gasta %d lookups de DNS; el límite es 10"
 #: includes/diagnostics.php:169
 msgid ""
 "Going over the limit does not degrade SPF gracefully: receivers return a "
-"permanent error and the whole record stops counting, as if it did not exist. "
-"Remove providers you no longer use, or replace include: entries with ip4: "
+"permanent error and the whole record stops counting, as if it did not exist."
+" Remove providers you no longer use, or replace include: entries with ip4: "
 "entries where the provider documents stable addresses."
 msgstr ""
 "Pasarse del límite no degrada el SPF de a poco: los receptores devuelven un "
 "error permanente y el registro entero deja de valer, como si no existiera. "
-"Sacá los proveedores que ya no usás, o reemplazá los include: por ip4: donde "
-"el proveedor documente direcciones estables."
+"Sacá los proveedores que ya no usás, o reemplazá los include: por ip4: donde"
+" el proveedor documente direcciones estables."
 
 #. translators: %d: number of lookups
 #: includes/diagnostics.php:176 includes/diagnostics.php:184
@@ -285,8 +361,8 @@ msgstr "El SPF gasta %d de los 10 lookups de DNS permitidos"
 
 #: includes/diagnostics.php:177
 msgid ""
-"One more provider and it will break. Look at the tree below for includes you "
-"can remove."
+"One more provider and it will break. Look at the tree below for includes you"
+" can remove."
 msgstr ""
 "Un proveedor más y se rompe. Mirá en el árbol de abajo qué includes podés "
 "sacar."
@@ -305,8 +381,8 @@ msgid ""
 "the same as having no SPF, and worse in the eyes of most receivers. Change "
 "it to -all."
 msgstr ""
-"Eso autoriza a cualquier servidor de internet a mandar como este dominio. Es "
-"lo mismo que no tener SPF, y peor a los ojos de la mayoría de los "
+"Eso autoriza a cualquier servidor de internet a mandar como este dominio. Es"
+" lo mismo que no tener SPF, y peor a los ojos de la mayoría de los "
 "receptores. Cambialo a -all."
 
 #: includes/diagnostics.php:192
@@ -320,8 +396,8 @@ msgid ""
 "nothing. Use -all once you are sure every legitimate sender is listed, or "
 "~all while you check."
 msgstr ""
-"Sin un calificador de fallo al final, el correo de servidores no listados no "
-"se acepta ni se rechaza: los receptores lo tratan como si el registro no "
+"Sin un calificador de fallo al final, el correo de servidores no listados no"
+" se acepta ni se rechaza: los receptores lo tratan como si el registro no "
 "dijera nada. Usá -all cuando estés seguro de que todos los remitentes "
 "legítimos están listados, o ~all mientras lo verificás."
 
@@ -372,14 +448,14 @@ msgid ""
 "None of the %d selectors probed exists on this domain. That does not prove "
 "there is no DKIM — selectors cannot be listed over DNS, only guessed — but "
 "if your provider gave you DKIM records to publish and they are not here, "
-"mail is going out unsigned. Add your provider's selector in the settings and "
-"revalidate."
+"mail is going out unsigned. Add your provider's selector in the settings and"
+" revalidate."
 msgstr ""
 "Ninguno de los %d selectores probados existe en este dominio. Eso no prueba "
-"que no haya DKIM —los selectores no se pueden listar por DNS, sólo adivinar"
-"—, pero si tu proveedor te dio registros DKIM para publicar y no están acá, "
-"el correo está saliendo sin firma. Agregá el selector de tu proveedor en los "
-"ajustes y revalidá."
+"que no haya DKIM —los selectores no se pueden listar por DNS, sólo "
+"adivinar—, pero si tu proveedor te dio registros DKIM para publicar y no "
+"están acá, el correo está saliendo sin firma. Agregá el selector de tu "
+"proveedor en los ajustes y revalidá."
 
 #. translators: %s: selector
 #: includes/diagnostics.php:258
@@ -405,8 +481,8 @@ msgstr "El selector %s usa una clave de 1024 bits"
 
 #: includes/diagnostics.php:267
 msgid ""
-"It works, but 1024 bits is considered weak and some receivers score it down. "
-"Most providers can rotate to 2048 from their dashboard."
+"It works, but 1024 bits is considered weak and some receivers score it down."
+" Most providers can rotate to 2048 from their dashboard."
 msgstr ""
 "Funciona, pero 1024 bits se considera débil y algunos receptores lo "
 "penalizan. La mayoría de los proveedores puede rotar a 2048 desde su panel."
@@ -458,8 +534,8 @@ msgstr "No hay registro DMARC"
 
 #: includes/diagnostics.php:310
 msgid ""
-"Without DMARC, receivers decide on their own what to do when SPF and DKIM do "
-"not add up, and you get no reports about who is sending as your domain. "
+"Without DMARC, receivers decide on their own what to do when SPF and DKIM do"
+" not add up, and you get no reports about who is sending as your domain. "
 "Start with v=DMARC1; p=none; rua=mailto:you@yourdomain to receive reports "
 "without affecting delivery, then tighten it."
 msgstr ""
@@ -519,13 +595,13 @@ msgstr "La política DMARC es p=%s y el correo alinea por DKIM"
 #: includes/diagnostics.php:343
 #, php-format
 msgid ""
-"SPF alignment usually fails with a third-party provider — the bounce address "
-"is theirs, not yours — but %s signs with your domain's DKIM key, and one "
+"SPF alignment usually fails with a third-party provider — the bounce address"
+" is theirs, not yours — but %s signs with your domain's DKIM key, and one "
 "aligned mechanism is enough."
 msgstr ""
-"La alineación por SPF suele fallar con un proveedor externo —la dirección de "
-"rebote es de ellos, no tuya—, pero %s firma con la clave DKIM de tu dominio, "
-"y con un mecanismo alineado alcanza."
+"La alineación por SPF suele fallar con un proveedor externo —la dirección de"
+" rebote es de ellos, no tuya—, pero %s firma con la clave DKIM de tu "
+"dominio, y con un mecanismo alineado alcanza."
 
 #. translators: %s: policy
 #: includes/diagnostics.php:352
@@ -538,12 +614,12 @@ msgstr "La política DMARC es p=%s pero nada alinea"
 #, php-format
 msgid ""
 "With %1$s as the transport, SPF is not aligned (the bounce address belongs "
-"to the provider) and no DKIM key of yours is published for it. Every message "
-"will be %2$s. Publish the provider's DKIM records — that is the fix — or "
+"to the provider) and no DKIM key of yours is published for it. Every message"
+" will be %2$s. Publish the provider's DKIM records — that is the fix — or "
 "drop the policy to p=none until you do."
 msgstr ""
-"Con %1$s como transporte, el SPF no está alineado (la dirección de rebote es "
-"del proveedor) y no hay ninguna clave DKIM tuya publicada para él. Cada "
+"Con %1$s como transporte, el SPF no está alineado (la dirección de rebote es"
+" del proveedor) y no hay ninguna clave DKIM tuya publicada para él. Cada "
 "mensaje va a ser %2$s. Publicá los registros DKIM del proveedor —ése es el "
 "arreglo— o bajá la política a p=none hasta que lo hagas."
 
@@ -555,8 +631,8 @@ msgstr "La política se aplica al %d%% del correo"
 
 #: includes/diagnostics.php:369
 msgid ""
-"pct= below 100 means receivers apply the policy to a sample and let the rest "
-"through. Fine while ramping up; set it to 100 when you are done."
+"pct= below 100 means receivers apply the policy to a sample and let the rest"
+" through. Fine while ramping up; set it to 100 when you are done."
 msgstr ""
 "pct= por debajo de 100 significa que los receptores aplican la política a "
 "una muestra y dejan pasar el resto. Está bien mientras se despliega; ponelo "
@@ -571,8 +647,8 @@ msgid ""
 "You will never learn who is sending as your domain or what fails. Add "
 "rua=mailto:an-address-you-read."
 msgstr ""
-"Nunca vas a enterarte de quién manda como tu dominio ni de qué falla. Agregá "
-"rua=mailto:una-dirección-que-leas."
+"Nunca vas a enterarte de quién manda como tu dominio ni de qué falla. Agregá"
+" rua=mailto:una-dirección-que-leas."
 
 #. translators: %s: address
 #: includes/diagnostics.php:383
@@ -589,9 +665,10 @@ msgid ""
 "record at %2$s with v=DMARC1. Until it is published, receivers throw the "
 "reports away."
 msgstr ""
-"Esa dirección es de otro dominio (%1$s), y el estándar exige que ese dominio "
-"diga que acepta reportes por el tuyo. No lo dice: no hay un registro TXT en "
-"%2$s con v=DMARC1. Hasta que se publique, los receptores tiran los reportes."
+"Esa dirección es de otro dominio (%1$s), y el estándar exige que ese dominio"
+" diga que acepta reportes por el tuyo. No lo dice: no hay un registro TXT en"
+" %2$s con v=DMARC1. Hasta que se publique, los receptores tiran los "
+"reportes."
 
 #: includes/diagnostics.php:397
 msgid "The domain has no MX record"
@@ -599,13 +676,13 @@ msgstr "El dominio no tiene registro MX"
 
 #: includes/diagnostics.php:397
 msgid ""
-"Sending still works, but nothing can be received at this domain: replies and "
-"bounces to your From address go nowhere, and some receivers distrust senders "
-"that cannot receive."
+"Sending still works, but nothing can be received at this domain: replies and"
+" bounces to your From address go nowhere, and some receivers distrust "
+"senders that cannot receive."
 msgstr ""
-"Mandar sigue funcionando, pero en este dominio no se puede recibir nada: las "
-"respuestas y los rebotes a tu dirección de remitente no van a ningún lado, y "
-"algunos receptores desconfían de quien no puede recibir."
+"Mandar sigue funcionando, pero en este dominio no se puede recibir nada: las"
+" respuestas y los rebotes a tu dirección de remitente no van a ningún lado, "
+"y algunos receptores desconfían de quien no puede recibir."
 
 #. translators: 1: host, 2: target
 #: includes/diagnostics.php:405
@@ -630,8 +707,8 @@ msgstr "El return-path %s no resuelve"
 #: includes/diagnostics.php:407
 msgid ""
 "The provider offers a custom bounce domain that makes SPF align with your "
-"domain. It is optional — DKIM alignment is enough for DMARC — but publishing "
-"the CNAME the provider gives you improves reputation."
+"domain. It is optional — DKIM alignment is enough for DMARC — but publishing"
+" the CNAME the provider gives you improves reputation."
 msgstr ""
 "El proveedor ofrece un dominio de rebote propio que hace alinear el SPF con "
 "tu dominio. Es opcional —la alineación por DKIM alcanza para DMARC—, pero "
@@ -655,8 +732,8 @@ msgstr ""
 
 #: includes/dns-spf.php:51
 msgid ""
-"The domain publishes more than one SPF record. The standard treats that as a "
-"permanent error: receivers ignore all of them."
+"The domain publishes more than one SPF record. The standard treats that as a"
+" permanent error: receivers ignore all of them."
 msgstr ""
 "El dominio publica más de un registro SPF. El estándar lo trata como error "
 "permanente: los receptores los ignoran a todos."
@@ -670,8 +747,8 @@ msgid ""
 "No SPF record. An include that leads nowhere still counts as a lookup, and "
 "too many of these are an error on their own."
 msgstr ""
-"Sin registro SPF. Un include que no lleva a nada igual cuenta como lookup, y "
-"demasiados de éstos son un error por sí mismos."
+"Sin registro SPF. Un include que no lleva a nada igual cuenta como lookup, y"
+" demasiados de éstos son un error por sí mismos."
 
 #: includes/dns.php:246
 msgid ""
@@ -770,8 +847,8 @@ msgid ""
 "%s is handling this site's outgoing mail. DiluxOne Mail is logging and "
 "diagnosing without touching it."
 msgstr ""
-"%s está gestionando el correo saliente de este sitio. DiluxOne Mail registra "
-"y diagnostica sin tocarlo."
+"%s está gestionando el correo saliente de este sitio. DiluxOne Mail registra"
+" y diagnostica sin tocarlo."
 
 #: includes/observer.php:291
 msgid "Take over"
@@ -782,7 +859,8 @@ msgstr "Tomar el control"
 #, php-format
 msgid ""
 "%s intercepts mail before it reaches PHPMailer (pre_wp_mail). If it returns "
-"without sending, the message dies silently and no SMTP configuration applies."
+"without sending, the message dies silently and no SMTP configuration "
+"applies."
 msgstr ""
 "%s intercepta el correo antes de que llegue a PHPMailer (pre_wp_mail). Si "
 "devuelve sin mandar, el mensaje muere en silencio y no se aplica ninguna "
@@ -842,7 +920,8 @@ msgstr "Tu token de API de Mailtrap."
 
 #: includes/providers.php:122
 msgid ""
-"The full address of the mailbox that sends. SMTP AUTH must be enabled for it."
+"The full address of the mailbox that sends. SMTP AUTH must be enabled for "
+"it."
 msgstr ""
 "La dirección completa del buzón que manda. Tiene que tener SMTP AUTH "
 "habilitado."
@@ -869,8 +948,8 @@ msgstr "La dirección completa de Gmail o Workspace."
 
 #: includes/providers.php:159
 msgid ""
-"An app password, not the account password. Requires two-step verification on "
-"the account."
+"An app password, not the account password. Requires two-step verification on"
+" the account."
 msgstr ""
 "Una contraseña de aplicación, no la de la cuenta. Requiere verificación en "
 "dos pasos en la cuenta."
@@ -935,7 +1014,7 @@ msgstr "Otro servidor SMTP"
 msgid "Anything else"
 msgstr "Cualquier otro"
 
-#: includes/test-connection.php:169
+#: includes/test-connection.php:176
 msgid ""
 "There is no host to connect to. Choose a provider profile, or type the "
 "server's address."
@@ -943,7 +1022,7 @@ msgstr ""
 "No hay servidor al que conectarse. Elegí un perfil de proveedor, o escribí "
 "la dirección del servidor."
 
-#: includes/test-connection.php:212
+#: includes/test-connection.php:219
 msgid ""
 "The server did not accept the connection and gave no reason. The dialogue "
 "below is everything it said."
@@ -1219,7 +1298,7 @@ msgstr ""
 "guardando es cada link de recuperación de contraseña que el sitio mandó "
 "alguna vez, que es una llave de la cuenta y no un registro de lo que pasó."
 
-#: templates/admin-log-detail.php:52 templates/settings-server.php:39
+#: templates/admin-log-detail.php:52 templates/settings-server.php:47
 #: templates/settings-test.php:39
 msgid "SMTP conversation"
 msgstr "Diálogo SMTP"
@@ -1288,8 +1367,8 @@ msgid ""
 "There is no server configured yet, so nothing can go out through it. The "
 "setup card says which step is next."
 msgstr ""
-"Todavía no hay servidor configurado, así que no puede salir nada por acá. La "
-"tarjeta de configuración dice cuál es el paso que sigue."
+"Todavía no hay servidor configurado, así que no puede salir nada por acá. La"
+" tarjeta de configuración dice cuál es el paso que sigue."
 
 #: templates/admin-overview.php:121
 msgid ""
@@ -1305,8 +1384,8 @@ msgstr ""
 msgid ""
 "%s is handling delivery: it ends the send before this plugin is reached."
 msgstr ""
-"%s se está ocupando de la entrega: termina el envío antes de que se llegue a "
-"este plugin."
+"%s se está ocupando de la entrega: termina el envío antes de que se llegue a"
+" este plugin."
 
 #: templates/admin-overview.php:133
 msgid "Full status"
@@ -1528,7 +1607,8 @@ msgstr "dns_get_record() está disponible."
 
 #: templates/admin-status.php:132
 msgid ""
-"dns_get_record() is unavailable on this host; queries go over DNS-over-HTTPS."
+"dns_get_record() is unavailable on this host; queries go over DNS-over-"
+"HTTPS."
 msgstr ""
 "dns_get_record() no está disponible en este hosting; las consultas van por "
 "DNS-over-HTTPS."
@@ -1552,6 +1632,50 @@ msgstr "Versión"
 #: templates/admin-status.php:143
 msgid "schema"
 msgstr "esquema"
+
+#: templates/settings-api.php:23
+msgid "The key was not accepted, so nothing was saved."
+msgstr "La clave no fue aceptada, así que no se guardó nada."
+
+#. translators: %s: provider name
+#: templates/settings-api.php:40
+#, php-format
+msgid ""
+"Messages go out over HTTPS to %s. There is no server, no port and no SMTP "
+"password: one key does all of it, and the provider answers in words when it "
+"refuses a message."
+msgstr ""
+"Los mensajes salen por HTTPS hacia %s. No hay servidor, ni puerto, ni "
+"contraseña de SMTP: una sola clave hace todo, y el proveedor contesta en "
+"palabras cuando rechaza un mensaje."
+
+#: templates/settings-api.php:48
+msgid "Key"
+msgstr "Clave"
+
+#: templates/settings-api.php:54 templates/settings-server.php:132
+msgid "stored — leave empty to keep it"
+msgstr "guardada — dejala vacía para conservarla"
+
+#: templates/settings-api.php:54 templates/settings-server.php:132
+msgid "not set"
+msgstr "sin definir"
+
+#: templates/settings-api.php:60
+msgid ""
+"Stored encrypted with a key derived from this site's WordPress salts, and "
+"never shown again."
+msgstr ""
+"Se guarda cifrada con una clave derivada de las salts de WordPress de este "
+"sitio, y no se vuelve a mostrar."
+
+#: templates/settings-api.php:62 templates/settings-profile.php:81
+msgid "Provider documentation"
+msgstr "Documentación del proveedor"
+
+#: templates/settings-api.php:70
+msgid "Check the key and save"
+msgstr "Verificar la clave y guardar"
 
 #: templates/settings-logging.php:27
 msgid "Log"
@@ -1594,8 +1718,8 @@ msgid ""
 "Useful when arguing with the provider's support. Costs capturing the SMTP "
 "dialogue on every send."
 msgstr ""
-"Sirve para discutir con el soporte del proveedor. Cuesta capturar el diálogo "
-"SMTP en cada envío."
+"Sirve para discutir con el soporte del proveedor. Cuesta capturar el diálogo"
+" SMTP en cada envío."
 
 #: templates/settings-logging.php:47
 msgid "Keep transcripts for"
@@ -1609,8 +1733,8 @@ msgstr "El contenido de los mensajes no se guarda nunca."
 msgid ""
 "There is no setting for it. A log that kept bodies would be keeping every "
 "password-reset link the site has ever sent — and a reset link is not a "
-"record of what happened, it is a key to the account, valid for whoever reads "
-"the table next. What is kept is who was written to, when, about what, and "
+"record of what happened, it is a key to the account, valid for whoever reads"
+" the table next. What is kept is who was written to, when, about what, and "
 "how it went."
 msgstr ""
 "No hay opción para activarlo. Un registro que guardara los cuerpos estaría "
@@ -1634,7 +1758,8 @@ msgstr ""
 
 #: templates/settings-logging.php:65
 msgid "Delete a person's mail history when they ask to be erased"
-msgstr "Borrar el historial de correo de una persona cuando pide que la borren"
+msgstr ""
+"Borrar el historial de correo de una persona cuando pide que la borren"
 
 #: templates/settings-logging.php:71 templates/settings-sending.php:54
 #: templates/settings-sites.php:29
@@ -1643,15 +1768,58 @@ msgstr "Guardar"
 
 #: templates/settings-profile.php:21
 msgid ""
-"Four steps: pick the provider, prove the server accepts the credentials, say "
-"who the mail comes from, and send a message to check it arrives. Each one "
+"Four steps: pick the provider, prove the server accepts the credentials, say"
+" who the mail comes from, and send a message to check it arrives. Each one "
 "opens the next."
 msgstr ""
 "Cuatro pasos: elegir el proveedor, probar que el servidor acepta las "
 "credenciales, decir de quién viene el correo, y mandar un mensaje para "
 "comprobar que llega. Cada uno habilita el siguiente."
 
-#: templates/settings-profile.php:31
+#: templates/settings-profile.php:30
+msgid "How this site sends"
+msgstr "Cómo envía este sitio"
+
+#: templates/settings-profile.php:33
+msgid "Method"
+msgstr "Método"
+
+#: templates/settings-profile.php:38
+msgid "SMTP"
+msgstr "SMTP"
+
+#: templates/settings-profile.php:39
+msgid ""
+"the provider's mail server. Works with every provider here, and with any "
+"other one: choosing a profile only fills the server in for you."
+msgstr ""
+"el servidor de correo del proveedor. Funciona con todos los de acá y con "
+"cualquier otro: elegir un perfil sólo te completa los datos del servidor."
+
+#: templates/settings-profile.php:43
+msgid "The provider's API"
+msgstr "La API del proveedor"
+
+#: templates/settings-profile.php:44
+msgid ""
+"over HTTPS, with an API key instead of a server. Only some providers, and it"
+" is the way out when the host blocks the SMTP ports — which many do. When a "
+"send is refused you get the reason in words instead of a numbered error."
+msgstr ""
+"por HTTPS, con una clave de API en vez de un servidor. Sólo algunos "
+"proveedores, y es la salida cuando el hosting bloquea los puertos de SMTP, "
+"que muchos lo hacen. Cuando rechazan un envío te dan el motivo en palabras "
+"en vez de un error numerado."
+
+#: templates/settings-profile.php:52
+msgid ""
+"Only the providers with an API here are listed. The rest send over SMTP, "
+"which is the other option above."
+msgstr ""
+"Se listan sólo los proveedores que tienen API acá. El resto envía por SMTP, "
+"que es la otra opción de arriba."
+
+#: templates/settings-profile.php:53
 msgid ""
 "Choosing a profile fills in the host, port, encryption and — where the "
 "provider imposes one — the username. Every value here was checked against "
@@ -1661,21 +1829,17 @@ msgstr ""
 "proveedor lo impone— el usuario. Cada valor de acá se verificó contra la "
 "documentación del proveedor. La credencial la pegás en la solapa siguiente."
 
-#: templates/settings-profile.php:35
+#: templates/settings-profile.php:57
 msgid "Profile"
 msgstr "Perfil"
 
-#: templates/settings-profile.php:38
+#: templates/settings-profile.php:60
 msgid "— choose —"
 msgstr "— elegir —"
 
-#: templates/settings-profile.php:55
+#: templates/settings-profile.php:77
 msgid "Use this profile"
 msgstr "Usar este perfil"
-
-#: templates/settings-profile.php:59
-msgid "Provider documentation"
-msgstr "Documentación del proveedor"
 
 #: templates/settings-sender.php:23
 msgid "From address"
@@ -1703,14 +1867,14 @@ msgstr "Forzar remitente"
 msgid ""
 "Replace the From address other plugins set, not only the WordPress default"
 msgstr ""
-"Reemplazar la dirección de remitente que pongan otros plugins, no sólo la de "
-"WordPress por defecto"
+"Reemplazar la dirección de remitente que pongan otros plugins, no sólo la de"
+" WordPress por defecto"
 
 #: templates/settings-sender.php:41
 msgid ""
 "Off, the address above is used only where WordPress would have signed as "
-"wordpress@yourdomain. On, it also replaces one another plugin — or a snippet "
-"in the theme — decided for the message."
+"wordpress@yourdomain. On, it also replaces one another plugin — or a snippet"
+" in the theme — decided for the message."
 msgstr ""
 "Sin tildar, la dirección de arriba se usa sólo donde WordPress habría "
 "firmado como wordpress@tudominio. Tildado, reemplaza también la que decidió "
@@ -1730,8 +1894,8 @@ msgstr "Modo"
 
 #: templates/settings-sending.php:31
 msgid ""
-"Automatic — send only when no other mail plugin is active; otherwise log and "
-"diagnose without touching delivery"
+"Automatic — send only when no other mail plugin is active; otherwise log and"
+" diagnose without touching delivery"
 msgstr ""
 "Automático — mandar sólo cuando no haya otro plugin de correo activo; si lo "
 "hay, registrar y diagnosticar sin tocar la entrega"
@@ -1752,8 +1916,8 @@ msgid ""
 "reached. One that only hooks phpmailer_init to add a header is not taking "
 "delivery away and does not change the mode."
 msgstr ""
-"Otro plugin cuenta como que se ocupa del correo cuando reemplaza wp_mail() o "
-"contesta pre_wp_mail: los dos terminan el envío antes de que se llegue a "
+"Otro plugin cuenta como que se ocupa del correo cuando reemplaza wp_mail() o"
+" contesta pre_wp_mail: los dos terminan el envío antes de que se llegue a "
 "este plugin. Uno que sólo engancha phpmailer_init para agregar una cabecera "
 "no se está quedando con la entrega y no cambia el modo."
 
@@ -1765,8 +1929,8 @@ msgstr ""
 
 #: templates/settings-sending.php:48
 msgid ""
-"Only for the case where another plugin hooks pre_wp_mail and returns without "
-"sending — the message dies silently and no SMTP settings apply. If the "
+"Only for the case where another plugin hooks pre_wp_mail and returns without"
+" sending — the message dies silently and no SMTP settings apply. If the "
 "intercepting plugin is the one actually delivering your mail, turning this "
 "on leaves the site with no mail at all. Each intercepting callback is "
 "removed individually; nothing else on that hook is touched."
@@ -1778,36 +1942,36 @@ msgstr ""
 "separado; nada más de ese hook se toca."
 
 #. translators: %s: seconds
-#: templates/settings-server.php:28
+#: templates/settings-server.php:36
 #, php-format
 msgid "The server answered in %ss and accepted the credentials."
 msgstr "El servidor contestó en %ss y aceptó las credenciales."
 
-#: templates/settings-server.php:33
+#: templates/settings-server.php:41
 msgid "The server did not accept the connection, so nothing was saved."
 msgstr "El servidor no aceptó la conexión, así que no se guardó nada."
 
-#: templates/settings-server.php:49
+#: templates/settings-server.php:57
 msgid "The stored password can no longer be decrypted."
 msgstr "La contraseña guardada ya no se puede descifrar."
 
-#: templates/settings-server.php:50
+#: templates/settings-server.php:58
 msgid ""
 "It is encrypted with a key derived from this site's WordPress salts, and "
 "those have changed since it was saved — a new wp-config.php, a restored "
 "copy, a rotation. Nothing is broken and nothing leaked: type the password "
 "again and test the connection."
 msgstr ""
-"Está cifrada con una clave derivada de las salts de WordPress de este sitio, "
-"y esas cambiaron desde que se guardó: un wp-config.php nuevo, una copia "
+"Está cifrada con una clave derivada de las salts de WordPress de este sitio,"
+" y esas cambiaron desde que se guardó: un wp-config.php nuevo, una copia "
 "restaurada, una rotación. No se rompió nada ni se filtró nada: escribí la "
 "contraseña de nuevo y probá la conexión."
 
-#: templates/settings-server.php:63
+#: templates/settings-server.php:71
 msgid ""
 "These values are saved by testing them. The button opens a session against "
-"the server, upgrades to TLS, authenticates and hangs up — no message is sent "
-"and no mailbox is needed. If it fails, nothing is stored and you get the "
+"the server, upgrades to TLS, authenticates and hangs up — no message is sent"
+" and no mailbox is needed. If it fails, nothing is stored and you get the "
 "server's own words for why."
 msgstr ""
 "Estos valores se guardan probándolos. El botón abre una sesión contra el "
@@ -1815,55 +1979,56 @@ msgstr ""
 "falta un buzón. Si falla, no se guarda nada y te queda el motivo en las "
 "palabras del propio servidor."
 
-#: templates/settings-server.php:68
+#: templates/settings-server.php:76
 msgid "Host"
 msgstr "Host"
 
-#: templates/settings-server.php:73
-msgid "Replace the region in the host with the one your SES identity lives in."
+#: templates/settings-server.php:81
+msgid ""
+"Replace the region in the host with the one your SES identity lives in."
 msgstr "Reemplazá la región del host por la de tu identidad de SES."
 
-#: templates/settings-server.php:76
+#: templates/settings-server.php:84
 msgid ""
 "The profile assumes the mailbox runs next to PHP. Under Docker, DDEV, Lando "
 "or wp-env it does not: the host is the name of that service on the compose "
-"network — usually \"mailpit\" or \"mailhog\" — and \"localhost\" there means "
-"this container, where nothing is listening."
+"network — usually \"mailpit\" or \"mailhog\" — and \"localhost\" there means"
+" this container, where nothing is listening."
 msgstr ""
 "El perfil supone que el buzón corre al lado de PHP. Con Docker, DDEV, Lando "
 "o wp-env no es así: el servidor es el nombre de ese servicio en la red del "
-"compose —normalmente «mailpit» o «mailhog»— y «localhost» ahí significa este "
-"contenedor, donde no hay nada escuchando."
+"compose —normalmente «mailpit» o «mailhog»— y «localhost» ahí significa este"
+" contenedor, donde no hay nada escuchando."
 
-#: templates/settings-server.php:81
+#: templates/settings-server.php:89
 msgid "Port"
 msgstr "Puerto"
 
-#: templates/settings-server.php:88
+#: templates/settings-server.php:96
 msgid "Encryption"
 msgstr "Cifrado"
 
-#: templates/settings-server.php:91
+#: templates/settings-server.php:99
 msgid "STARTTLS (usually port 587)"
 msgstr "STARTTLS (normalmente puerto 587)"
 
-#: templates/settings-server.php:92
+#: templates/settings-server.php:100
 msgid "SSL/TLS from the start (usually port 465)"
 msgstr "SSL/TLS desde el inicio (normalmente puerto 465)"
 
-#: templates/settings-server.php:93
+#: templates/settings-server.php:101
 msgid "None (local servers only)"
 msgstr "Ninguno (sólo servidores locales)"
 
-#: templates/settings-server.php:99
+#: templates/settings-server.php:107
 msgid "Authentication"
 msgstr "Autenticación"
 
-#: templates/settings-server.php:101
+#: templates/settings-server.php:109
 msgid "The server requires a username and password"
 msgstr "El servidor pide usuario y contraseña"
 
-#: templates/settings-server.php:103
+#: templates/settings-server.php:111
 msgid ""
 "Local profiles never authenticate and never try to upgrade to TLS, whatever "
 "the server offers. That is what makes Mailpit and MailHog work out of the "
@@ -1873,23 +2038,15 @@ msgstr ""
 "que ofrezca el servidor. Es lo que hace que Mailpit y MailHog funcionen de "
 "entrada."
 
-#: templates/settings-server.php:108
+#: templates/settings-server.php:116
 msgid "Username"
 msgstr "Usuario"
 
-#: templates/settings-server.php:118
+#: templates/settings-server.php:126
 msgid "Password"
 msgstr "Contraseña"
 
-#: templates/settings-server.php:124
-msgid "stored — leave empty to keep it"
-msgstr "guardada — dejala vacía para conservarla"
-
-#: templates/settings-server.php:124
-msgid "not set"
-msgstr "sin definir"
-
-#: templates/settings-server.php:129
+#: templates/settings-server.php:137
 msgid ""
 "The password never comes back to the browser. It is stored encrypted with a "
 "key derived from this site's WordPress salts, and it is redacted from the "
@@ -1899,23 +2056,23 @@ msgstr ""
 "derivada de las salts de WordPress de este sitio, y se tacha del registro, "
 "de la pantalla de estado y de cualquier diálogo SMTP."
 
-#: templates/settings-server.php:131
+#: templates/settings-server.php:139
 msgid ""
-"Better still, keep it out of the database altogether: define it in wp-config."
-"php and the plugin reads it from there and never stores it."
+"Better still, keep it out of the database altogether: define it in wp-"
+"config.php and the plugin reads it from there and never stores it."
 msgstr ""
 "Mejor todavía: sacala de la base por completo. Definila en wp-config.php y "
 "el plugin la lee de ahí sin guardarla nunca."
 
-#: templates/settings-server.php:137
+#: templates/settings-server.php:145
 msgid "Timeout"
 msgstr "Tiempo de espera"
 
-#: templates/settings-server.php:139
+#: templates/settings-server.php:147
 msgid "seconds"
 msgstr "segundos"
 
-#: templates/settings-server.php:145
+#: templates/settings-server.php:153
 msgid "Test connection and save"
 msgstr "Probar conexión y guardar"
 
@@ -1964,8 +2121,8 @@ msgid ""
 "The mail log is off, so nothing is being recorded. Turn it on in DiluxOne "
 "Mail → Settings."
 msgstr ""
-"El historial está apagado, así que no se registra nada. Prendelo en DiluxOne "
-"Mail → Ajustes."
+"El historial está apagado, así que no se registra nada. Prendelo en DiluxOne"
+" Mail → Ajustes."
 
 #. translators: 1: count, 2: addresses
 #: templates/user-profile.php:22
@@ -1984,8 +2141,8 @@ msgid "See all in the mail log"
 msgstr "Ver todo en el historial de correo"
 
 #~ msgid ""
-#~ "The password never comes back to the browser. It is redacted from the "
-#~ "log, the status screen and any SMTP transcript."
+#~ "The password never comes back to the browser. It is redacted from the log, "
+#~ "the status screen and any SMTP transcript."
 #~ msgstr ""
 #~ "La contraseña nunca vuelve al navegador. Se tapa en el historial, en la "
 #~ "pantalla de estado y en cualquier diálogo SMTP."
@@ -1997,12 +2154,11 @@ msgstr "Ver todo en el historial de correo"
 #~ msgstr "No se pudo reenviar el mensaje. Mirá el error en el historial."
 
 #~ msgid ""
-#~ "This message cannot be resent: its body was not stored. Turn on body "
-#~ "storage in the settings to make future messages resendable."
+#~ "This message cannot be resent: its body was not stored. Turn on body storage"
+#~ " in the settings to make future messages resendable."
 #~ msgstr ""
 #~ "Este mensaje no se puede reenviar: no se guardó su cuerpo. Prendé el "
-#~ "guardado del cuerpo en los ajustes para que los próximos se puedan "
-#~ "reenviar."
+#~ "guardado del cuerpo en los ajustes para que los próximos se puedan reenviar."
 
 #~ msgid "Resend"
 #~ msgstr "Reenviar"
@@ -2020,8 +2176,8 @@ msgstr "Ver todo en el historial de correo"
 #~ "The body was not stored — body storage is off in the settings — so this "
 #~ "message cannot be resent."
 #~ msgstr ""
-#~ "El cuerpo no se guardó —el guardado del cuerpo está apagado en los ajustes"
-#~ "—, así que este mensaje no se puede reenviar."
+#~ "El cuerpo no se guardó —el guardado del cuerpo está apagado en los ajustes—,"
+#~ " así que este mensaje no se puede reenviar."
 
 #~ msgid "Bodies are stored."
 #~ msgstr "Los cuerpos se guardan."
@@ -2036,26 +2192,25 @@ msgstr "Ver todo en el historial de correo"
 #~ msgstr "Apagado por defecto a propósito."
 
 #~ msgid ""
-#~ "The body is personal data — names, orders, sometimes a temporary password "
-#~ "— and storing it is what turns a technical log into a legal liability. It "
-#~ "is also the only way to resend a message, so the resend button only works "
-#~ "for messages logged while this is on."
+#~ "The body is personal data — names, orders, sometimes a temporary password — "
+#~ "and storing it is what turns a technical log into a legal liability. It is "
+#~ "also the only way to resend a message, so the resend button only works for "
+#~ "messages logged while this is on."
 #~ msgstr ""
 #~ "El cuerpo es dato personal —nombres, pedidos, a veces una contraseña "
-#~ "temporal— y guardarlo es lo que convierte un registro técnico en un "
-#~ "problema legal. También es la única forma de reenviar un mensaje, así que "
-#~ "el botón de reenviar sólo funciona para los mensajes registrados con esto "
-#~ "prendido."
+#~ "temporal— y guardarlo es lo que convierte un registro técnico en un problema"
+#~ " legal. También es la única forma de reenviar un mensaje, así que el botón "
+#~ "de reenviar sólo funciona para los mensajes registrados con esto prendido."
 
 #~ msgid "Keep bodies and transcripts for"
 #~ msgstr "Conservar cuerpos y diálogos durante"
 
 #~ msgid ""
-#~ "Bodies are not stored, so messages cannot be resent from here; turn on "
-#~ "body storage in the settings to change that for future messages."
+#~ "Bodies are not stored, so messages cannot be resent from here; turn on body "
+#~ "storage in the settings to change that for future messages."
 #~ msgstr ""
-#~ "Los cuerpos no se guardan, así que desde acá no se puede reenviar; prendé "
-#~ "el guardado del cuerpo en los ajustes para cambiarlo para los próximos "
+#~ "Los cuerpos no se guardan, así que desde acá no se puede reenviar; prendé el"
+#~ " guardado del cuerpo en los ajustes para cambiarlo para los próximos "
 #~ "mensajes."
 
 #~ msgid "no host yet"
