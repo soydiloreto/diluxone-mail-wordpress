@@ -25,9 +25,15 @@
  * existed.
  *
  * Connecting an SMTP server is something eight plugins already do, and do
- * well. This one does it too, boring and solid, because it is the floor. But
- * the floor is not the product: the two things this plugin exists for are the
- * ones none of those eight does.
+ * well. This one does it too, boring and solid, because it is the floor: over
+ * SMTP or over the provider's own API, with as many providers configured at
+ * once as a site wants. They are a list and the order is the whole of it —
+ * the first sends, the next is what gets tried when it will not — because
+ * "default" and "fallback" are two names for a thing an order already says,
+ * and an order keeps saying it for the fourth provider too.
+ *
+ * But the floor is not the product: the two things this plugin exists for are
+ * the ones none of those eight does.
  *
  * The first is that the mail history hangs off each person's profile. They
  * all show one global list of sends; none lets you open a user and see what
@@ -47,6 +53,11 @@
  * What it does not do and will not do: send the mail itself. That is a
  * sending service, with its infrastructure, its IP reputation and its bounce
  * handling. Here you connect the provider the site already has, full stop.
+ *
+ * Nor does it keep the body of a message, and there is no setting for it. The
+ * mail WordPress sends most often is the password reset, and that link is not
+ * a record of what happened: it is a key to the account for as long as it is
+ * valid, for whoever reads the table next.
  * ---------------------------------------------------------------------------
  */
 

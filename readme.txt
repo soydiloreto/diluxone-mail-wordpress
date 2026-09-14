@@ -8,7 +8,7 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Send WordPress email through any SMTP provider, log every message — one history per person — and find out why your mail is not arriving.
+Send WordPress email through your providers, with a second one to fall back on, log every message — one history per person — and find out why your mail is not arriving.
 
 == Description ==
 
@@ -18,9 +18,11 @@ authenticate it, Gmail and Outlook drop it without telling anyone. The site
 works, the form says thank you, and the email never existed.
 
 Connecting an SMTP server is something eight plugins already do, and do well.
-This one does it too — solid and boring, because it is the floor, not the
-product. The two things it does that no other plugin does are the reason it
-exists.
+This one does it too — over SMTP or over the provider's own API, with as many
+providers configured as you like and a fallback when the first one will not
+take a message. That part is solid and boring, because it is the floor, not
+the product. The two things it does that no other plugin does are the reason
+it exists.
 
 = A mail history on every user's profile =
 
@@ -49,6 +51,23 @@ you what is broken. This one does:
 
 Hosts that disable `dns_get_record()` are common, so it falls back to
 DNS-over-HTTPS automatically. Results are cached, with a revalidate button.
+
+= As many providers as you want, in the order you want =
+
+Providers are a list, and the list is the whole configuration: the one at the
+top sends, and if it refuses a message the next one is asked, in order, until
+one of them takes it or there is nobody left. Drag a row to change who sends —
+there is no "primary" dropdown, because the order already said it.
+
+Each one is set up in four steps that unlock as you go: the method and the
+provider, the credentials, the sender address, and a real test message. A
+provider that has not sent that message is not in service, so a half-filled
+form can never become the thing your site sends through.
+
+Every attempt is a row in the log, on purpose. A message that went out through
+the second provider after the first refused it is two events, and a log that
+showed one of them would be hiding the reason the site has a second provider
+at all.
 
 = Three levels of logging =
 
@@ -83,6 +102,12 @@ database. Production credentials live in your hosting's variables and never
 touch the database or your repository, and the same code works locally and in
 production without editing settings on every deploy.
 
+There is one set of those constants and a list of providers, so they describe
+the one at the top — the one that sends. Anything below it is configured on
+its own screen and used as written, which is the only way a fallback can work:
+a second provider reached with the first one's password is the one setup
+guaranteed to fail, at the exact moment the site is counting on it.
+
 == Frequently Asked Questions ==
 
 = Does it store the content of my emails? =
@@ -110,11 +135,16 @@ those SMTP simply does not work while HTTPS does; and when a message is
 refused, an API answers with a sentence — the domain is not verified, the
 sender is not allowed — where SMTP answers `535` and leaves you guessing.
 
-Not every provider has one here. The API path covers the providers whose send
-is one header and one JSON body; the ones that sign every request (Amazon SES,
-Azure Communication Services) or need an OAuth consent screen (Microsoft 365,
-Gmail) stay on SMTP. Choosing the API of a provider that has none is refused on
-the spot rather than falling back quietly.
+Not every provider has one here. The API path covers Mailtrap, SendGrid,
+Postmark, Brevo, Resend and Mailjet — the ones whose send is one header and
+one JSON body. The ones that sign every request (Amazon SES, Azure
+Communication Services) or need an OAuth consent screen (Microsoft 365, Gmail)
+stay on SMTP. Choosing the API of a provider that has none is refused on the
+spot rather than falling back quietly.
+
+Nothing stops you from having both: the same provider over its API at the top
+of the list and over SMTP underneath it is a reasonable fallback, and so is
+two different providers.
 
 = Where does the SMTP password end up? =
 
@@ -132,6 +162,22 @@ way.
 Encryption at rest is worth being honest about: it protects the credential
 where it travels — dumps, backups, staging copies — not from code running on
 the site, which can always ask the plugin for it.
+
+= Where is all of this stored? =
+
+The list of providers is one WordPress option, `diluxone_mail_connections`:
+one record per provider, each with its own host, credential and sender, in the
+order the screen shows them. Removing a provider removes its record and
+nothing else, and reordering rewrites only the order.
+
+Passwords and API keys inside those records are encrypted; everything else is
+stored as you typed it. The log lives in two tables of its own.
+
+Deleting the plugin leaves all of it alone unless you tick "Delete the mail
+log and every setting when the plugin is deleted" under Log and privacy.
+Deleting a plugin to reinstall it is something people do, and a year of mail
+history that disappears because of that would be this plugin's doing.
+Deactivating never removes anything either way.
 
 = Do I have to uninstall my current SMTP plugin? =
 
