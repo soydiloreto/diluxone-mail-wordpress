@@ -8,7 +8,7 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Send WordPress email through your providers, with a second one to fall back on, log every message — one history per person — and find out why your mail is not arriving.
+Send WordPress email through your providers, with a fallback, log every message — one history per person — and find out why it is not arriving.
 
 == Description ==
 

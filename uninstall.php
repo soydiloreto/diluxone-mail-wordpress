@@ -113,10 +113,11 @@ function diluxone_mail_uninstall_tables_drop(): void {
 	global $wpdb;
 
 	foreach ( array( 'diluxone_mail_log', 'diluxone_mail_detail' ) as $table ) {
-		$name = $wpdb->base_prefix . $table;
-
-		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- A table name cannot be a placeholder, and this one is built here rather than coming from a request.
-		$wpdb->query( "DROP TABLE IF EXISTS `{$name}`" );
+		// %i is the identifier placeholder of WordPress 6.2, which is what the
+		// rest of the plugin uses for table names: no query here interpolates
+		// one, even one built two lines above out of constants.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- There is no cache to invalidate and no API for dropping a table.
+		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $wpdb->base_prefix . $table ) );
 	}
 }
 
