@@ -152,6 +152,15 @@ function diluxone_mail_findings( array $r, array $profile ): array {
 	$active = (string) $r['provider'];
 	$name   = (string) $r['profile_name'];
 
+	// ── The provider's own opinion ───────────────────────────────────
+	// Before any of the receiver-side reasoning: a provider that has not been
+	// given this domain refuses to send from it, and that is a wall rather
+	// than a risk. The two marks it leaves in DNS when a domain is set up with
+	// it are its SPF include and its DKIM selectors, and neither of them being
+	// there means the domain was never finished on their side — which is the
+	// difference between mail that lands in spam and mail that never leaves.
+	$f = array_merge( $f, diluxone_mail_findings_provider_side( $r, $profile ) );
+
 	// ── SPF ──────────────────────────────────────────────────────────
 	if ( null === $spf['record'] ) {
 		$f[] = diluxone_mail_finding( 'error', 'spf', __( 'There is no SPF record', 'diluxone-mail' ), __( 'Receivers have no way to know which servers may send mail for this domain, and most of them treat that as a bad sign. Publish a TXT record starting with v=spf1 that lists your provider and ends with -all.', 'diluxone-mail' ) );
@@ -408,4 +417,68 @@ function diluxone_mail_findings( array $r, array $profile ): array {
 	}
 
 	return $f;
+}
+
+/**
+ * What the provider itself will make of this domain.
+ *
+ * Everything else in the diagnosis is about what receivers think. This is
+ * about whether the message gets out of the building at all: SendGrid,
+ * Mailtrap, Postmark and the rest refuse a domain that has not been added and
+ * verified on their side, and they refuse it with a number.
+ *
+ * There is no way to ask over SMTP and no key to ask over HTTP here, so it is
+ * read off DNS, which the diagnosis has already looked up. A domain set up
+ * with a provider carries that provider's marks: its include in the SPF
+ * record, its selectors in DKIM. Neither present is not proof — a provider can
+ * be configured in ways that leave neither — but it is the shape of a domain
+ * nobody finished, and saying so is worth more than the false negative costs.
+ *
+ * @param array<string, mixed> $r       The report.
+ * @param array<string, mixed> $profile The active provider's profile.
+ * @return array<int, array{level: string, section: string, title: string, text: string}>
+ */
+function diluxone_mail_findings_provider_side( array $r, array $profile ): array {
+	$active = (string) $r['provider'];
+	$name   = (string) $r['profile_name'];
+
+	// Nothing configured, a local mailbox, or a provider that leaves no marks:
+	// there is nothing to read.
+	if ( '' === $active || (bool) $profile['local'] ) {
+		return array();
+	}
+
+	$includes  = array_map( 'strval', (array) $profile['spf_includes'] );
+	$selectors = array_map( 'strval', (array) $profile['dkim_selectors'] );
+
+	if ( array() === $includes && array() === $selectors ) {
+		return array();
+	}
+
+	foreach ( (array) $r['spf_senders'] as $sender ) {
+		if ( $sender['active'] ) {
+			return array();
+		}
+	}
+
+	foreach ( (array) $r['dkim'] as $dkim ) {
+		if ( (bool) $dkim['found'] && in_array( (string) $dkim['selector'], $selectors, true ) ) {
+			return array();
+		}
+	}
+
+	return array(
+		diluxone_mail_finding(
+			'error',
+			'spf',
+			/* translators: %s: provider name */
+			sprintf( __( '%s does not look set up for this domain', 'diluxone-mail' ), $name ),
+			sprintf(
+				/* translators: 1: provider name, 2: the domain */
+				__( 'Neither %1$s\'s SPF include nor any of its DKIM selectors is published for %2$s, which is what a domain that was never added on their side looks like. Providers refuse mail from a domain they have not verified, so this is not about landing in spam: the message does not leave at all, and what comes back is a number. Add the domain in your account there, publish the DNS records it gives you, and wait for it to read as verified before looking at anything else on this screen.', 'diluxone-mail' ),
+				$name,
+				(string) $r['domain']
+			)
+		),
+	);
 }

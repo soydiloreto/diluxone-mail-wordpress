@@ -123,6 +123,46 @@ class DiagnosticsTest extends DnsTestCase {
 		$this->assertTrue( $this->has( \diluxone_mail_diagnose( 'sinall.test' ), 'warning', 'does not end with' ) );
 	}
 
+	public function test_a_domain_the_provider_never_got_is_said_first(): void {
+		// Neither the provider's include nor any of its selectors: the shape of
+		// a domain nobody finished adding on the provider's side.
+		$this->dns( 'nueva.test', 'TXT', array( 'v=spf1 -all' ) );
+
+		$r = \diluxone_mail_diagnose( 'nueva.test' );
+
+		$this->assertTrue( $this->has( $r, 'error', 'does not look set up for this domain' ) );
+		// First, because it is the one that stops the mail leaving at all.
+		$this->assertStringContainsString( 'does not look set up', (string) $r['findings'][0]['title'] );
+		$this->assertStringContainsString( 'the message does not leave at all', (string) $r['findings'][0]['text'] );
+	}
+
+	public function test_either_mark_is_enough_to_stop_saying_it(): void {
+		// The include is there: the domain was added, whatever else is wrong.
+		$this->dns( 'conspf.test', 'TXT', array( 'v=spf1 include:spf.mailjet.com -all' ) );
+		$this->dns( 'spf.mailjet.com', 'TXT', array( 'v=spf1 ip4:1.1.1.1 ~all' ) );
+
+		$r = \diluxone_mail_diagnose( 'conspf.test' );
+		$this->assertFalse( $this->has( $r, 'error', 'does not look set up for this domain' ) );
+
+		// Only the DKIM selector, and that is enough too.
+		$this->dns( 'condkim.test', 'TXT', array( 'v=spf1 -all' ) );
+		$this->dns( 'mailjet._domainkey.condkim.test', 'TXT', array( 'v=DKIM1; k=rsa; p=MIIBIjAN' ) );
+
+		$r = \diluxone_mail_diagnose( 'condkim.test' );
+		$this->assertFalse( $this->has( $r, 'error', 'does not look set up for this domain' ) );
+	}
+
+	public function test_a_local_mailbox_is_never_told_to_go_and_verify_a_domain(): void {
+		\diluxone_mail_connection_put( '', array( 'diluxone_mail_provider' => 'mailpit', 'diluxone_mail_host' => 'mailpit' ) );
+
+		$this->dns( 'local.test', 'TXT', array( 'v=spf1 -all' ) );
+
+		$r = \diluxone_mail_diagnose( 'local.test' );
+
+		// Mailpit has no account, no domains and no opinion about yours.
+		$this->assertFalse( $this->has( $r, 'error', 'does not look set up for this domain' ) );
+	}
+
 	public function test_the_active_provider_has_to_be_in_the_spf(): void {
 		$this->dns( 'nomj.test', 'TXT', array( 'v=spf1 include:sendgrid.net -all' ) );
 		$this->dns( 'sendgrid.net', 'TXT', array( 'v=spf1 ip4:1.1.1.1 ~all' ) );
