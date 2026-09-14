@@ -281,3 +281,11 @@ iframe.diluxone-mail-body {
 .diluxone-mail-row-off td {
 	opacity: .55;
 }
+
+/* "You are looking at 25 of 10,000", with the way to the rest. */
+.diluxone-mail-profile-more {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: #50575e;
+}

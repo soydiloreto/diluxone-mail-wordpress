@@ -48,15 +48,16 @@ function diluxone_mail_settings_fields(): array {
  *
  * @return array<string, mixed>
  */
-function diluxone_mail_settings_data( string $scope ): array {
+function diluxone_mail_settings_data( string $scope, string $screen = '' ): array {
 	$editable = 'network' === $scope || diluxone_mail_site_override_allowed();
 	$attempt  = diluxone_mail_attempt_take();
-	$tab      = diluxone_mail_current_tab( $scope );
+	$tab      = diluxone_mail_current_tab( $scope, $screen );
 	$provider = diluxone_mail_config_value( 'provider' );
 
 	return array(
 		'scope'               => $scope,
 		'tab'                 => $tab,
+		'screen'              => $screen,
 		'progress'            => diluxone_mail_settings_progress(),
 		'editable'            => $editable,
 		'fields'              => diluxone_mail_settings_field_values( $scope, $attempt ),
@@ -136,10 +137,17 @@ function diluxone_mail_settings_field_values( string $scope, ?array $attempt = n
 	return $fields;
 }
 
-/** A site's settings screen. */
+/** The four steps of setting up a provider. */
+function diluxone_mail_screen_provider(): void {
+	diluxone_mail_screen_open( __( 'Provider', 'diluxone-mail' ) );
+	diluxone_mail_view( 'admin-settings', diluxone_mail_settings_data( 'site', 'provider' ) );
+	diluxone_mail_screen_close();
+}
+
+/** Everything else a site can decide. */
 function diluxone_mail_screen_settings(): void {
 	diluxone_mail_screen_open( __( 'Settings', 'diluxone-mail' ) );
-	diluxone_mail_view( 'admin-settings', diluxone_mail_settings_data( 'site' ) );
+	diluxone_mail_view( 'admin-settings', diluxone_mail_settings_data( 'site', 'settings' ) );
 	diluxone_mail_screen_close();
 }
 
@@ -194,7 +202,7 @@ function diluxone_mail_settings_redirect( string $scope, string $done, string $t
 
 	wp_safe_redirect(
 		'' === $tab
-			? add_query_arg( $args, 'network' === $scope ? network_admin_url( 'settings.php?page=diluxone-mail-network' ) : diluxone_mail_admin_url( DILUXONE_MAIL_SETTINGS ) )
+			? add_query_arg( $args, 'network' === $scope ? network_admin_url( 'settings.php?page=diluxone-mail-network' ) : diluxone_mail_admin_url( DILUXONE_MAIL_PROVIDER_PAGE ) )
 			: diluxone_mail_tab_url( $tab, $scope, $args )
 	);
 

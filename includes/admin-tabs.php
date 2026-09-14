@@ -29,15 +29,16 @@ defined( 'ABSPATH' ) || exit;
  * not. `needs` is the tab that has to be complete before this one opens.
  * `groups` are the groups of settings the tab's form is allowed to save.
  *
- * @return array<string, array{label: string, step: int, needs: string, groups: array<int, string>}>
+ * @return array<string, array{label: string, step: int, needs: string, groups: array<int, string>, screen: string}>
  */
-function diluxone_mail_settings_tabs( string $scope = 'site' ): array {
+function diluxone_mail_settings_tabs( string $scope = 'site', string $screen = '' ): array {
 	$tabs = array(
 		'profile' => array(
 			'label'  => __( 'Provider', 'diluxone-mail' ),
 			'step'   => 1,
 			'needs'  => '',
 			'groups' => array(),
+			'screen' => 'provider',
 		),
 		// No groups: the transport settings have no plain-save path at all.
 		// They are written by the connection test and by nothing else, which
@@ -52,30 +53,35 @@ function diluxone_mail_settings_tabs( string $scope = 'site' ): array {
 			'step'   => 2,
 			'needs'  => 'profile',
 			'groups' => array(),
+			'screen' => 'provider',
 		),
 		'sender'  => array(
 			'label'  => __( 'Sender', 'diluxone-mail' ),
 			'step'   => 3,
 			'needs'  => 'server',
 			'groups' => array( 'from' ),
+			'screen' => 'provider',
 		),
 		'test'    => array(
 			'label'  => __( 'Test message', 'diluxone-mail' ),
 			'step'   => 4,
 			'needs'  => 'sender',
 			'groups' => array(),
+			'screen' => 'provider',
 		),
 		'sending' => array(
 			'label'  => __( 'Sending behaviour', 'diluxone-mail' ),
 			'step'   => 0,
 			'needs'  => '',
 			'groups' => array( 'mode' ),
+			'screen' => 'settings',
 		),
 		'logging' => array(
 			'label'  => __( 'Log and privacy', 'diluxone-mail' ),
 			'step'   => 0,
 			'needs'  => '',
 			'groups' => array( 'log', 'privacy' ),
+			'screen' => 'settings',
 		),
 	);
 
@@ -85,10 +91,27 @@ function diluxone_mail_settings_tabs( string $scope = 'site' ): array {
 			'step'   => 0,
 			'needs'  => '',
 			'groups' => array(),
+			'screen' => 'settings',
 		);
 	}
 
-	return $tabs;
+	if ( '' === $screen ) {
+		return $tabs;
+	}
+
+	// Narrowed to one screen: the four steps of choosing a provider are a
+	// sequence somebody walks once, and the settings are things they come back
+	// to change. Putting them in one row of tabs made the wizard look like a
+	// place to rummage around in.
+	return array_filter(
+		$tabs,
+		static fn( array $tab ): bool => $screen === $tab['screen']
+	);
+}
+
+/** Which screen a tab is shown on. */
+function diluxone_mail_tab_screen( string $tab, string $scope = 'site' ): string {
+	return (string) ( diluxone_mail_settings_tabs( $scope )[ $tab ]['screen'] ?? 'settings' );
 }
 
 /**
@@ -190,8 +213,8 @@ function diluxone_mail_tab_open( string $tab, array $progress, string $scope = '
  * Out of the closed ones it falls back to the first step that is not done,
  * which is where somebody arriving for the first time has to start anyway.
  */
-function diluxone_mail_current_tab( string $scope = 'site' ): string {
-	$tabs     = diluxone_mail_settings_tabs( $scope );
+function diluxone_mail_current_tab( string $scope = 'site', string $screen = '' ): string {
+	$tabs     = diluxone_mail_settings_tabs( $scope, $screen );
 	$progress = diluxone_mail_settings_progress();
 
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- It only picks which tab to render; it changes nothing.
@@ -207,7 +230,7 @@ function diluxone_mail_current_tab( string $scope = 'site' ): string {
 		}
 	}
 
-	return 'profile';
+	return (string) array_key_first( $tabs );
 }
 
 /**
@@ -216,11 +239,15 @@ function diluxone_mail_current_tab( string $scope = 'site' ): string {
  * @param array<string, mixed> $args
  */
 function diluxone_mail_tab_url( string $tab, string $scope = 'site', array $args = array() ): string {
-	$base = 'network' === $scope
-		? network_admin_url( 'settings.php?page=diluxone-mail-network' )
-		: diluxone_mail_admin_url( DILUXONE_MAIL_SETTINGS );
+	if ( 'network' === $scope ) {
+		// One screen on the network: the super administrator is configuring
+		// the whole network's mail in one sitting, not walking a site's setup.
+		return add_query_arg( array_merge( array( 'tab' => $tab ), $args ), network_admin_url( 'settings.php?page=diluxone-mail-network' ) );
+	}
 
-	return add_query_arg( array_merge( array( 'tab' => $tab ), $args ), $base );
+	$page = 'provider' === diluxone_mail_tab_screen( $tab, $scope ) ? DILUXONE_MAIL_PROVIDER_PAGE : DILUXONE_MAIL_SETTINGS;
+
+	return diluxone_mail_admin_url( $page, array_merge( array( 'tab' => $tab ), $args ) );
 }
 
 /**
@@ -240,8 +267,8 @@ function diluxone_mail_tab_groups( string $tab, string $scope = 'site' ): array 
 }
 
 /** The row of tabs. */
-function diluxone_mail_tabs_nav( string $current, string $scope ): void {
-	$tabs     = diluxone_mail_settings_tabs( $scope );
+function diluxone_mail_tabs_nav( string $current, string $scope, string $screen = '' ): void {
+	$tabs     = diluxone_mail_settings_tabs( $scope, $screen );
 	$progress = diluxone_mail_settings_progress();
 
 	// The only markup a label may carry: the second step's two names, one of

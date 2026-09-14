@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-14T00:28:15+00:00\n"
+"POT-Creation-Date: 2026-09-14T00:38:58+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -44,20 +44,20 @@ msgstr ""
 msgid "Pablo Ariel Di Loreto"
 msgstr "Pablo Ariel Di Loreto"
 
-#: includes/admin-dns.php:16 includes/admin.php:69
-#: templates/admin-overview.php:59 templates/admin-overview.php:231
-#: templates/admin-overview.php:280
+#: includes/admin-dns.php:16 includes/admin.php:84
+#: templates/admin-overview.php:60 templates/admin-overview.php:232
+#: templates/admin-overview.php:281
 msgid "Deliverability"
 msgstr "Entregabilidad"
 
 #: includes/admin-dns.php:42 includes/admin-log.php:62
-#: includes/admin-settings.php:159 includes/admin-settings.php:472
+#: includes/admin-settings.php:167 includes/admin-settings.php:480
 #: includes/observer.php:300
 msgid "You are not allowed to do this."
 msgstr "No tenés permiso para hacer esto."
 
-#: includes/admin-log.php:27 includes/admin.php:68
-#: templates/admin-overview.php:58 templates/admin-overview.php:211
+#: includes/admin-log.php:27 includes/admin.php:83
+#: templates/admin-overview.php:59 templates/admin-overview.php:212
 #: templates/admin-status.php:96 templates/settings-logging.php:24
 msgid "Mail log"
 msgstr "Historial de correo"
@@ -74,58 +74,59 @@ msgstr "Ese mensaje ya no está en el historial."
 msgid "Network settings"
 msgstr "Ajustes de la red"
 
-#: includes/admin-overview.php:103 includes/admin.php:66
+#: includes/admin-overview.php:104 includes/admin.php:80
 msgid "Overview"
 msgstr "Resumen"
 
-#: includes/admin-settings.php:141 includes/admin.php:67
-#: templates/admin-overview.php:56
+#: includes/admin-settings.php:142 includes/admin-tabs.php:37
+#: includes/admin.php:81 includes/log-list-table.php:48
+#: templates/admin-log-detail.php:37 templates/admin-overview.php:56
+#: templates/settings-profile.php:51 templates/settings-profile.php:66
+msgid "Provider"
+msgstr "Proveedor"
+
+#: includes/admin-settings.php:149 includes/admin.php:82
+#: templates/admin-overview.php:58
 msgid "Settings"
 msgstr "Ajustes"
 
-#: includes/admin-status.php:59 includes/admin.php:70
+#: includes/admin-status.php:59 includes/admin.php:85
 #: includes/log-list-table.php:47 includes/privacy.php:90
 #: templates/user-profile.php:37
 msgid "Status"
 msgstr "Estado"
 
-#: includes/admin-tabs.php:37 includes/log-list-table.php:48
-#: templates/admin-log-detail.php:37 templates/settings-profile.php:51
-#: templates/settings-profile.php:66
-msgid "Provider"
-msgstr "Proveedor"
-
-#: includes/admin-tabs.php:51 includes/admin-tabs.php:282
+#: includes/admin-tabs.php:52 includes/admin-tabs.php:309
 #: templates/settings-api.php:35
 msgid "API key"
 msgstr "Clave de API"
 
-#: includes/admin-tabs.php:51 includes/admin-tabs.php:280
+#: includes/admin-tabs.php:52 includes/admin-tabs.php:307
 #: templates/settings-server.php:69
 msgid "SMTP server"
 msgstr "Servidor SMTP"
 
-#: includes/admin-tabs.php:57 templates/settings-sender.php:25
+#: includes/admin-tabs.php:59 templates/settings-sender.php:25
 msgid "Sender"
 msgstr "Remitente"
 
-#: includes/admin-tabs.php:63
+#: includes/admin-tabs.php:66
 msgid "Test message"
 msgstr "Mensaje de prueba"
 
-#: includes/admin-tabs.php:69
+#: includes/admin-tabs.php:73
 msgid "Sending behaviour"
 msgstr "Cómo se envía"
 
-#: includes/admin-tabs.php:75
+#: includes/admin-tabs.php:80
 msgid "Log and privacy"
 msgstr "Registro y privacidad"
 
-#: includes/admin-tabs.php:84 templates/settings-sites.php:18
+#: includes/admin-tabs.php:90 templates/settings-sites.php:18
 msgid "Sites"
 msgstr "Sitios"
 
-#: includes/admin-tabs.php:125
+#: includes/admin-tabs.php:148
 msgid ""
 "Choose how this site sends and which provider first: the key belongs to one "
 "of them."
@@ -133,7 +134,7 @@ msgstr ""
 "Elegí primero cómo envía el sitio y con qué proveedor: la clave es de uno de"
 " ellos."
 
-#: includes/admin-tabs.php:126
+#: includes/admin-tabs.php:149
 msgid ""
 "Choose a provider profile first: it fills in the host, the port and the "
 "encryption this tab asks for."
@@ -141,7 +142,7 @@ msgstr ""
 "Elegí primero un perfil de proveedor: completa el servidor, el puerto y el "
 "cifrado que esta solapa te pide."
 
-#: includes/admin-tabs.php:129
+#: includes/admin-tabs.php:152
 msgid ""
 "The provider has to accept the key first. Check it on the previous tab; "
 "until it does, there is nothing to send with."
@@ -149,7 +150,7 @@ msgstr ""
 "Primero el proveedor tiene que aceptar la clave. Verificala en la solapa "
 "anterior; hasta que la acepte, no hay con qué enviar."
 
-#: includes/admin-tabs.php:130
+#: includes/admin-tabs.php:153
 msgid ""
 "The SMTP server has to answer first. Test the connection on the previous "
 "tab; until it does, there is nothing to send from."
@@ -157,7 +158,7 @@ msgstr ""
 "Primero tiene que contestar el servidor SMTP. Probá la conexión en la solapa"
 " anterior; hasta que conteste, no hay desde dónde enviar."
 
-#: includes/admin-tabs.php:132
+#: includes/admin-tabs.php:155
 msgid ""
 "Set the From address first: a provider will not deliver a message sent from "
 "an address it has not verified."
@@ -166,45 +167,45 @@ msgstr ""
 "mensaje enviado desde una dirección que no verificó."
 
 #. translators: 1: step number, 2: name of the step
-#: includes/admin-tabs.php:263 includes/admin-tabs.php:275
+#: includes/admin-tabs.php:290 includes/admin-tabs.php:302
 #, php-format
 msgctxt "numbered step in the settings screen"
 msgid "%1$d. %2$s"
 msgstr "%1$d. %2$s"
 
-#: includes/admin.php:34 templates/admin-status.php:23
+#: includes/admin.php:48 templates/admin-status.php:23
 msgid "DiluxOne Mail"
 msgstr "DiluxOne Mail"
 
 #. translators: 1: plugin name, 2: screen name
-#: includes/admin.php:41
+#: includes/admin.php:55
 #, php-format
 msgctxt "title of a dashboard screen"
 msgid "%1$s | %2$s"
 msgstr "%1$s | %2$s"
 
-#: includes/admin.php:155
+#: includes/admin.php:171
 msgid "Settings saved."
 msgstr "Ajustes guardados."
 
-#: includes/admin.php:156
+#: includes/admin.php:172
 msgid "Provider profile applied. Paste the credentials and save."
 msgstr "Perfil del proveedor aplicado. Pegá las credenciales y guardá."
 
-#: includes/admin.php:157
+#: includes/admin.php:173
 msgid "DiluxOne Mail is now handling this site's outgoing mail."
 msgstr "DiluxOne Mail ahora gestiona el correo saliente de este sitio."
 
-#: includes/admin.php:158
+#: includes/admin.php:174
 msgid "DNS cache cleared and the diagnosis run again."
 msgstr "Caché de DNS vaciado y diagnóstico vuelto a correr."
 
-#: includes/admin.php:159
+#: includes/admin.php:175
 msgid "The server answered and the credentials work. They are saved."
 msgstr ""
 "El servidor contestó y las credenciales funcionan. Quedaron guardadas."
 
-#: includes/admin.php:160
+#: includes/admin.php:176
 msgid ""
 "The server answered, but this PHP cannot encrypt the password (openssl with "
 "AES-256-GCM is missing), and it is not stored in the clear. Set it through "
@@ -214,7 +215,7 @@ msgstr ""
 "openssl con AES-256-GCM) y no se guarda en texto plano. Cargala con la "
 "constante DILUXONE_MAIL_PASS en wp-config.php."
 
-#: includes/admin.php:161
+#: includes/admin.php:177
 msgid ""
 "That provider has no API here, only its SMTP server. Choose SMTP, or a "
 "provider that does."
@@ -222,11 +223,11 @@ msgstr ""
 "Ese proveedor no tiene API acá, sólo su servidor SMTP. Elegí SMTP, o un "
 "proveedor que sí la tenga."
 
-#: includes/admin.php:162
+#: includes/admin.php:178
 msgid "The provider recognised the key. It is saved."
 msgstr "El proveedor reconoció la clave. Quedó guardada."
 
-#: includes/admin.php:163
+#: includes/admin.php:179
 msgid ""
 "The key is saved. The provider could not be asked whether it is valid, so "
 "the test message is what will tell you."
@@ -234,15 +235,15 @@ msgstr ""
 "La clave quedó guardada. No se le pudo preguntar al proveedor si es válida, "
 "así que el mensaje de prueba es lo que te lo va a decir."
 
-#: includes/admin.php:164
+#: includes/admin.php:180
 msgid "The provider does not recognise that key, so nothing was saved."
 msgstr "El proveedor no reconoce esa clave, así que no se guardó nada."
 
-#: includes/admin.php:165
+#: includes/admin.php:181
 msgid "The list of domains was read again from the provider."
 msgstr "La lista de dominios se volvió a leer del proveedor."
 
-#: includes/admin.php:166
+#: includes/admin.php:182
 msgid ""
 "The provider could not be asked for its domains. The address can be typed by"
 " hand."
@@ -250,7 +251,7 @@ msgstr ""
 "No se le pudo preguntar al proveedor por sus dominios. La dirección se puede"
 " escribir a mano."
 
-#: includes/admin.php:167
+#: includes/admin.php:183
 msgid ""
 "The server did not accept the connection, so nothing was saved. What went "
 "wrong is below."
@@ -258,44 +259,44 @@ msgstr ""
 "El servidor no aceptó la conexión, así que no se guardó nada. Abajo está qué"
 " falló."
 
-#: includes/admin.php:168
+#: includes/admin.php:184
 msgid "Test message sent."
 msgstr "Mensaje de prueba enviado."
 
-#: includes/admin.php:169
+#: includes/admin.php:185
 msgid ""
 "This site's settings are fixed by the network and cannot be changed here."
 msgstr "Los ajustes de este sitio los fija la red y no se pueden cambiar acá."
 
 #. translators: %s: name of the constant
-#: includes/admin.php:188
+#: includes/admin.php:204
 #, php-format
 msgid "defined by the environment — PHP constant %s"
 msgstr "definido por el entorno — constante de PHP %s"
 
 #. translators: %s: name of the variable
-#: includes/admin.php:191
+#: includes/admin.php:207
 #, php-format
 msgid "defined by the environment — variable %s"
 msgstr "definido por el entorno — variable %s"
 
-#: includes/admin.php:193
+#: includes/admin.php:209
 msgid "stored, but it can no longer be decrypted — type it again"
 msgstr "guardada, pero ya no se puede descifrar — escribila de nuevo"
 
-#: includes/admin.php:195
+#: includes/admin.php:211
 msgid "set by the network"
 msgstr "fijado por la red"
 
-#: includes/admin.php:197
+#: includes/admin.php:213
 msgid "set on this site"
 msgstr "fijado en este sitio"
 
-#: includes/admin.php:199
+#: includes/admin.php:215
 msgid "default value"
 msgstr "valor por defecto"
 
-#: includes/admin.php:244
+#: includes/admin.php:260
 msgid ""
 "This site fixes this from code: whatever is chosen here, it stays as it is."
 msgstr ""
@@ -869,7 +870,7 @@ msgstr "Filtrar"
 msgid "No messages logged yet."
 msgstr "Todavía no hay mensajes registrados."
 
-#: includes/log.php:80 templates/admin-overview.php:89
+#: includes/log.php:80 templates/admin-overview.php:90
 msgid "Sending"
 msgstr "Enviando"
 
@@ -1387,7 +1388,7 @@ msgid "Continue the setup"
 msgstr "Seguir con la configuración"
 
 #. translators: 1: recipient, 2: seconds
-#: templates/admin-overview.php:70 templates/settings-test.php:27
+#: templates/admin-overview.php:71 templates/settings-test.php:27
 #, php-format
 msgid ""
 "Test message handed to the server for %1$s in %2$ss. Check the inbox — and "
@@ -1396,31 +1397,31 @@ msgstr ""
 "Mensaje de prueba entregado al servidor para %1$s en %2$ss. Revisá la "
 "bandeja de entrada — y la de spam."
 
-#: templates/admin-overview.php:76 templates/settings-test.php:33
+#: templates/admin-overview.php:77 templates/settings-test.php:33
 msgid "The test message was not sent."
 msgstr "El mensaje de prueba no se envió."
 
-#: templates/admin-overview.php:93
+#: templates/admin-overview.php:94
 msgid "This plugin sends the mail of this site."
 msgstr "Este plugin envía el correo de este sitio."
 
 #. translators: 1: provider name, 2: SMTP host
-#: templates/admin-overview.php:98
+#: templates/admin-overview.php:99
 #, php-format
 msgid "Through %1$s, at %2$s."
 msgstr "Por %1$s, en %2$s."
 
 #. translators: %s: the From address
-#: templates/admin-overview.php:109
+#: templates/admin-overview.php:110
 #, php-format
 msgid "Signed as %s."
 msgstr "Firmado como %s."
 
-#: templates/admin-overview.php:116
+#: templates/admin-overview.php:117
 msgid "This plugin is watching, not sending."
 msgstr "Este plugin está mirando, no enviando."
 
-#: templates/admin-overview.php:119
+#: templates/admin-overview.php:120
 msgid ""
 "There is no server configured yet, so nothing can go out through it. The "
 "setup card says which step is next."
@@ -1428,7 +1429,7 @@ msgstr ""
 "Todavía no hay servidor configurado, así que no puede salir nada por acá. La"
 " tarjeta de configuración dice cuál es el paso que sigue."
 
-#: templates/admin-overview.php:121
+#: templates/admin-overview.php:122
 msgid ""
 "The mode is set to never send. Messages are logged and diagnosed, and "
 "delivery is left to whoever else is doing it."
@@ -1437,7 +1438,7 @@ msgstr ""
 "diagnostican, y la entrega queda en manos de quien la esté haciendo."
 
 #. translators: %s: names of the plugins handling delivery
-#: templates/admin-overview.php:126
+#: templates/admin-overview.php:127
 #, php-format
 msgid ""
 "%s is handling delivery: it ends the send before this plugin is reached."
@@ -1445,63 +1446,63 @@ msgstr ""
 "%s se está ocupando de la entrega: termina el envío antes de que se llegue a"
 " este plugin."
 
-#: templates/admin-overview.php:133
+#: templates/admin-overview.php:134
 msgid "Full status"
 msgstr "Estado completo"
 
-#: templates/admin-overview.php:140
+#: templates/admin-overview.php:141
 msgid "Setup"
 msgstr "Configuración"
 
-#: templates/admin-overview.php:144
+#: templates/admin-overview.php:145
 msgid "All four steps are done."
 msgstr "Los cuatro pasos están hechos."
 
 #. translators: %d: how many steps are left
-#: templates/admin-overview.php:150
+#: templates/admin-overview.php:151
 #, php-format
 msgid "%d step left."
 msgid_plural "%d steps left."
 msgstr[0] "%d paso pendiente."
 msgstr[1] "%d pasos pendientes."
 
-#: templates/admin-overview.php:170
+#: templates/admin-overview.php:171
 msgid "Messages"
 msgstr "Mensajes"
 
-#: templates/admin-overview.php:174
+#: templates/admin-overview.php:175
 msgid "The log is off, so there is nothing to count."
 msgstr "El registro está apagado, así que no hay nada que contar."
 
 #. translators: 1: messages sent, 2: messages failed
-#: templates/admin-overview.php:180
+#: templates/admin-overview.php:181
 #, php-format
 msgid "%1$d sent, %2$d failed"
 msgstr "%1$d enviados, %2$d fallidos"
 
 #. translators: %s: how long ago
-#: templates/admin-overview.php:193
+#: templates/admin-overview.php:194
 #, php-format
 msgid "Last send went out %s ago."
 msgstr "El último envío salió hace %s."
 
 #. translators: 1: how long ago, 2: the error
-#: templates/admin-overview.php:202
+#: templates/admin-overview.php:203
 #, php-format
 msgid "Last send failed %1$s ago: %2$s"
 msgstr "El último envío falló hace %1$s: %2$s"
 
-#: templates/admin-overview.php:234
+#: templates/admin-overview.php:235
 msgid "There is no domain to check yet: it comes from the From address."
 msgstr ""
 "Todavía no hay dominio que revisar: sale de la dirección del remitente."
 
-#: templates/admin-overview.php:236
+#: templates/admin-overview.php:237
 msgid "Not diagnosed yet."
 msgstr "Todavía sin diagnosticar."
 
 #. translators: %s: the domain
-#: templates/admin-overview.php:241
+#: templates/admin-overview.php:242
 #, php-format
 msgid ""
 "%s has not been diagnosed yet. The check runs on the deliverability screen; "
@@ -1512,7 +1513,7 @@ msgstr ""
 "dibujar esta página."
 
 #. translators: %d: number of problems
-#: templates/admin-overview.php:252
+#: templates/admin-overview.php:253
 #, php-format
 msgid "%d problem found."
 msgid_plural "%d problems found."
@@ -1520,32 +1521,32 @@ msgstr[0] "%d problema encontrado."
 msgstr[1] "%d problemas encontrados."
 
 #. translators: %d: number of warnings
-#: templates/admin-overview.php:262
+#: templates/admin-overview.php:263
 #, php-format
 msgid "%d warning."
 msgid_plural "%d warnings."
 msgstr[0] "%d advertencia."
 msgstr[1] "%d advertencias."
 
-#: templates/admin-overview.php:268
+#: templates/admin-overview.php:269
 msgid "Nothing to fix."
 msgstr "No hay nada que corregir."
 
 #. translators: %s: the domain
-#: templates/admin-overview.php:274
+#: templates/admin-overview.php:275
 #, php-format
 msgid "SPF, DKIM and DMARC for %s."
 msgstr "SPF, DKIM y DMARC de %s."
 
-#: templates/admin-overview.php:291 templates/settings-test.php:51
+#: templates/admin-overview.php:292 templates/settings-test.php:51
 msgid "Send a test message"
 msgstr "Mandar un mensaje de prueba"
 
-#: templates/admin-overview.php:293 templates/settings-test.php:53
+#: templates/admin-overview.php:294 templates/settings-test.php:53
 msgid "Send to"
 msgstr "Mandar a"
 
-#: templates/admin-overview.php:295 templates/settings-test.php:55
+#: templates/admin-overview.php:296 templates/settings-test.php:55
 msgid "Send test"
 msgstr "Mandar prueba"
 
@@ -2233,9 +2234,22 @@ msgstr[1] "%1$d mensajes a %2$s."
 msgid "Nothing yet."
 msgstr "Todavía nada."
 
-#: templates/user-profile.php:65
-msgid "See all in the mail log"
-msgstr "Ver todo en el historial de correo"
+#. translators: 1: how many messages are shown, 2: how many there are
+#: templates/user-profile.php:69
+#, php-format
+msgid "Showing the last %1$d of %2$d."
+msgstr "Mostrando los últimos %1$d de %2$d."
+
+#: templates/user-profile.php:76
+msgid "All of them in the mail log"
+msgstr "Todos en el registro de correo"
+
+#: templates/user-profile.php:77
+msgid "(opens in a new tab)"
+msgstr "(se abre en una solapa nueva)"
+
+#~ msgid "See all in the mail log"
+#~ msgstr "Ver todo en el historial de correo"
 
 #~ msgid ""
 #~ "The token of the sending domain, from Sending Domains → your domain → "

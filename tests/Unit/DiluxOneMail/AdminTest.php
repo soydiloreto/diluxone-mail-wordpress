@@ -62,7 +62,7 @@ class AdminTest extends TestCase {
 		$this->assertStringContainsString( 'page=diluxone-mail-log', \diluxone_mail_admin_url( 'diluxone-mail-log', array( 'view' => 3 ) ) );
 		$this->assertStringContainsString( 'view=3', \diluxone_mail_admin_url( 'diluxone-mail-log', array( 'view' => 3 ) ) );
 		$this->assertSame( 'x', \diluxone_mail_admin_title( 'x', 'Settings' ) );
-		$this->assertCount( 5, \diluxone_mail_screens() );
+		$this->assertCount( 6, \diluxone_mail_screens() );
 	}
 
 	public function test_the_notices_for_each_action(): void {

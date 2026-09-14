@@ -23,7 +23,7 @@ function diluxone_mail_screen_dns(): void {
 			'report'         => '' !== $domain ? diluxone_mail_diagnose( $domain ) : null,
 			'domain'         => $domain,
 			'revalidate_url' => wp_nonce_url( admin_url( 'admin-post.php?action=diluxone_mail_revalidate' ), 'diluxone_mail_revalidate' ),
-			'settings_url'   => diluxone_mail_admin_url( DILUXONE_MAIL_SETTINGS ),
+			'settings_url'   => diluxone_mail_tab_url( 'sender' ),
 			// The four values the diagnosis runs on are edited here, on the
 			// screen that uses them, rather than on a settings tab that says
 			// "DNS diagnostics" and shows no diagnosis.

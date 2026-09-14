@@ -20,7 +20,7 @@ class UserProfileTest extends AdminTestCase {
 		$this->assertStringContainsString( '30 messages', $html );
 		$this->assertStringContainsString( 'boom', $html );
 		$this->assertStringNotContainsString( 'Resend', $html );
-		$this->assertStringContainsString( 'See all in the mail log', $html );
+		$this->assertStringContainsString( 'All of them in the mail log', $html );
 		$this->assertStringContainsString( "email IN ('ana@x.test')", $this->db->of( 'get_results' )[0]['sql'] );
 	}
 

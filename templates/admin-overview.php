@@ -52,9 +52,10 @@ $diluxone_mail_card = static function ( string $state, string $icon, string $tit
 		<?php esc_html_e( 'Send WordPress mail through your own SMTP provider, keep a log of every message, and find out why the ones that leave still do not arrive.', 'diluxone-mail' ); ?>
 	</p>
 	<p class="diluxone-mail-welcome-actions">
-		<a class="button button-primary" href="<?php echo esc_url( (string) $data['settings_url'] ); ?>">
-			<?php echo $diluxone_mail_left > 0 ? esc_html__( 'Continue the setup', 'diluxone-mail' ) : esc_html__( 'Settings', 'diluxone-mail' ); ?>
+		<a class="button button-primary" href="<?php echo esc_url( (string) $data['provider_url'] ); ?>">
+			<?php echo $diluxone_mail_left > 0 ? esc_html__( 'Continue the setup', 'diluxone-mail' ) : esc_html__( 'Provider', 'diluxone-mail' ); ?>
 		</a>
+		<a class="button" href="<?php echo esc_url( (string) $data['settings_url'] ); ?>"><?php esc_html_e( 'Settings', 'diluxone-mail' ); ?></a>
 		<a class="button" href="<?php echo esc_url( (string) $data['log_url'] ); ?>"><?php esc_html_e( 'Mail log', 'diluxone-mail' ); ?></a>
 		<a class="button" href="<?php echo esc_url( (string) $data['dns_url'] ); ?>"><?php esc_html_e( 'Deliverability', 'diluxone-mail' ); ?></a>
 	</p>

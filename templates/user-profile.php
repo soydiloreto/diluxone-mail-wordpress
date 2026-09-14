@@ -61,7 +61,22 @@ defined( 'ABSPATH' ) || exit;
 			<?php endforeach; ?>
 		</tbody>
 	</table>
-	<?php if ( '' !== (string) $data['log_url'] && (int) $data['total'] > count( $data['rows'] ) ) : ?>
-		<p><a href="<?php echo esc_url( (string) $data['log_url'] ); ?>"><?php esc_html_e( 'See all in the mail log', 'diluxone-mail' ); ?></a></p>
+	<?php if ( (int) $data['total'] > count( $data['rows'] ) ) : ?>
+		<p class="diluxone-mail-profile-more">
+			<?php
+			printf(
+				/* translators: 1: how many messages are shown, 2: how many there are */
+				esc_html__( 'Showing the last %1$d of %2$d.', 'diluxone-mail' ),
+				count( $data['rows'] ),
+				(int) $data['total']
+			);
+			?>
+			<?php if ( '' !== (string) $data['log_url'] ) : ?>
+				<a class="button button-small" href="<?php echo esc_url( (string) $data['log_url'] ); ?>" target="_blank" rel="noopener">
+					<?php esc_html_e( 'All of them in the mail log', 'diluxone-mail' ); ?>
+					<span class="screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'diluxone-mail' ); ?></span>
+				</a>
+			<?php endif; ?>
+		</p>
 	<?php endif; ?>
 <?php endif; ?>

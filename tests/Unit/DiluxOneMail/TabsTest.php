@@ -118,7 +118,11 @@ class TabsTest extends AdminTestCase {
 		$this->assertArrayHasKey( 'sites', \diluxone_mail_settings_tabs( 'network' ) );
 		$this->assertArrayNotHasKey( 'sites', \diluxone_mail_settings_tabs( 'site' ) );
 		$this->assertStringContainsString( 'settings.php?page=diluxone-mail-network', \diluxone_mail_tab_url( 'sites', 'network' ) );
-		$this->assertStringContainsString( 'page=diluxone-mail-settings', \diluxone_mail_tab_url( 'sender' ) );
+		// The four steps live on their own screen; the rest on the settings one.
+		$this->assertStringContainsString( 'page=diluxone-mail-provider', \diluxone_mail_tab_url( 'sender' ) );
+		$this->assertStringContainsString( 'page=diluxone-mail-settings', \diluxone_mail_tab_url( 'logging' ) );
+		$this->assertSame( array( 'profile', 'server', 'sender', 'test' ), array_keys( \diluxone_mail_settings_tabs( 'site', 'provider' ) ) );
+		$this->assertSame( array( 'sending', 'logging' ), array_keys( \diluxone_mail_settings_tabs( 'site', 'settings' ) ) );
 	}
 
 	public function test_the_overview_before_anything_is_set_up(): void {

@@ -302,7 +302,7 @@ class ApiTest extends AdminTestCase {
 		$this->por_api();
 		$_GET['tab'] = 'server';
 
-		$html = $this->render( 'diluxone_mail_screen_settings' );
+		$html = $this->render( 'diluxone_mail_screen_provider' );
 
 		$this->assertStringContainsString( 'API key', $html );
 		$this->assertStringContainsString( 'diluxone_mail_api_key', $html );
@@ -522,7 +522,7 @@ class ApiTest extends AdminTestCase {
 
 		// And the step still paints, with the plain field.
 		$_GET['tab'] = 'sender';
-		$html        = $this->render( 'diluxone_mail_screen_settings' );
+		$html        = $this->render( 'diluxone_mail_screen_provider' );
 
 		$this->assertStringContainsString( 'name="diluxone_mail_from"', $html );
 		$this->assertStringNotContainsString( 'diluxone_mail_from_domain', $html );
@@ -597,7 +597,7 @@ class ApiTest extends AdminTestCase {
 	}
 
 	public function test_the_first_step_offers_both_methods(): void {
-		$html = $this->render( 'diluxone_mail_screen_settings' );
+		$html = $this->render( 'diluxone_mail_screen_provider' );
 
 		$this->assertStringContainsString( 'diluxone_mail_transport_smtp', $html );
 		$this->assertStringContainsString( 'diluxone_mail_transport_api', $html );
@@ -607,7 +607,7 @@ class ApiTest extends AdminTestCase {
 	}
 
 	public function test_the_whole_first_step_carries_both_methods_at_once(): void {
-		$html = $this->render( 'diluxone_mail_screen_settings' );
+		$html = $this->render( 'diluxone_mail_screen_provider' );
 
 		// Both versions of every piece that differs are in the page, with the
 		// one that does not apply hidden. Nothing waits for a round-trip to
@@ -628,7 +628,7 @@ class ApiTest extends AdminTestCase {
 		\update_option( 'diluxone_mail_provider', 'mailtrap_sending' );
 		$_GET['tab'] = 'profile';
 
-		$html = $this->render( 'diluxone_mail_screen_settings' );
+		$html = $this->render( 'diluxone_mail_screen_provider' );
 
 		$this->assertMatchesRegularExpression( '/class="diluxone-mail-when-smtp" hidden/', $html );
 		$this->assertDoesNotMatchRegularExpression( '/class="diluxone-mail-when-api" hidden/', $html );

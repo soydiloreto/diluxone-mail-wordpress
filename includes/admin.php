@@ -25,6 +25,20 @@ const DILUXONE_MAIL_MENU = 'diluxone-mail';
 const DILUXONE_MAIL_SETTINGS = 'diluxone-mail-settings';
 
 /**
+ * The provider screen's slug.
+ *
+ * Choosing a provider is a sequence walked once, with a step that opens the
+ * next; the settings are things somebody comes back to change. One row of tabs
+ * holding both made the sequence look like a place to rummage in.
+ *
+ * `_PAGE` because the bare name is taken: DILUXONE_MAIL_PROVIDER is how a site
+ * pins the provider from wp-config.php, and defining it here made every
+ * install believe its environment had chosen a provider called
+ * "diluxone-mail-provider".
+ */
+const DILUXONE_MAIL_PROVIDER_PAGE = 'diluxone-mail-provider';
+
+/**
  * The name the plugin introduces itself with in the dashboard.
  *
  * Written once: the menu, every screen title and the browser tab all use it.
@@ -64,6 +78,7 @@ add_filter( 'admin_title', 'diluxone_mail_admin_title', 10, 2 );
 function diluxone_mail_screens(): array {
 	return array(
 		'diluxone-mail'          => __( 'Overview', 'diluxone-mail' ),
+		'diluxone-mail-provider' => __( 'Provider', 'diluxone-mail' ),
 		'diluxone-mail-settings' => __( 'Settings', 'diluxone-mail' ),
 		'diluxone-mail-log'      => __( 'Mail log', 'diluxone-mail' ),
 		'diluxone-mail-dns'      => __( 'Deliverability', 'diluxone-mail' ),
@@ -85,6 +100,7 @@ function diluxone_mail_menu(): void {
 
 	$callbacks = array(
 		'diluxone-mail'          => 'diluxone_mail_screen_overview',
+		'diluxone-mail-provider' => 'diluxone_mail_screen_provider',
 		'diluxone-mail-settings' => 'diluxone_mail_screen_settings',
 		'diluxone-mail-log'      => 'diluxone_mail_screen_log',
 		'diluxone-mail-dns'      => 'diluxone_mail_screen_dns',

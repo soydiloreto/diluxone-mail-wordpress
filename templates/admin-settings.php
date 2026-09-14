@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-diluxone_mail_tabs_nav( (string) $data['tab'], (string) $data['scope'] );
+diluxone_mail_tabs_nav( (string) $data['tab'], (string) $data['scope'], (string) $data['screen'] );
 ?>
 
 <?php if ( 'site' === $data['scope'] && ! $data['editable'] ) : ?>

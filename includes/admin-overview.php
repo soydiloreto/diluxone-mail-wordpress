@@ -89,6 +89,7 @@ function diluxone_mail_overview(): array {
 		'domain'       => $domain,
 		'findings'     => diluxone_mail_findings_by_level( $report ),
 		'has_report'   => null !== $report,
+		'provider_url' => diluxone_mail_admin_url( DILUXONE_MAIL_PROVIDER_PAGE ),
 		'settings_url' => diluxone_mail_admin_url( DILUXONE_MAIL_SETTINGS ),
 		'log_url'      => diluxone_mail_admin_url( 'diluxone-mail-log' ),
 		'dns_url'      => diluxone_mail_admin_url( 'diluxone-mail-dns' ),
