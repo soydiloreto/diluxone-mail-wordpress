@@ -318,6 +318,6 @@ function diluxone_mail_save_options( array $input, string $scope = 'site' ): voi
 	}
 
 	if ( array() !== $into_connection ) {
-		diluxone_mail_connection_put( diluxone_mail_editing_id(), $into_connection );
+		diluxone_mail_connection_write( $into_connection );
 	}
 }

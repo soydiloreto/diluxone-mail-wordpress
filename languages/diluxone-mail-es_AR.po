@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-14T00:52:34+00:00\n"
+"POT-Creation-Date: 2026-09-14T00:58:45+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -48,13 +48,14 @@ msgstr "Pablo Ariel Di Loreto"
 msgid "API"
 msgstr "API"
 
-#: includes/admin-connections.php:37 templates/settings-profile.php:39
+#: includes/admin-connections.php:37 templates/settings-profile.php:42
+#: templates/settings-profile.php:89
 msgid "SMTP"
 msgstr "SMTP"
 
 #: includes/admin-connections.php:89 includes/admin-dns.php:42
-#: includes/admin-log.php:62 includes/admin-settings.php:192
-#: includes/admin-settings.php:515 includes/observer.php:300
+#: includes/admin-log.php:62 includes/admin-settings.php:198
+#: includes/admin-settings.php:520 includes/observer.php:300
 msgid "You are not allowed to do this."
 msgstr "No tenés permiso para hacer esto."
 
@@ -90,16 +91,16 @@ msgstr "Ajustes de la red"
 msgid "Overview"
 msgstr "Resumen"
 
-#: includes/admin-settings.php:156 includes/providers.php:97
-#: includes/providers.php:115 includes/providers.php:133
-#: includes/providers.php:151 includes/providers.php:169
-#: includes/providers.php:187 includes/providers.php:205
-#: includes/providers.php:223 includes/providers.php:241
-#: includes/providers.php:259
+#: includes/admin-settings.php:162 includes/admin.php:81
+#: includes/providers.php:97 includes/providers.php:115
+#: includes/providers.php:133 includes/providers.php:151
+#: includes/providers.php:169 includes/providers.php:187
+#: includes/providers.php:205 includes/providers.php:223
+#: includes/providers.php:241 includes/providers.php:259
 msgid "Providers"
 msgstr "Proveedores"
 
-#: includes/admin-settings.php:174 includes/admin.php:82
+#: includes/admin-settings.php:180 includes/admin.php:82
 #: templates/admin-overview.php:58
 msgid "Settings"
 msgstr "Ajustes"
@@ -110,10 +111,11 @@ msgstr "Ajustes"
 msgid "Status"
 msgstr "Estado"
 
-#: includes/admin-tabs.php:37 includes/admin.php:81
-#: includes/log-list-table.php:48 templates/admin-log-detail.php:37
-#: templates/admin-overview.php:56 templates/provider-list.php:33
-#: templates/settings-profile.php:52 templates/settings-profile.php:77
+#: includes/admin-tabs.php:37 includes/log-list-table.php:48
+#: templates/admin-log-detail.php:37 templates/admin-overview.php:56
+#: templates/provider-list.php:33 templates/settings-profile.php:27
+#: templates/settings-profile.php:31 templates/settings-profile.php:103
+#: templates/settings-profile.php:115
 msgid "Provider"
 msgstr "Proveedor"
 
@@ -411,7 +413,7 @@ msgstr "El proveedor rechazó el mensaje (HTTP %1$d): %2$s"
 
 #. translators: 1: provider name, 2: the From address
 #. translators: 1: domain name, 2: why it cannot be used
-#: includes/connections.php:315 templates/settings-sender.php:48
+#: includes/connections.php:372 templates/settings-sender.php:48
 #, php-format
 msgid "%1$s — %2$s"
 msgstr "%1$s — %2$s"
@@ -1754,7 +1756,8 @@ msgstr "Agregar un proveedor"
 msgid "Order"
 msgstr "Orden"
 
-#: templates/provider-list.php:34 templates/settings-profile.php:34
+#: templates/provider-list.php:34 templates/settings-profile.php:40
+#: templates/settings-profile.php:84
 msgid "Method"
 msgstr "Método"
 
@@ -1808,13 +1811,13 @@ msgstr "¿Quitar este proveedor? Sus credenciales se borran con él."
 msgid "Remove"
 msgstr "Quitar"
 
-#: templates/provider-panel.php:17 templates/provider-panel.php:19
+#: templates/provider-panel.php:20 templates/provider-panel.php:22
 msgid "Set up a provider"
 msgstr "Configurar un proveedor"
 
-#: templates/provider-panel.php:21
-msgid "Back to the list"
-msgstr "Volver al listado"
+#: templates/provider-panel.php:24
+msgid "Close"
+msgstr "Cerrar"
 
 #: templates/settings-api.php:23
 msgid "The key was not accepted, so nothing was saved."
@@ -1852,7 +1855,7 @@ msgstr ""
 "Se guarda cifrada con una clave derivada de las salts de WordPress de este "
 "sitio, y no se vuelve a mostrar."
 
-#: templates/settings-api.php:63 templates/settings-profile.php:106
+#: templates/settings-api.php:63 templates/settings-profile.php:35
 msgid "Provider documentation"
 msgstr "Documentación del proveedor"
 
@@ -1949,7 +1952,41 @@ msgstr ""
 msgid "Save"
 msgstr "Guardar"
 
-#: templates/settings-profile.php:21
+#: templates/settings-profile.php:42 templates/settings-profile.php:94
+msgid "The provider's API"
+msgstr "La API del proveedor"
+
+#: templates/settings-profile.php:44
+msgid ""
+"Neither of these changes on a provider that is already set up: the "
+"credentials on the next step were issued by this provider, for this method. "
+"To send another way, add a provider and remove this one — everything it "
+"holds goes with it, which is what you want to happen to a credential you "
+"have stopped using."
+msgstr ""
+"Ninguna de las dos cambia en un proveedor ya configurado: las credenciales "
+"del paso siguiente las emitió este proveedor, para este método. Para enviar "
+"de otra forma, agregá un proveedor y quitá este — todo lo que guarda se va "
+"con él, que es lo que querés que pase con una credencial que dejaste de "
+"usar."
+
+#: templates/settings-profile.php:58 templates/settings-profile.php:138
+msgid "Name"
+msgstr "Nombre"
+
+#: templates/settings-profile.php:61
+msgid "Save name"
+msgstr "Guardar nombre"
+
+#: templates/settings-profile.php:62 templates/settings-profile.php:141
+msgid ""
+"Optional, and only for you: it is what the list calls this one. Two accounts"
+" with the same provider look identical without it."
+msgstr ""
+"Opcional, y sólo para vos: es como lo va a llamar el listado. Dos cuentas "
+"del mismo proveedor se ven idénticas sin esto."
+
+#: templates/settings-profile.php:71
 msgid ""
 "Four steps: pick how this site sends and through whom, prove the provider "
 "accepts the credentials, say who the mail comes from, and send a message to "
@@ -1959,11 +1996,11 @@ msgstr ""
 " proveedor acepta las credenciales, decir de quién viene el correo, y mandar"
 " un mensaje para comprobar que llega. Cada uno habilita el siguiente."
 
-#: templates/settings-profile.php:31
+#: templates/settings-profile.php:81
 msgid "How this site sends"
 msgstr "Cómo envía este sitio"
 
-#: templates/settings-profile.php:40
+#: templates/settings-profile.php:90
 msgid ""
 "the provider's mail server. Works with every provider here, and with any "
 "other one: choosing a profile only fills the server in for you."
@@ -1971,11 +2008,7 @@ msgstr ""
 "el servidor de correo del proveedor. Funciona con todos los de acá y con "
 "cualquier otro: elegir un perfil sólo te completa los datos del servidor."
 
-#: templates/settings-profile.php:44
-msgid "The provider's API"
-msgstr "La API del proveedor"
-
-#: templates/settings-profile.php:45
+#: templates/settings-profile.php:95
 msgid ""
 "over HTTPS, with an API key instead of a server. Only some providers, and it"
 " is the way out when the host blocks the SMTP ports — which many do. When a "
@@ -1986,19 +2019,15 @@ msgstr ""
 "que muchos lo hacen. Cuando rechazan un envío te dan el motivo en palabras "
 "en vez de un error numerado."
 
-#: templates/settings-profile.php:56
-msgid "Name"
-msgstr "Nombre"
-
-#: templates/settings-profile.php:59
+#: templates/settings-profile.php:98
 msgid ""
-"Optional, and only for you: it is what the list calls this one. Two accounts"
-" with the same provider look identical without it."
+"Both are settled once this provider is saved: its credentials belong to "
+"whichever you pick here."
 msgstr ""
-"Opcional, y sólo para vos: es como lo va a llamar el listado. Dos cuentas "
-"del mismo proveedor se ven idénticas sin esto."
+"Las dos quedan fijas al guardar este proveedor: sus credenciales son de lo "
+"que elijas acá."
 
-#: templates/settings-profile.php:65
+#: templates/settings-profile.php:106
 msgid ""
 "This only saves you typing: choosing a profile fills in the host, the port, "
 "the encryption and — where the provider imposes one — the username, all "
@@ -2011,7 +2040,7 @@ msgstr ""
 "envío, y cualquier servidor que no esté en la lista funciona con «Otro "
 "servidor SMTP»."
 
-#: templates/settings-profile.php:69
+#: templates/settings-profile.php:110
 msgid ""
 "Here the provider is the transport, not a shortcut: the message is handed to"
 " this one over HTTPS. Only the providers with an API are listed — the rest "
@@ -2021,21 +2050,13 @@ msgstr ""
 "este por HTTPS. Se listan sólo los proveedores que tienen API; el resto "
 "envía por SMTP, que es la otra opción de arriba."
 
-#: templates/settings-profile.php:76
-msgid "Profile"
-msgstr "Perfil"
-
-#: templates/settings-profile.php:82
+#: templates/settings-profile.php:118
 msgid "— choose —"
 msgstr "— elegir —"
 
-#: templates/settings-profile.php:100
-msgid "Use this profile"
-msgstr "Usar este perfil"
-
-#: templates/settings-profile.php:101
-msgid "Use this provider"
-msgstr "Usar este proveedor"
+#: templates/settings-profile.php:147
+msgid "Save and continue"
+msgstr "Guardar y continuar"
 
 #: templates/settings-sender.php:29
 msgid "From address"
@@ -2369,6 +2390,18 @@ msgstr "Todos en el registro de correo"
 #: templates/user-profile.php:77
 msgid "(opens in a new tab)"
 msgstr "(se abre en una solapa nueva)"
+
+#~ msgid "Back to the list"
+#~ msgstr "Volver al listado"
+
+#~ msgid "Profile"
+#~ msgstr "Perfil"
+
+#~ msgid "Use this profile"
+#~ msgstr "Usar este perfil"
+
+#~ msgid "Use this provider"
+#~ msgstr "Usar este proveedor"
 
 #~ msgid "See all in the mail log"
 #~ msgstr "Ver todo en el historial de correo"

@@ -50,6 +50,14 @@ abstract class AdminTestCase extends TestCase {
 		$this->db = $GLOBALS['wpdb'];
 		$this->db->reset();
 
+		// Per-request state that outlives a test because it is static: an
+		// override left behind answers the next test's questions about a
+		// provider it never configured.
+		\diluxone_mail_active_id( '' );
+		\diluxone_mail_failing_over( false );
+		\diluxone_mail_api_answered( false );
+		\diluxone_mail_api_reply( '' );
+
 		\diluxone_mail_other_mailers( true );
 		\diluxone_mail_current( null, true );
 		\diluxone_mail_debug_enabled( false );

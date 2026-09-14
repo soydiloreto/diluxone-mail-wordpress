@@ -78,7 +78,7 @@ add_filter( 'admin_title', 'diluxone_mail_admin_title', 10, 2 );
 function diluxone_mail_screens(): array {
 	return array(
 		'diluxone-mail'          => __( 'Overview', 'diluxone-mail' ),
-		'diluxone-mail-provider' => __( 'Provider', 'diluxone-mail' ),
+		'diluxone-mail-provider' => __( 'Providers', 'diluxone-mail' ),
 		'diluxone-mail-settings' => __( 'Settings', 'diluxone-mail' ),
 		'diluxone-mail-log'      => __( 'Mail log', 'diluxone-mail' ),
 		'diluxone-mail-dns'      => __( 'Deliverability', 'diluxone-mail' ),

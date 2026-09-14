@@ -59,6 +59,12 @@ function diluxone_mail_settings_data( string $scope, string $screen = '' ): arra
 		'tab'                 => $tab,
 		'screen'              => $screen,
 		'label'               => (string) ( diluxone_mail_connection( diluxone_mail_editing_id() )['label'] ?? '' ),
+		// A provider that is already stored does not change what it is. Its
+		// credentials were issued by one provider for one method, and swapping
+		// either underneath them leaves a record whose ticks refer to
+		// something that is no longer there — the cheap, honest move is a new
+		// record and one fewer surprise.
+		'locked'              => '' !== diluxone_mail_editing_id() && '' !== (string) ( diluxone_mail_connection( diluxone_mail_editing_id() )['diluxone_mail_provider'] ?? '' ),
 		'progress'            => diluxone_mail_settings_progress(),
 		'editable'            => $editable,
 		'fields'              => diluxone_mail_settings_field_values( $scope, $attempt ),
@@ -149,7 +155,7 @@ function diluxone_mail_screen_provider(): void {
 	// Everything the panel reads — the fields, their provenance, what has been
 	// verified — resolves against the record it is editing, which is not
 	// necessarily the one delivering the site's mail right now.
-	diluxone_mail_active_id( diluxone_mail_editing_id() );
+	diluxone_mail_focus_editing();
 
 	$list = diluxone_mail_connections_data();
 
@@ -303,7 +309,7 @@ function diluxone_mail_posted_transport(): array {
 function diluxone_mail_apply_provider(): void {
 	check_admin_referer( 'diluxone_mail_settings' );
 
-	diluxone_mail_active_id( diluxone_mail_editing_id() );
+	diluxone_mail_focus_editing();
 
 	$scope = diluxone_mail_posted_scope();
 
@@ -325,8 +331,7 @@ function diluxone_mail_apply_provider(): void {
 
 	$label = isset( $_POST['label'] ) ? sanitize_text_field( wp_unslash( $_POST['label'] ) ) : '';
 
-	$id = diluxone_mail_connection_put(
-		diluxone_mail_editing_id(),
+	$id = diluxone_mail_connection_write(
 		array_merge(
 			diluxone_mail_provider_defaults( $key ),
 			array(
@@ -352,7 +357,7 @@ add_action( 'admin_post_diluxone_mail_apply_provider', 'diluxone_mail_apply_prov
 function diluxone_mail_connection_action(): void {
 	check_admin_referer( 'diluxone_mail_settings' );
 
-	diluxone_mail_active_id( diluxone_mail_editing_id() );
+	diluxone_mail_focus_editing();
 
 	$scope = diluxone_mail_posted_scope();
 
@@ -417,7 +422,7 @@ add_action( 'admin_post_diluxone_mail_connection', 'diluxone_mail_connection_act
 function diluxone_mail_api_key_action(): void {
 	check_admin_referer( 'diluxone_mail_settings' );
 
-	diluxone_mail_active_id( diluxone_mail_editing_id() );
+	diluxone_mail_focus_editing();
 
 	$scope = diluxone_mail_posted_scope();
 
@@ -472,7 +477,7 @@ function diluxone_mail_store_api_key( string $key ): bool {
 		return false;
 	}
 
-	diluxone_mail_connection_put( diluxone_mail_editing_id(), array( 'diluxone_mail_api_key' => $encrypted ) );
+	diluxone_mail_connection_write( array( 'diluxone_mail_api_key' => $encrypted ) );
 
 	return true;
 }
@@ -498,7 +503,7 @@ function diluxone_mail_store_password( string $pass ): bool {
 		return false;
 	}
 
-	diluxone_mail_connection_put( diluxone_mail_editing_id(), array( 'diluxone_mail_pass' => $encrypted ) );
+	diluxone_mail_connection_write( array( 'diluxone_mail_pass' => $encrypted ) );
 
 	return true;
 }

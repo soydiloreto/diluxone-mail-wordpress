@@ -616,7 +616,7 @@ class ApiTest extends AdminTestCase {
 		$this->assertStringContainsString( 'data-api="0"', $html );
 	}
 
-	public function test_the_whole_first_step_carries_both_methods_at_once(): void {
+	public function test_a_new_provider_asks_both_questions_and_carries_both_answers(): void {
 		$this->panel();
 		$html = $this->render( 'diluxone_mail_screen_provider' );
 
@@ -625,24 +625,55 @@ class ApiTest extends AdminTestCase {
 		// stop describing the method that was not chosen.
 		$this->assertStringContainsString( 'diluxone-mail-when-smtp', $html );
 		$this->assertStringContainsString( 'diluxone-mail-when-api', $html );
-		$this->assertStringContainsString( 'Use this profile', $html );
-		$this->assertStringContainsString( 'Use this provider', $html );
-		// Including the name of the second step, in the row of tabs.
+		$this->assertStringContainsString( 'Save and continue', $html );
 		$this->assertStringContainsString( 'SMTP server', $html );
 		$this->assertStringContainsString( 'API key', $html );
 
-		// Stored as SMTP: the SMTP half is the one showing.
+		// Nothing is done yet: a provider that does not exist has no ticks,
+		// and certainly not the ticks of the one already in charge.
+		$this->assertStringNotContainsString( 'diluxone-mail-tab-done', $html );
+
+		// Defaulting to SMTP: the SMTP half is the one showing.
 		$this->assertMatchesRegularExpression( '/class="diluxone-mail-when-api" hidden/', $html );
 		$this->assertDoesNotMatchRegularExpression( '/class="diluxone-mail-when-smtp" hidden/', $html );
+	}
 
-		\update_option( 'diluxone_mail_transport', 'api' );
-		\update_option( 'diluxone_mail_provider', 'mailtrap_sending' );
-		$_GET['tab'] = 'profile';
+	public function test_a_stored_provider_stops_asking_what_it_is(): void {
+		$id = $this->conexion(
+			array(
+				'diluxone_mail_provider'  => 'mailtrap_sending',
+				'diluxone_mail_transport' => 'api',
+			)
+		);
 
-		$this->panel();
+		$_GET = array( 'tab' => 'profile' );
+		$this->panel( $id );
+
 		$html = $this->render( 'diluxone_mail_screen_provider' );
 
-		$this->assertMatchesRegularExpression( '/class="diluxone-mail-when-smtp" hidden/', $html );
-		$this->assertDoesNotMatchRegularExpression( '/class="diluxone-mail-when-api" hidden/', $html );
+		// The two questions of a new provider are settled, and shown as
+		// settled: its credentials belong to the answers already given.
+		$this->assertStringNotContainsString( 'diluxone_mail_transport_api', $html );
+		$this->assertStringNotContainsString( 'name="diluxone_mail_provider"', $html );
+		$this->assertStringContainsString( 'Save name', $html );
+		$this->assertStringContainsString( 'Neither of these changes', $html );
+	}
+
+	public function test_adding_one_does_not_borrow_the_progress_of_another(): void {
+		// One already set up and verified, and a second being added.
+		$this->configured();
+
+		$_GET     = array( 'new' => '1' );
+		$_REQUEST = $_GET;
+
+		// What the screen does when it opens on one.
+		\diluxone_mail_focus_editing();
+
+		$progress = \diluxone_mail_settings_progress();
+
+		$this->assertFalse( $progress['profile'] );
+		$this->assertFalse( $progress['server'] );
+		$this->assertFalse( $progress['sender'] );
+		$this->assertSame( 'profile', \diluxone_mail_current_tab( 'site', 'provider' ) );
 	}
 }

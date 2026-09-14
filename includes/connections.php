@@ -187,6 +187,16 @@ function diluxone_mail_connections_reorder( array $ids ): void {
 }
 
 /**
+ * The answer that means "a provider that does not exist yet".
+ *
+ * An empty id already meant "whichever is in charge", so adding one needed a
+ * word of its own. Without it the four steps of a new provider showed the
+ * progress of the first one on the list: its ticks, its verified credential,
+ * its sender — for a record nobody had created.
+ */
+const DILUXONE_MAIL_NEW = '__new__';
+
+/**
  * Which connection answers for the fields right now.
  *
  * Normally the first on the list. During a failover it is whichever one the
@@ -200,6 +210,10 @@ function diluxone_mail_active_id( ?string $set = null ): string {
 
 	if ( null !== $set ) {
 		$override = $set;
+	}
+
+	if ( DILUXONE_MAIL_NEW === $override ) {
+		return '';
 	}
 
 	$connections = diluxone_mail_connections();
@@ -247,6 +261,11 @@ function diluxone_mail_editing_id(): string {
 		return isset( diluxone_mail_connections()[ $asked ] ) ? $asked : '';
 	}
 
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- It only decides whether the screen is looking at a new record or an existing one.
+	if ( isset( $_REQUEST['new'] ) ) {
+		return '';
+	}
+
 	return diluxone_mail_default_id();
 }
 
@@ -266,6 +285,44 @@ function diluxone_mail_connection_put( string $id, array $values ): string {
 	$connections[ $id ] = array_merge( $connections[ $id ] ?? array(), $values );
 
 	diluxone_mail_connections_put( $connections );
+
+	return $id;
+}
+
+/**
+ * Points this request at the record the screen is working on.
+ *
+ * One rule in one place, because getting it wrong is invisible: a provider
+ * being added must answer out of nothing, not out of whichever one is in
+ * charge, or its four steps arrive carrying somebody else's ticks, somebody
+ * else's verified credential and somebody else's sender.
+ *
+ * @return string The id, empty when it is one that does not exist yet.
+ */
+function diluxone_mail_focus_editing(): string {
+	$editing = diluxone_mail_editing_id();
+
+	diluxone_mail_active_id( '' === $editing ? DILUXONE_MAIL_NEW : $editing );
+
+	return $editing;
+}
+
+/**
+ * Writes into the record the screen is working on, and stays on it.
+ *
+ * A new provider has no id until the first thing is written, and everything
+ * after that — the credential, what has been verified, what the next step
+ * renders — has to land on the record that was just created rather than on
+ * whichever one is in charge. So writing also settles which one the rest of
+ * this request is about.
+ *
+ * @param array<string, mixed> $values
+ * @return string The id written to.
+ */
+function diluxone_mail_connection_write( array $values ): string {
+	$id = diluxone_mail_connection_put( diluxone_mail_editing_id(), $values );
+
+	diluxone_mail_active_id( $id );
 
 	return $id;
 }

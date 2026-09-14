@@ -96,7 +96,7 @@ function diluxone_mail_verified( string $what ): void {
 	$stored[ $what ] = diluxone_mail_connection_fingerprint();
 	$stored['time']  = time();
 
-	diluxone_mail_connection_put( diluxone_mail_editing_id(), array( 'verified' => $stored ) );
+	diluxone_mail_connection_write( array( 'verified' => $stored ) );
 }
 
 /** Did the server answer to the credentials that are stored right now? */

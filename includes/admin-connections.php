@@ -171,6 +171,11 @@ function diluxone_mail_connection_rename_action(): void {
 		diluxone_mail_connection_put( $id, array( 'label' => $label ) );
 	}
 
+	// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
+	if ( isset( $_POST['from_panel'] ) ) {
+		diluxone_mail_settings_redirect( 'site', 'renamed', 'profile', $id );
+	}
+
 	diluxone_mail_connections_redirect( 'renamed' );
 }
 add_action( 'admin_post_diluxone_mail_rename', 'diluxone_mail_connection_rename_action' );
