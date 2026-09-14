@@ -95,6 +95,26 @@ function diluxone_mail_settings_tabs( string $scope = 'site', string $screen = '
 		);
 	}
 
+	/**
+	 * Filters the tabs, in the order they are shown.
+	 *
+	 * A tab exists because it is registered here, not because a template has
+	 * it written inside: the day a step of this belongs to a separate plugin,
+	 * it adds its tab and the row picks it up. Nothing does that today.
+	 *
+	 * A tab that joins the chain needs a `step` and the `needs` of whatever
+	 * comes before it, and whatever it declares in `groups` becomes savable
+	 * from its form — which is why a group that is not in
+	 * diluxone_mail_settings_fields() is dropped rather than trusted.
+	 *
+	 * @param array<string, array{label: string, step: int, needs: string, groups: array<int, string>, screen: string}> $tabs
+	 * @param string                                                                                                    $scope 'site' or 'network'.
+	 */
+	/** @var array<array-key, mixed> $filtered */
+	$filtered = (array) apply_filters( 'diluxone_mail_settings_tabs', $tabs, $scope );
+
+	$tabs = array_filter( $filtered, 'diluxone_mail_tab_is_whole' );
+
 	if ( '' === $screen ) {
 		return $tabs;
 	}
@@ -107,6 +127,25 @@ function diluxone_mail_settings_tabs( string $scope = 'site', string $screen = '
 		$tabs,
 		static fn( array $tab ): bool => $screen === $tab['screen']
 	);
+}
+
+/**
+ * Is this a tab the row can draw and the save routine can trust?
+ *
+ * Every key has to be there, because the row reads all five and a missing one
+ * is a notice on every settings page. And `groups` is the part that matters
+ * beyond tidiness: the save routine writes whatever the current tab's groups
+ * name, so a group invented by a filter would be a way of writing settings
+ * this plugin never declared. Only the ones it declares survive.
+ *
+ * @param mixed $tab
+ */
+function diluxone_mail_tab_is_whole( $tab ): bool {
+	if ( ! is_array( $tab ) || ! isset( $tab['label'], $tab['step'], $tab['needs'], $tab['groups'], $tab['screen'] ) ) {
+		return false;
+	}
+
+	return array() === array_diff( (array) $tab['groups'], array_keys( diluxone_mail_settings_fields() ) );
 }
 
 /** Which screen a tab is shown on. */

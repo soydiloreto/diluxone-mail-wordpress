@@ -73,17 +73,73 @@ add_filter( 'admin_title', 'diluxone_mail_admin_title', 10, 2 );
 /**
  * The menu's screens, in order.
  *
- * @return array<string, string>
+ * One entry per screen, carrying its own name and the function that renders
+ * it. It used to be two lists — a name here and a callback in the menu — that
+ * had to agree by hand, and the day they did not the menu was a fatal error
+ * on an undefined index.
+ *
+ * It is filtered so a screen can be added, renamed, reordered or taken away
+ * from outside this file. Nothing does that today and the plugin is one piece;
+ * the point is that the day a part of it becomes its own plugin, it registers
+ * its screen here instead of this file having to know that it exists.
+ *
+ * @return array<string, array{title: string, callback: callable-string}>
  */
 function diluxone_mail_screens(): array {
-	return array(
-		'diluxone-mail'          => __( 'Overview', 'diluxone-mail' ),
-		'diluxone-mail-provider' => __( 'Providers', 'diluxone-mail' ),
-		'diluxone-mail-settings' => __( 'Settings', 'diluxone-mail' ),
-		'diluxone-mail-log'      => __( 'Mail log', 'diluxone-mail' ),
-		'diluxone-mail-dns'      => __( 'Deliverability', 'diluxone-mail' ),
-		'diluxone-mail-status'   => __( 'Status', 'diluxone-mail' ),
+	$screens = array(
+		DILUXONE_MAIL_MENU          => array(
+			'title'    => __( 'Overview', 'diluxone-mail' ),
+			'callback' => 'diluxone_mail_screen_overview',
+		),
+		DILUXONE_MAIL_PROVIDER_PAGE => array(
+			'title'    => __( 'Providers', 'diluxone-mail' ),
+			'callback' => 'diluxone_mail_screen_provider',
+		),
+		DILUXONE_MAIL_SETTINGS      => array(
+			'title'    => __( 'Settings', 'diluxone-mail' ),
+			'callback' => 'diluxone_mail_screen_settings',
+		),
+		'diluxone-mail-log'         => array(
+			'title'    => __( 'Mail log', 'diluxone-mail' ),
+			'callback' => 'diluxone_mail_screen_log',
+		),
+		'diluxone-mail-dns'         => array(
+			'title'    => __( 'Deliverability', 'diluxone-mail' ),
+			'callback' => 'diluxone_mail_screen_dns',
+		),
+		'diluxone-mail-status'      => array(
+			'title'    => __( 'Status', 'diluxone-mail' ),
+			'callback' => 'diluxone_mail_screen_status',
+		),
 	);
+
+	/**
+	 * Filters the screens under this plugin's menu, in the order they appear.
+	 *
+	 * @param array<string, array{title: string, callback: callable-string}> $screens Keyed by page slug.
+	 */
+	// Whatever comes back was written by somebody else, so it is read as
+	// unknown and checked rather than trusted — which is what the loose type
+	// here says, and what keeps the guard below meaningful.
+	/** @var array<array-key, mixed> $filtered */
+	$filtered = (array) apply_filters( 'diluxone_mail_screens', $screens );
+
+	// A screen whose function does not exist is a fatal error on the next
+	// click, and the click is the admin menu. Whoever registered it is gone by
+	// then; dropping it here means a deactivated add-on leaves no trace rather
+	// than a broken dashboard.
+	return array_filter( $filtered, 'diluxone_mail_screen_is_whole' );
+}
+
+/**
+ * Can this screen be put in the menu and rendered when it is clicked?
+ *
+ * @param mixed $screen
+ */
+function diluxone_mail_screen_is_whole( $screen ): bool {
+	return is_array( $screen )
+		&& isset( $screen['title'], $screen['callback'] )
+		&& is_callable( $screen['callback'] );
 }
 
 /** The menu. */
@@ -98,17 +154,15 @@ function diluxone_mail_menu(): void {
 		76
 	);
 
-	$callbacks = array(
-		'diluxone-mail'          => 'diluxone_mail_screen_overview',
-		'diluxone-mail-provider' => 'diluxone_mail_screen_provider',
-		'diluxone-mail-settings' => 'diluxone_mail_screen_settings',
-		'diluxone-mail-log'      => 'diluxone_mail_screen_log',
-		'diluxone-mail-dns'      => 'diluxone_mail_screen_dns',
-		'diluxone-mail-status'   => 'diluxone_mail_screen_status',
-	);
-
-	foreach ( diluxone_mail_screens() as $slug => $title ) {
-		add_submenu_page( DILUXONE_MAIL_MENU, $title, $title, 'manage_options', $slug, $callbacks[ $slug ] );
+	foreach ( diluxone_mail_screens() as $slug => $screen ) {
+		add_submenu_page(
+			DILUXONE_MAIL_MENU,
+			(string) $screen['title'],
+			(string) $screen['title'],
+			'manage_options',
+			(string) $slug,
+			$screen['callback']
+		);
 	}
 }
 add_action( 'admin_menu', 'diluxone_mail_menu' );

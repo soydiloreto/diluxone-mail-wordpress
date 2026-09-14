@@ -167,9 +167,20 @@ class AdminFlowTest extends IntegrationTestCase {
 
 		$this->proveedor( array( 'diluxone_mail_from' => 'hello@example.org' ) );
 		update_option( 'diluxone_mail_dns_resolver', 'doh' );
+
+		$clave = 'diluxone_mail_diagnosis_' . md5( 'example.org' );
+		set_site_transient( $clave, array( 'domain' => 'example.org', 'findings' => array() ), HOUR_IN_SECONDS );
+
 		$this->nonce( 'diluxone_mail_revalidate' );
 		$this->assertStringContainsString( 'revalidated', $this->redirect_of( 'diluxone_mail_revalidate' ) );
-		$this->assertIsArray( get_site_transient( 'diluxone_mail_diagnosis_' . md5( 'example.org' ) ) );
+
+		// Revalidating empties the cache and nothing else. It used to run the
+		// diagnosis here, which put seconds of DNS into a request with nothing
+		// on screen — the exact wait the deliverability screen was changed to
+		// get rid of. The screen draws its skeleton off this empty cache and
+		// the browser fills it.
+		$this->assertFalse( get_site_transient( $clave ) );
+		$this->assertNull( diluxone_mail_diagnosis_cached( 'example.org' ) );
 	}
 
 	public function test_a_persons_profile_paints_their_own(): void {

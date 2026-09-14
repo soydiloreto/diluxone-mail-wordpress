@@ -49,7 +49,7 @@ defined( 'ABSPATH' ) || exit;
  * @return array<string, array<string, mixed>>
  */
 function diluxone_mail_providers(): array {
-	return array(
+	$profiles = array(
 		'mailpit'          => array(
 			'name'           => 'Mailpit',
 			'group'          => __( 'Local development', 'diluxone-mail' ),
@@ -289,6 +289,49 @@ function diluxone_mail_providers(): array {
 			'docs'           => '',
 		),
 	);
+
+	/**
+	 * Filters the SMTP profiles offered, in the order of the dropdown.
+	 *
+	 * The API catalogue in api-providers.php has had this from the start and
+	 * this did not, so a provider could be added over HTTPS and not over SMTP
+	 * — an asymmetry with no reason behind it.
+	 *
+	 * A profile has to carry every key: the dropdown, the mailer and the
+	 * diagnosis each read a different one, and a half-written profile fails
+	 * somewhere far from whoever added it.
+	 *
+	 * `custom` can be edited but not removed. It is what an unknown key falls
+	 * back to, so a site whose stored provider is gone — renamed, or from an
+	 * add-on that is no longer there — would have nothing left to answer with.
+	 *
+	 * @param array<string, array<string, mixed>> $profiles
+	 */
+	/** @var array<array-key, mixed> $filtered */
+	$filtered = (array) apply_filters( 'diluxone_mail_providers', $profiles );
+
+	$whole = array_filter( $filtered, 'diluxone_mail_profile_is_whole' );
+
+	if ( ! isset( $whole['custom'] ) ) {
+		$whole['custom'] = $profiles['custom'];
+	}
+
+	return $whole;
+}
+
+/**
+ * Does this profile carry everything the rest of the plugin reads off it?
+ *
+ * @param mixed $profile
+ */
+function diluxone_mail_profile_is_whole( $profile ): bool {
+	if ( ! is_array( $profile ) ) {
+		return false;
+	}
+
+	$keys = array( 'name', 'group', 'host', 'port', 'encryption', 'auth', 'autotls', 'user', 'user_hint', 'pass_hint', 'local', 'dkim_selectors', 'spf_includes', 'return_path', 'docs' );
+
+	return array() === array_diff( $keys, array_keys( $profile ) );
 }
 
 /**

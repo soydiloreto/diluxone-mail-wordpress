@@ -84,6 +84,35 @@ npx wp-env run cli wp diluxone-mail dns example.com --fresh
 npx wp-env run cli wp diluxone-mail log list --email=you@example.test
 ```
 
+## Where the plugin can be extended from outside
+
+The plugin is one piece and nothing extends it today. It is built so that it
+could be split without a refactor: every file in `includes/` only registers
+hooks and is loaded by `glob()` in alphabetical order, so a file being here or
+in a separate plugin is the same thing to everything else. Three lists the
+plugin draws its own screens from are registries rather than literals, which is
+the part that does not come for free:
+
+| Filter | What it decides |
+|---|---|
+| `diluxone_mail_screens` | The screens under the menu, in order, each with the function that renders it. |
+| `diluxone_mail_settings_tabs` | The row of tabs: the label, the position in the chain (`step`/`needs`), the settings groups the tab's form may save, and which screen it belongs to. |
+| `diluxone_mail_providers` | The SMTP profiles in the dropdown. `diluxone_mail_api_providers` is the same for the ones reachable over HTTPS. |
+
+All three validate what comes back, because anything arriving through a filter
+was written by somebody else and a half-written entry fails far away from
+whoever wrote it — on somebody's dashboard, on the next click. A screen whose
+callback does not exist is dropped rather than put in the menu; a profile
+missing a key never reaches the dropdown; a tab may only name groups of
+settings the plugin itself declares, since the save routine writes whatever the
+current tab's groups name. `custom` can be edited but not removed: it is what
+an unknown provider key falls back to.
+
+The delivery path has its own: `diluxone_mail_config`, `diluxone_mail_option`,
+`diluxone_mail_should_send`, `diluxone_mail_atts`,
+`diluxone_mail_connection_mailer`, and the `diluxone_mail_failover` action,
+which fires with the provider about to be tried and the one that refused.
+
 ## Docker image overrides
 
 | Variable | Default | Used by |
