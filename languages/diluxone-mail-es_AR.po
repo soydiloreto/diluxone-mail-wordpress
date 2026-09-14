@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-14T01:46:27+00:00\n"
+"POT-Creation-Date: 2026-09-14T02:32:02+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -508,9 +508,9 @@ msgid "The provider refused the message (HTTP %1$d): %2$s"
 msgstr "El proveedor rechazó el mensaje (HTTP %1$d): %2$s"
 
 #. translators: 1: provider name, 2: the From address
-#. translators: 1: domain name, 2: why it cannot be used
-#: includes/connections.php:391 templates/settings-sender.php:48
+#: includes/connections.php:395
 #, php-format
+msgctxt "a provider named after its sender"
 msgid "%1$s — %2$s"
 msgstr "%1$s — %2$s"
 
@@ -1942,11 +1942,11 @@ msgstr "¿Quitar este proveedor? Sus credenciales se borran con él."
 msgid "Remove"
 msgstr "Quitar"
 
-#: templates/provider-panel.php:20 templates/provider-panel.php:22
+#: templates/provider-panel.php:26 templates/provider-panel.php:28
 msgid "Set up a provider"
 msgstr "Configurar un proveedor"
 
-#: templates/provider-panel.php:24
+#: templates/provider-panel.php:30
 msgid "Close"
 msgstr "Cerrar"
 
@@ -2219,6 +2219,13 @@ msgstr "Guardar y continuar"
 #: templates/settings-sender.php:29
 msgid "From address"
 msgstr "Dirección de remitente"
+
+#. translators: 1: domain name, 2: why it cannot be used
+#: templates/settings-sender.php:48
+#, php-format
+msgctxt "a sender domain and why it is unusable"
+msgid "%1$s — %2$s"
+msgstr "%1$s — %2$s"
 
 #: templates/settings-sender.php:54
 msgid "Refresh"
@@ -2548,6 +2555,10 @@ msgstr "Todos en el registro de correo"
 #: templates/user-profile.php:77
 msgid "(opens in a new tab)"
 msgstr "(se abre en una solapa nueva)"
+
+#, php-format
+#~ msgid "%1$s — %2$s"
+#~ msgstr "%1$s — %2$s"
 
 #~ msgid "Back to the list"
 #~ msgstr "Volver al listado"

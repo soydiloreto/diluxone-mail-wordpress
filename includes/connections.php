@@ -387,8 +387,12 @@ function diluxone_mail_connection_label( array $connection ): string {
 		return (string) $profile['name'];
 	}
 
+	// Same shape as the sender step's domain list and a different sentence, so
+	// it carries a context: without one gettext folds the two into a single
+	// entry with two contradictory translator comments, and whoever translates
+	// it is told it is about a domain when it is about a provider.
 	/* translators: 1: provider name, 2: the From address */
-	return sprintf( __( '%1$s — %2$s', 'diluxone-mail' ), (string) $profile['name'], $from );
+	return sprintf( _x( '%1$s — %2$s', 'a provider named after its sender', 'diluxone-mail' ), (string) $profile['name'], $from );
 }
 
 /**

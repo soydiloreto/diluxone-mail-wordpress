@@ -45,7 +45,7 @@ $diluxone_mail_domains = (bool) $data['sender_domains']['ok'] && array() !== $da
 									'' === (string) $diluxone_mail_d['note']
 										? (string) $diluxone_mail_d['name']
 										/* translators: 1: domain name, 2: why it cannot be used */
-										: sprintf( __( '%1$s — %2$s', 'diluxone-mail' ), (string) $diluxone_mail_d['name'], (string) $diluxone_mail_d['note'] )
+										: sprintf( _x( '%1$s — %2$s', 'a sender domain and why it is unusable', 'diluxone-mail' ), (string) $diluxone_mail_d['name'], (string) $diluxone_mail_d['note'] )
 								);
 								?>
 							</option>
