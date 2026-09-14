@@ -9,6 +9,12 @@
 defined( 'ABSPATH' ) || exit;
 ?>
 
+<?php if ( null !== $data['closed'] ) : ?>
+	<div class="notice notice-<?php echo esc_attr( (string) $data['closed']['kind'] ); ?> inline">
+		<p><?php echo esc_html( (string) $data['closed']['text'] ); ?></p>
+	</div>
+<?php endif; ?>
+
 <p class="description diluxone-mail-intro">
 	<?php esc_html_e( 'The order is what decides: the first provider sends, and the one below it is what gets tried when a message will not go out. Drag to reorder, or use the arrows.', 'diluxone-mail' ); ?>
 </p>

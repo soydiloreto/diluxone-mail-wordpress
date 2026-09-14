@@ -76,7 +76,11 @@ function diluxone_mail_connection_fingerprint( ?array $config = null ): string {
  * @return array{connection: string, message: string, time: int}
  */
 function diluxone_mail_verification(): array {
-	$stored = diluxone_mail_connection( diluxone_mail_editing_id() )['verified'] ?? array();
+	// The marks belong to the provider the fingerprint is taken from, which is
+	// the active one — not the one a screen happens to be editing. In the
+	// wizard those are the same; on a list asking each row in turn they are
+	// not, and reading one against the other says every row is unverified.
+	$stored = diluxone_mail_connection( diluxone_mail_active_id() )['verified'] ?? array();
 	$stored = is_array( $stored ) ? $stored : array();
 
 	return array(
@@ -96,7 +100,17 @@ function diluxone_mail_verified( string $what ): void {
 	$stored[ $what ] = diluxone_mail_connection_fingerprint();
 	$stored['time']  = time();
 
-	diluxone_mail_connection_write( array( 'verified' => $stored ) );
+	$active = diluxone_mail_active_id();
+
+	// Nothing active means a provider being set up that has not been written
+	// yet, and writing is what creates it.
+	if ( '' === $active ) {
+		diluxone_mail_connection_write( array( 'verified' => $stored ) );
+
+		return;
+	}
+
+	diluxone_mail_connection_put( $active, array( 'verified' => $stored ) );
 }
 
 /** Did the server answer to the credentials that are stored right now? */

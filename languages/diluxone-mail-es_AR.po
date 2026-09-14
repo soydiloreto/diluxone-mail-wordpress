@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DiluxOne Mail – SMTP, Email Log & Deliverability Diagnostics 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/diluxone-mail\n"
-"POT-Creation-Date: 2026-09-14T00:58:45+00:00\n"
+"POT-Creation-Date: 2026-09-14T01:27:45+00:00\n"
 "PO-Revision-Date: 2026-09-13 02:39+0000\n"
 "Last-Translator: Pablo Ariel Di Loreto\n"
 "Language-Team: Español (Argentina)\n"
@@ -44,24 +44,64 @@ msgstr ""
 msgid "Pablo Ariel Di Loreto"
 msgstr "Pablo Ariel Di Loreto"
 
-#: includes/admin-connections.php:37
+#: includes/admin-connections.php:39
 msgid "API"
 msgstr "API"
 
-#: includes/admin-connections.php:37 templates/settings-profile.php:42
+#: includes/admin-connections.php:39 templates/settings-profile.php:42
 #: templates/settings-profile.php:89
 msgid "SMTP"
 msgstr "SMTP"
 
-#: includes/admin-connections.php:89 includes/admin-dns.php:42
+#: includes/admin-connections.php:95 includes/admin-dns.php:42
 #: includes/admin-log.php:62 includes/admin-settings.php:198
 #: includes/admin-settings.php:520 includes/observer.php:300
 msgid "You are not allowed to do this."
 msgstr "No tenés permiso para hacer esto."
 
-#: includes/admin-connections.php:93
+#: includes/admin-connections.php:99
 msgid "This site's providers are fixed by the network."
 msgstr "Los proveedores de este sitio los fija la red."
+
+#. translators: %s: the provider's name
+#: includes/admin-connections.php:215
+#, php-format
+msgid ""
+"%s is not finished: it still has a step open, and nothing is sent through a "
+"provider that has not proved it can."
+msgstr ""
+"%s quedó a medias: todavía tiene un paso abierto, y no se envía nada por un "
+"proveedor que no demostró que puede."
+
+#. translators: %s: the provider's name
+#: includes/admin-connections.php:224
+#, php-format
+msgid ""
+"%s is set up and a message has gone out through it. It is the one that "
+"sends."
+msgstr "%s está configurado y ya salió un mensaje por él. Es el que envía."
+
+#. translators: %s: the provider's name
+#: includes/admin-connections.php:226
+#, php-format
+msgid ""
+"%s is set up and is the one that sends. Nothing has been sent through it yet"
+" — the fourth step is where that is settled."
+msgstr ""
+"%s está configurado y es el que envía. Todavía no salió nada por él: eso se "
+"resuelve en el cuarto paso."
+
+#. translators: 1: the provider's name, 2: the provider that sends
+#: includes/admin-connections.php:234
+#, php-format
+msgid ""
+"%1$s is set up. It is not the one that sends — %2$s is, because it is first "
+"— so it will only be used if that one will not take a message. Drag it to "
+"the top to change that."
+msgstr ""
+"%1$s está configurado. No es el que envía —lo es %2$s, porque está primero—,"
+" así que sólo se usa si ese no acepta un mensaje. Arrastralo arriba de todo "
+"para cambiarlo."
 
 #: includes/admin-dns.php:16 includes/admin.php:84
 #: templates/admin-overview.php:60 templates/admin-overview.php:232
@@ -113,7 +153,7 @@ msgstr "Estado"
 
 #: includes/admin-tabs.php:37 includes/log-list-table.php:48
 #: templates/admin-log-detail.php:37 templates/admin-overview.php:56
-#: templates/provider-list.php:33 templates/settings-profile.php:27
+#: templates/provider-list.php:39 templates/settings-profile.php:27
 #: templates/settings-profile.php:31 templates/settings-profile.php:103
 #: templates/settings-profile.php:115
 msgid "Provider"
@@ -207,28 +247,28 @@ msgctxt "title of a dashboard screen"
 msgid "%1$s | %2$s"
 msgstr "%1$s | %2$s"
 
-#: includes/admin.php:171
+#: includes/admin.php:181
 msgid "Settings saved."
 msgstr "Ajustes guardados."
 
-#: includes/admin.php:172
+#: includes/admin.php:182
 msgid "Provider profile applied. Paste the credentials and save."
 msgstr "Perfil del proveedor aplicado. Pegá las credenciales y guardá."
 
-#: includes/admin.php:173
+#: includes/admin.php:183
 msgid "DiluxOne Mail is now handling this site's outgoing mail."
 msgstr "DiluxOne Mail ahora gestiona el correo saliente de este sitio."
 
-#: includes/admin.php:174
+#: includes/admin.php:184
 msgid "DNS cache cleared and the diagnosis run again."
 msgstr "Caché de DNS vaciado y diagnóstico vuelto a correr."
 
-#: includes/admin.php:175
+#: includes/admin.php:185
 msgid "The server answered and the credentials work. They are saved."
 msgstr ""
 "El servidor contestó y las credenciales funcionan. Quedaron guardadas."
 
-#: includes/admin.php:176
+#: includes/admin.php:186
 msgid ""
 "The server answered, but this PHP cannot encrypt the password (openssl with "
 "AES-256-GCM is missing), and it is not stored in the clear. Set it through "
@@ -238,7 +278,7 @@ msgstr ""
 "openssl con AES-256-GCM) y no se guarda en texto plano. Cargala con la "
 "constante DILUXONE_MAIL_PASS en wp-config.php."
 
-#: includes/admin.php:177
+#: includes/admin.php:187
 msgid ""
 "That provider has no API here, only its SMTP server. Choose SMTP, or a "
 "provider that does."
@@ -246,11 +286,11 @@ msgstr ""
 "Ese proveedor no tiene API acá, sólo su servidor SMTP. Elegí SMTP, o un "
 "proveedor que sí la tenga."
 
-#: includes/admin.php:178
+#: includes/admin.php:188
 msgid "The provider recognised the key. It is saved."
 msgstr "El proveedor reconoció la clave. Quedó guardada."
 
-#: includes/admin.php:179
+#: includes/admin.php:189
 msgid ""
 "The key is saved. The provider could not be asked whether it is valid, so "
 "the test message is what will tell you."
@@ -258,28 +298,28 @@ msgstr ""
 "La clave quedó guardada. No se le pudo preguntar al proveedor si es válida, "
 "así que el mensaje de prueba es lo que te lo va a decir."
 
-#: includes/admin.php:180
+#: includes/admin.php:190
 msgid "The provider does not recognise that key, so nothing was saved."
 msgstr "El proveedor no reconoce esa clave, así que no se guardó nada."
 
-#: includes/admin.php:181
+#: includes/admin.php:191
 msgid ""
 "The order was changed. The first provider on the list is the one that sends."
 msgstr "Se cambió el orden. El primer proveedor del listado es el que envía."
 
-#: includes/admin.php:182
+#: includes/admin.php:192
 msgid "The provider was removed, with its credentials."
 msgstr "Se quitó el proveedor, con sus credenciales."
 
-#: includes/admin.php:183
+#: includes/admin.php:193
 msgid "Renamed."
 msgstr "Renombrado."
 
-#: includes/admin.php:184
+#: includes/admin.php:194
 msgid "The list of domains was read again from the provider."
 msgstr "La lista de dominios se volvió a leer del proveedor."
 
-#: includes/admin.php:185
+#: includes/admin.php:195
 msgid ""
 "The provider could not be asked for its domains. The address can be typed by"
 " hand."
@@ -287,7 +327,7 @@ msgstr ""
 "No se le pudo preguntar al proveedor por sus dominios. La dirección se puede"
 " escribir a mano."
 
-#: includes/admin.php:186
+#: includes/admin.php:196
 msgid ""
 "The server did not accept the connection, so nothing was saved. What went "
 "wrong is below."
@@ -295,44 +335,44 @@ msgstr ""
 "El servidor no aceptó la conexión, así que no se guardó nada. Abajo está qué"
 " falló."
 
-#: includes/admin.php:187
+#: includes/admin.php:197
 msgid "Test message sent."
 msgstr "Mensaje de prueba enviado."
 
-#: includes/admin.php:188
+#: includes/admin.php:198
 msgid ""
 "This site's settings are fixed by the network and cannot be changed here."
 msgstr "Los ajustes de este sitio los fija la red y no se pueden cambiar acá."
 
 #. translators: %s: name of the constant
-#: includes/admin.php:207
+#: includes/admin.php:217
 #, php-format
 msgid "defined by the environment — PHP constant %s"
 msgstr "definido por el entorno — constante de PHP %s"
 
 #. translators: %s: name of the variable
-#: includes/admin.php:210
+#: includes/admin.php:220
 #, php-format
 msgid "defined by the environment — variable %s"
 msgstr "definido por el entorno — variable %s"
 
-#: includes/admin.php:212
+#: includes/admin.php:222
 msgid "stored, but it can no longer be decrypted — type it again"
 msgstr "guardada, pero ya no se puede descifrar — escribila de nuevo"
 
-#: includes/admin.php:214
+#: includes/admin.php:224
 msgid "set by the network"
 msgstr "fijado por la red"
 
-#: includes/admin.php:216
+#: includes/admin.php:226
 msgid "set on this site"
 msgstr "fijado en este sitio"
 
-#: includes/admin.php:218
+#: includes/admin.php:228
 msgid "default value"
 msgstr "valor por defecto"
 
-#: includes/admin.php:263
+#: includes/admin.php:273
 msgid ""
 "This site fixes this from code: whatever is chosen here, it stays as it is."
 msgstr ""
@@ -413,7 +453,7 @@ msgstr "El proveedor rechazó el mensaje (HTTP %1$d): %2$s"
 
 #. translators: 1: provider name, 2: the From address
 #. translators: 1: domain name, 2: why it cannot be used
-#: includes/connections.php:372 templates/settings-sender.php:48
+#: includes/connections.php:391 templates/settings-sender.php:48
 #, php-format
 msgid "%1$s — %2$s"
 msgstr "%1$s — %2$s"
@@ -1107,7 +1147,7 @@ msgstr "Otro servidor SMTP"
 msgid "Anything else"
 msgstr "Cualquier otro"
 
-#: includes/test-connection.php:168
+#: includes/test-connection.php:182
 msgid ""
 "There is no host to connect to. Choose a provider profile, or type the "
 "server's address."
@@ -1115,7 +1155,7 @@ msgstr ""
 "No hay servidor al que conectarse. Elegí un perfil de proveedor, o escribí "
 "la dirección del servidor."
 
-#: includes/test-connection.php:211
+#: includes/test-connection.php:225
 msgid ""
 "The server did not accept the connection and gave no reason. The dialogue "
 "below is everything it said."
@@ -1123,18 +1163,18 @@ msgstr ""
 "El servidor no aceptó la conexión y no dijo por qué. El diálogo de abajo es "
 "todo lo que contestó."
 
-#: includes/test-send.php:29
+#: includes/test-send.php:36
 msgid "That is not a valid email address."
 msgstr "Esa no es una dirección de correo válida."
 
 #. translators: %s: site name
-#: includes/test-send.php:52
+#: includes/test-send.php:59
 #, php-format
 msgid "Test message from %s"
 msgstr "Mensaje de prueba de %s"
 
 #. translators: 1: SMTP host, 2: profile name
-#: includes/test-send.php:57
+#: includes/test-send.php:64
 #, php-format
 msgid ""
 "If this arrived, the site can send mail through %1$s (%2$s).\n"
@@ -1145,15 +1185,15 @@ msgstr ""
 "\n"
 "Enviado por DiluxOne Mail."
 
-#: includes/test-send.php:58
+#: includes/test-send.php:65
 msgid "another plugin's transport"
 msgstr "el transporte de otro plugin"
 
-#: includes/test-send.php:59
+#: includes/test-send.php:66
 msgid "observer mode"
 msgstr "modo observador"
 
-#: includes/test-send.php:69
+#: includes/test-send.php:77
 msgid ""
 "wp_mail() returned false without saying why. Another plugin may have "
 "intercepted the message."
@@ -1727,7 +1767,7 @@ msgstr "Versión"
 msgid "schema"
 msgstr "esquema"
 
-#: templates/provider-list.php:13
+#: templates/provider-list.php:19
 msgid ""
 "The order is what decides: the first provider sends, and the one below it is"
 " what gets tried when a message will not go out. Drag to reorder, or use the"
@@ -1737,11 +1777,11 @@ msgstr ""
 "que se recurre cuando un mensaje no sale. Arrastrá para reordenar, o usá las"
 " flechas."
 
-#: templates/provider-list.php:18
+#: templates/provider-list.php:24
 msgid "No provider configured yet."
 msgstr "Todavía no hay ningún proveedor configurado."
 
-#: templates/provider-list.php:19
+#: templates/provider-list.php:25
 msgid ""
 "Four steps: pick how this site sends and through whom, prove the provider "
 "accepts the credentials, say who the mail comes from, and send a message to "
@@ -1751,66 +1791,66 @@ msgstr ""
 " proveedor acepta las credenciales, decir de quién viene el correo, y mandar"
 " un mensaje para comprobar que llega."
 
-#: templates/provider-list.php:20 templates/provider-list.php:95
+#: templates/provider-list.php:26 templates/provider-list.php:101
 msgid "Add a provider"
 msgstr "Agregar un proveedor"
 
-#: templates/provider-list.php:32
+#: templates/provider-list.php:38
 msgid "Order"
 msgstr "Orden"
 
-#: templates/provider-list.php:34 templates/settings-profile.php:40
+#: templates/provider-list.php:40 templates/settings-profile.php:40
 #: templates/settings-profile.php:84
 msgid "Method"
 msgstr "Método"
 
-#: templates/provider-list.php:35
+#: templates/provider-list.php:41
 msgid "Sends as"
 msgstr "Envía como"
 
-#: templates/provider-list.php:36
+#: templates/provider-list.php:42
 msgid "State"
 msgstr "Estado"
 
-#: templates/provider-list.php:47
+#: templates/provider-list.php:53
 msgid "Sends"
 msgstr "Envía"
 
-#: templates/provider-list.php:49
+#: templates/provider-list.php:55
 msgid "If that fails"
 msgstr "Si ese falla"
 
 #. translators: %d: the provider's place in the order
-#: templates/provider-list.php:54
+#: templates/provider-list.php:60
 #, php-format
 msgid "Then %d"
 msgstr "Después %d"
 
-#: templates/provider-list.php:68
+#: templates/provider-list.php:74
 msgid "Tested"
 msgstr "Probado"
 
-#: templates/provider-list.php:70
+#: templates/provider-list.php:76
 msgid "Ready"
 msgstr "Listo"
 
-#: templates/provider-list.php:72
+#: templates/provider-list.php:78
 msgid "Half set up"
 msgstr "A medio configurar"
 
-#: templates/provider-list.php:80
+#: templates/provider-list.php:86
 msgid "Move up"
 msgstr "Subir"
 
-#: templates/provider-list.php:83
+#: templates/provider-list.php:89
 msgid "Move down"
 msgstr "Bajar"
 
-#: templates/provider-list.php:85
+#: templates/provider-list.php:91
 msgid "Remove this provider? Its credentials are deleted with it."
 msgstr "¿Quitar este proveedor? Sus credenciales se borran con él."
 
-#: templates/provider-list.php:86
+#: templates/provider-list.php:92
 msgid "Remove"
 msgstr "Quitar"
 

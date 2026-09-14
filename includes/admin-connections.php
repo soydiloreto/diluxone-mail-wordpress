@@ -65,9 +65,13 @@ function diluxone_mail_connections_data(): array {
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- It only decides whether the panel is open; nothing is written by looking.
 	$editing = isset( $_GET['connection'] ) || isset( $_GET['new'] );
 
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- It only decides which row a sentence is about; nothing is written by looking.
+	$closed = isset( $_GET['closed'] ) ? sanitize_key( wp_unslash( $_GET['closed'] ) ) : '';
+
 	return array(
 		'rows'       => $rows,
 		'editing'    => $editing,
+		'closed'     => diluxone_mail_connection_closed( $closed, $rows ),
 		'list_url'   => diluxone_mail_admin_url( DILUXONE_MAIL_PROVIDER_PAGE ),
 		'new_url'    => diluxone_mail_admin_url( DILUXONE_MAIL_PROVIDER_PAGE, array( 'new' => '1' ) ),
 		'action_url' => admin_url( 'admin-post.php' ),
@@ -181,3 +185,59 @@ function diluxone_mail_connection_rename_action(): void {
 	diluxone_mail_connections_redirect( 'renamed' );
 }
 add_action( 'admin_post_diluxone_mail_rename', 'diluxone_mail_connection_rename_action' );
+
+/**
+ * What to say about the provider somebody has just finished with.
+ *
+ * The panel closes and the list comes back, and without this the answer to
+ * twenty minutes of setting something up is a screen that looks exactly as it
+ * did before. The sentence is built from the record's own state rather than
+ * from what the last button did: half a provider closed halfway says so.
+ *
+ * @param array<int, array<string, mixed>> $rows
+ * @return array{text: string, kind: string}|null
+ */
+function diluxone_mail_connection_closed( string $id, array $rows ): ?array {
+	if ( '' === $id ) {
+		return null;
+	}
+
+	foreach ( $rows as $row ) {
+		if ( $row['id'] !== $id ) {
+			continue;
+		}
+
+		$name = (string) $row['label'];
+
+		if ( ! $row['ready'] ) {
+			return array(
+				/* translators: %s: the provider's name */
+				'text' => sprintf( __( '%s is not finished: it still has a step open, and nothing is sent through a provider that has not proved it can.', 'diluxone-mail' ), $name ),
+				'kind' => 'warning',
+			);
+		}
+
+		if ( 0 === (int) $row['position'] ) {
+			return array(
+				'text' => $row['tested']
+					/* translators: %s: the provider's name */
+					? sprintf( __( '%s is set up and a message has gone out through it. It is the one that sends.', 'diluxone-mail' ), $name )
+					/* translators: %s: the provider's name */
+					: sprintf( __( '%s is set up and is the one that sends. Nothing has been sent through it yet — the fourth step is where that is settled.', 'diluxone-mail' ), $name ),
+				'kind' => 'success',
+			);
+		}
+
+		return array(
+			'text' => sprintf(
+				/* translators: 1: the provider's name, 2: the provider that sends */
+				__( '%1$s is set up. It is not the one that sends — %2$s is, because it is first — so it will only be used if that one will not take a message. Drag it to the top to change that.', 'diluxone-mail' ),
+				$name,
+				(string) ( $rows[0]['label'] ?? '' )
+			),
+			'kind' => 'info',
+		);
+	}
+
+	return null;
+}

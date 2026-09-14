@@ -159,7 +159,7 @@ function diluxone_mail_screen_provider(): void {
 
 	$list = diluxone_mail_connections_data();
 
-	diluxone_mail_screen_open( __( 'Providers', 'diluxone-mail' ) );
+	diluxone_mail_screen_open( __( 'Providers', 'diluxone-mail' ), ! $list['editing'] );
 	diluxone_mail_view( 'provider-list', $list );
 
 	if ( $list['editing'] ) {

@@ -20,12 +20,13 @@ defined( 'ABSPATH' ) || exit;
 	<div class="diluxone-mail-panel" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e( 'Set up a provider', 'diluxone-mail' ); ?>">
 		<div class="diluxone-mail-panel-head">
 			<h2><?php esc_html_e( 'Set up a provider', 'diluxone-mail' ); ?></h2>
-			<a class="button diluxone-mail-panel-close" href="<?php echo esc_url( (string) $data['list_url'] ); ?>">
+			<a class="button diluxone-mail-panel-close" href="<?php echo esc_url( '' === diluxone_mail_editing_id() ? (string) $data['list_url'] : add_query_arg( 'closed', diluxone_mail_editing_id(), (string) $data['list_url'] ) ); ?>">
 				<?php esc_html_e( 'Close', 'diluxone-mail' ); ?>
 			</a>
 		</div>
 
 		<div class="diluxone-mail-panel-body">
+			<?php diluxone_mail_screen_notices(); ?>
 			<?php diluxone_mail_view( 'admin-settings', $data ); ?>
 		</div>
 	</div>

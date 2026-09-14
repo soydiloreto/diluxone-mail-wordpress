@@ -130,10 +130,20 @@ function diluxone_mail_admin_url( string $screen, array $args = array() ): strin
  * and not only on settings: whoever looks at the log and sees "handed to
  * FluentSMTP" needs the explanation at hand.
  */
-function diluxone_mail_screen_open( string $title ): void {
+function diluxone_mail_screen_open( string $title, bool $with_notices = true ): void {
 	echo '<div class="wrap diluxone-mail-admin">';
 	printf( '<h1>%s</h1>', esc_html( diluxone_mail_screen_title( $title ) ) );
 
+	// A screen with something open over it says nothing here: a notice behind
+	// a dialog is a notice nobody reads, and the answer to what somebody just
+	// pressed belongs next to the button they pressed it with.
+	if ( $with_notices ) {
+		diluxone_mail_screen_notices();
+	}
+}
+
+/** The notices that belong to every screen of the plugin. */
+function diluxone_mail_screen_notices(): void {
 	diluxone_mail_done_notice();
 	diluxone_mail_observer_notice();
 	diluxone_mail_pre_wp_mail_notice();

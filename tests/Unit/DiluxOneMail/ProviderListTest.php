@@ -217,6 +217,97 @@ class ProviderListTest extends AdminTestCase {
 		$this->assertSame( '', \diluxone_mail_active_id() );
 	}
 
+	public function test_a_notice_goes_inside_whatever_is_open_over_the_list(): void {
+		$id = $this->conexion( array( 'diluxone_mail_provider' => 'mailjet' ) );
+
+		$_GET = array( 'diluxone_mail_done' => 'saved' );
+		$this->panel( $id );
+
+		$html  = $this->render( 'diluxone_mail_screen_provider' );
+		$antes = substr( $html, 0, (int) strpos( $html, 'diluxone-mail-backdrop' ) );
+
+		// Behind a dialog is where a notice goes unread.
+		$this->assertStringNotContainsString( 'Settings saved', $antes );
+		$this->assertStringContainsString( 'Settings saved', $html );
+
+		// With nothing open it is where it always was.
+		$_GET     = array( 'diluxone_mail_done' => 'saved' );
+		$_REQUEST = $_GET;
+
+		$html = $this->render( 'diluxone_mail_screen_provider' );
+		$this->assertStringContainsString( 'Settings saved', $html );
+		$this->assertStringNotContainsString( 'diluxone-mail-backdrop', $html );
+	}
+
+	public function test_closing_says_what_the_provider_ended_up_being(): void {
+		$id = $this->conexion(
+			array(
+				'diluxone_mail_provider' => 'mailjet',
+				'diluxone_mail_host'     => 'smtp.x.test',
+				'diluxone_mail_from'     => 'hello@x.test',
+			)
+		);
+
+		// Half set up: it says so rather than congratulating anybody.
+		$_GET     = array( 'closed' => $id );
+		$_REQUEST = $_GET;
+
+		$this->assertStringContainsString( 'still has a step open', $this->render( 'diluxone_mail_screen_provider' ) );
+
+		// Finished, and first: it is the one that sends.
+		\diluxone_mail_active_id( $id );
+		\diluxone_mail_verified( 'connection' );
+		\diluxone_mail_active_id( '' );
+
+		$_GET     = array( 'closed' => $id );
+		$_REQUEST = $_GET;
+
+		$html = $this->render( 'diluxone_mail_screen_provider' );
+		$this->assertStringContainsString( 'is the one that sends', $html );
+
+		// Finished, and second: it says what it is for instead.
+		$otro = $this->conexion( array( 'diluxone_mail_provider' => 'sendgrid' ) );
+		\diluxone_mail_connection_promote( $otro );
+
+		$_GET     = array( 'closed' => $id );
+		$_REQUEST = $_GET;
+
+		$html = $this->render( 'diluxone_mail_screen_provider' );
+		$this->assertStringContainsString( 'only be used if that one will not take a message', $html );
+	}
+
+	public function test_each_row_is_judged_against_itself(): void {
+		// One verified provider and one that is not, in that order. Asking the
+		// list means asking each row about its own marks: reading one row's
+		// fingerprint against another row's marks says nobody is verified.
+		$verificado = $this->conexion(
+			array(
+				'diluxone_mail_provider' => 'mailjet',
+				'diluxone_mail_host'     => 'smtp.x.test',
+				'diluxone_mail_from'     => 'hello@x.test',
+			)
+		);
+
+		\diluxone_mail_active_id( $verificado );
+		\diluxone_mail_verified( 'connection' );
+		\diluxone_mail_active_id( '' );
+
+		$a_medias = $this->conexion( array( 'diluxone_mail_provider' => 'sendgrid' ) );
+
+		$por_id = array_column( \diluxone_mail_connections_data()['rows'], null, 'id' );
+
+		$this->assertTrue( $por_id[ $verificado ]['ready'] );
+		$this->assertFalse( $por_id[ $a_medias ]['ready'] );
+
+		// And the order it is asked in does not change the answer.
+		\diluxone_mail_connection_promote( $a_medias );
+
+		$por_id = array_column( \diluxone_mail_connections_data()['rows'], null, 'id' );
+
+		$this->assertTrue( $por_id[ $verificado ]['ready'] );
+		$this->assertFalse( $por_id[ $a_medias ]['ready'] );
+	}
+
 	public function test_none_of_it_without_the_capability(): void {
 		$GLOBALS['_test_can'] = false;
 
