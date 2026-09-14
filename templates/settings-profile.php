@@ -23,6 +23,7 @@ $diluxone_mail_locked = $data['fields']['diluxone_mail_host']['readonly'] || in_
 
 <form method="post" action="<?php echo esc_url( (string) $data['action_url'] ); ?>" class="diluxone-mail-form">
 	<?php wp_nonce_field( 'diluxone_mail_settings' ); ?>
+	<?php diluxone_mail_connection_field(); ?>
 	<input type="hidden" name="action" value="diluxone_mail_apply_provider">
 	<input type="hidden" name="scope" value="<?php echo esc_attr( (string) $data['scope'] ); ?>">
 	<input type="hidden" name="tab" value="profile">
@@ -49,6 +50,16 @@ $diluxone_mail_locked = $data['fields']['diluxone_mail_host']['readonly'] || in_
 	</table>
 
 	<h2><?php esc_html_e( 'Provider', 'diluxone-mail' ); ?></h2>
+
+	<table class="form-table" role="presentation">
+		<tr>
+			<th scope="row"><label for="diluxone_mail_label"><?php esc_html_e( 'Name', 'diluxone-mail' ); ?></label></th>
+			<td>
+				<input type="text" class="regular-text" id="diluxone_mail_label" name="label" value="<?php echo esc_attr( (string) $data['label'] ); ?>">
+				<p class="description"><?php esc_html_e( 'Optional, and only for you: it is what the list calls this one. Two accounts with the same provider look identical without it.', 'diluxone-mail' ); ?></p>
+			</td>
+		</tr>
+	</table>
 
 	<p class="description diluxone-mail-when-smtp" <?php echo 'smtp' === $data['transport_kind'] ? '' : 'hidden'; ?>>
 		<?php esc_html_e( 'This only saves you typing: choosing a profile fills in the host, the port, the encryption and — where the provider imposes one — the username, all checked against the provider\'s documentation. Nothing else about the send changes, and any server not on the list works through "Other SMTP server".', 'diluxone-mail' ); ?>

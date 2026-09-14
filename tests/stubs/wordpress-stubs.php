@@ -493,6 +493,10 @@ if (!function_exists('wp_remote_retrieve_body')) {
 	}
 }
 
+if (!function_exists('esc_js')) {
+	function esc_js(string $text): string { return addslashes($text); }
+}
+
 if (!function_exists('wp_kses')) {
 	/**
 	 * Enough of it for the tests: the real one strips what is not allowed, and
@@ -511,8 +515,11 @@ if (!function_exists('is_wp_error')) {
 
 if (!class_exists('WP_Error')) {
 	class WP_Error {
-		public function __construct(public string $code = '', public string $message = '') {}
+		/** @param mixed $data */
+		public function __construct(public string $code = '', public string $message = '', public $data = '') {}
 		public function get_error_message(): string { return $this->message; }
+		/** @return mixed */
+		public function get_error_data() { return $this->data; }
 	}
 }
 

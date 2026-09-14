@@ -45,6 +45,7 @@ $diluxone_mail_test = $data['test'];
 
 <form method="post" action="<?php echo esc_url( (string) $data['action_url'] ); ?>" class="diluxone-mail-form diluxone-mail-test">
 	<?php wp_nonce_field( 'diluxone_mail_test' ); ?>
+	<?php diluxone_mail_connection_field(); ?>
 	<input type="hidden" name="action" value="diluxone_mail_test">
 	<input type="hidden" name="scope" value="<?php echo esc_attr( (string) $data['scope'] ); ?>">
 

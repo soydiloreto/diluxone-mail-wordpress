@@ -53,6 +53,7 @@ class CryptoTest extends AdminTestCase {
 
 		// And the screen says so instead of pretending there is no password.
 		\update_option( 'diluxone_mail_provider', 'mailjet' );
+		$this->panel();
 		$this->assertStringContainsString( 'no longer be decrypted', $this->render( 'diluxone_mail_screen_provider' ) );
 	}
 

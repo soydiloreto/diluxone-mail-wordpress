@@ -58,6 +58,7 @@ function diluxone_mail_settings_data( string $scope, string $screen = '' ): arra
 		'scope'               => $scope,
 		'tab'                 => $tab,
 		'screen'              => $screen,
+		'label'               => (string) ( diluxone_mail_connection( diluxone_mail_editing_id() )['label'] ?? '' ),
 		'progress'            => diluxone_mail_settings_progress(),
 		'editable'            => $editable,
 		'fields'              => diluxone_mail_settings_field_values( $scope, $attempt ),
@@ -137,15 +138,34 @@ function diluxone_mail_settings_field_values( string $scope, ?array $attempt = n
 	return $fields;
 }
 
-/** The four steps of setting up a provider. */
+/**
+ * The configured providers, and the four steps over them.
+ *
+ * The list is the screen. Setting one up is a detour from it rather than a
+ * place of its own, so it happens in a panel with the list still behind: you
+ * come back to where you were and to what you were comparing it against.
+ */
 function diluxone_mail_screen_provider(): void {
-	// Everything this screen reads — the fields, their provenance, what has
-	// been verified — resolves against the record it is editing, which is not
+	// Everything the panel reads — the fields, their provenance, what has been
+	// verified — resolves against the record it is editing, which is not
 	// necessarily the one delivering the site's mail right now.
 	diluxone_mail_active_id( diluxone_mail_editing_id() );
 
-	diluxone_mail_screen_open( __( 'Provider', 'diluxone-mail' ) );
-	diluxone_mail_view( 'admin-settings', diluxone_mail_settings_data( 'site', 'provider' ) );
+	$list = diluxone_mail_connections_data();
+
+	diluxone_mail_screen_open( __( 'Providers', 'diluxone-mail' ) );
+	diluxone_mail_view( 'provider-list', $list );
+
+	if ( $list['editing'] ) {
+		diluxone_mail_view(
+			'provider-panel',
+			array_merge(
+				diluxone_mail_settings_data( 'site', 'provider' ),
+				array( 'list_url' => $list['list_url'] )
+			)
+		);
+	}
+
 	diluxone_mail_screen_close();
 }
 
@@ -202,8 +222,14 @@ function diluxone_mail_posted_tab( string $scope ): string {
 }
 
 /** Where to go back to after saving. */
-function diluxone_mail_settings_redirect( string $scope, string $done, string $tab = '' ): void {
+function diluxone_mail_settings_redirect( string $scope, string $done, string $tab = '', string $connection = '' ): void {
 	$args = array( 'diluxone_mail_done' => $done );
+
+	// A step that has just created the record says so, because until it does
+	// the request only knew it was setting up something new.
+	if ( '' !== $connection ) {
+		$_REQUEST['connection'] = $connection;
+	}
 
 	wp_safe_redirect(
 		'' === $tab
@@ -297,12 +323,20 @@ function diluxone_mail_apply_provider(): void {
 		diluxone_mail_settings_redirect( $scope, 'no-api', 'profile' );
 	}
 
-	diluxone_mail_save_options(
-		array_merge( diluxone_mail_provider_defaults( $key ), array( 'diluxone_mail_transport' => $method ) ),
-		$scope
+	$label = isset( $_POST['label'] ) ? sanitize_text_field( wp_unslash( $_POST['label'] ) ) : '';
+
+	$id = diluxone_mail_connection_put(
+		diluxone_mail_editing_id(),
+		array_merge(
+			diluxone_mail_provider_defaults( $key ),
+			array(
+				'diluxone_mail_transport' => $method,
+				'label'                   => $label,
+			)
+		)
 	);
 
-	diluxone_mail_settings_redirect( $scope, 'profile-applied', 'server' );
+	diluxone_mail_settings_redirect( $scope, 'profile-applied', 'server', $id );
 }
 add_action( 'admin_post_diluxone_mail_apply_provider', 'diluxone_mail_apply_provider' );
 

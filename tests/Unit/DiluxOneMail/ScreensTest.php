@@ -50,6 +50,7 @@ class ScreensTest extends AdminTestCase {
 	}
 
 	public function test_the_first_tab_offers_the_profiles(): void {
+$this->panel();
 		$html = $this->render( 'diluxone_mail_screen_provider' );
 
 		$this->assertStringContainsString( 'Mailjet', $html );
@@ -62,6 +63,7 @@ class ScreensTest extends AdminTestCase {
 		\update_option( 'diluxone_mail_provider', 'mailjet' );
 		\set_transient( 'diluxone_mail_attempt_1', array( 'ok' => false, 'error' => '535 nope', 'transcript' => 'AUTH LOGIN', 'seconds' => 0.1, 'fields' => array( 'diluxone_mail_host' => 'smtp.typo.test' ) ), 60 );
 
+$this->panel();
 		$html = $this->render( 'diluxone_mail_screen_provider' );
 
 		$this->assertStringContainsString( '535 nope', $html );
@@ -76,6 +78,7 @@ class ScreensTest extends AdminTestCase {
 		$_GET['tab'] = 'test';
 		\set_transient( 'diluxone_mail_test_1', array( 'ok' => true, 'error' => '', 'transcript' => '', 'seconds' => 0.2, 'to' => 'a@x.test' ), 60 );
 
+$this->panel();
 		$html = $this->render( 'diluxone_mail_screen_provider' );
 
 		$this->assertStringContainsString( 'handed to the server', $html );
@@ -86,6 +89,7 @@ class ScreensTest extends AdminTestCase {
 		putenv( 'DILUXONE_MAIL_PASS=secreta' );
 		putenv( 'DILUXONE_MAIL_PROVIDER=ses' );
 
+$this->panel();
 		$html = $this->render( 'diluxone_mail_screen_provider' );
 
 		$this->assertStringContainsString( 'defined by the environment', $html );
@@ -102,6 +106,7 @@ class ScreensTest extends AdminTestCase {
 		$this->assertStringContainsString( 'Network settings', $html );
 		$this->assertStringContainsString( 'name="diluxone_mail_network_allow_override"', $html );
 
+$this->panel();
 		$sitio = $this->render( 'diluxone_mail_screen_provider' );
 		$this->assertStringContainsString( 'fixed by the network', $sitio );
 	}

@@ -309,6 +309,7 @@ class ApiTest extends AdminTestCase {
 		$this->por_api();
 		$_GET['tab'] = 'server';
 
+		$this->panel();
 		$html = $this->render( 'diluxone_mail_screen_provider' );
 
 		$this->assertStringContainsString( 'API key', $html );
@@ -529,6 +530,7 @@ class ApiTest extends AdminTestCase {
 
 		// And the step still paints, with the plain field.
 		$_GET['tab'] = 'sender';
+		$this->panel();
 		$html        = $this->render( 'diluxone_mail_screen_provider' );
 
 		$this->assertStringContainsString( 'name="diluxone_mail_from"', $html );
@@ -604,6 +606,7 @@ class ApiTest extends AdminTestCase {
 	}
 
 	public function test_the_first_step_offers_both_methods(): void {
+		$this->panel();
 		$html = $this->render( 'diluxone_mail_screen_provider' );
 
 		$this->assertStringContainsString( 'diluxone_mail_transport_smtp', $html );
@@ -614,6 +617,7 @@ class ApiTest extends AdminTestCase {
 	}
 
 	public function test_the_whole_first_step_carries_both_methods_at_once(): void {
+		$this->panel();
 		$html = $this->render( 'diluxone_mail_screen_provider' );
 
 		// Both versions of every piece that differs are in the page, with the
@@ -635,6 +639,7 @@ class ApiTest extends AdminTestCase {
 		\update_option( 'diluxone_mail_provider', 'mailtrap_sending' );
 		$_GET['tab'] = 'profile';
 
+		$this->panel();
 		$html = $this->render( 'diluxone_mail_screen_provider' );
 
 		$this->assertMatchesRegularExpression( '/class="diluxone-mail-when-smtp" hidden/', $html );

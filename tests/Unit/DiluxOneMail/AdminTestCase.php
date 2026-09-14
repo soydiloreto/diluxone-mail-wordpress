@@ -113,6 +113,24 @@ abstract class AdminTestCase extends TestCase {
 		return \diluxone_mail_connection_put( '', $values );
 	}
 
+	/**
+	 * Opens the four steps over the list, the way a link on it does.
+	 *
+	 * The provider screen is the list; setting one up is a panel over it, and
+	 * which record it is for travels in the request.
+	 */
+	protected function panel( string $id = '' ): void {
+		$id = '' === $id ? \diluxone_mail_default_id() : $id;
+
+		if ( '' === $id ) {
+			$_GET['new'] = '1';
+		} else {
+			$_GET['connection'] = $id;
+		}
+
+		$_REQUEST = array_merge( $_REQUEST, $_GET );
+	}
+
 	/** Runs a handler that ends in a redirect and returns where to. */
 	protected function redirect_of( callable $handler ): string {
 		try {

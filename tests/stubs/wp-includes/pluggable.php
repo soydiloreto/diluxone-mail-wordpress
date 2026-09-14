@@ -14,7 +14,9 @@ if (!function_exists('wp_mail')) {
 		if (null !== $pre) return $pre;
 		$GLOBALS['_test_wp_mail_calls'][] = $atts;
 		if (!empty($GLOBALS['_test_wp_mail_fails'])) {
-			do_action('wp_mail_failed', new WP_Error('wp_mail_failed', (string) $GLOBALS['_test_wp_mail_fails']));
+			// Core puts the arguments of the send in the error's data, which is
+			// what makes sending the message again possible at all.
+			do_action('wp_mail_failed', new WP_Error('wp_mail_failed', (string) $GLOBALS['_test_wp_mail_fails'], $atts));
 			return false;
 		}
 		do_action('wp_mail_succeeded', $atts);

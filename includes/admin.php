@@ -178,6 +178,9 @@ function diluxone_mail_done_notice(): void {
 		'key-ok'            => array( __( 'The provider recognised the key. It is saved.', 'diluxone-mail' ), 'success' ),
 		'key-unchecked'     => array( __( 'The key is saved. The provider could not be asked whether it is valid, so the test message is what will tell you.', 'diluxone-mail' ), 'warning' ),
 		'key-refused'       => array( __( 'The provider does not recognise that key, so nothing was saved.', 'diluxone-mail' ), 'error' ),
+		'reordered'         => array( __( 'The order was changed. The first provider on the list is the one that sends.', 'diluxone-mail' ), 'success' ),
+		'forgotten'         => array( __( 'The provider was removed, with its credentials.', 'diluxone-mail' ), 'success' ),
+		'renamed'           => array( __( 'Renamed.', 'diluxone-mail' ), 'success' ),
 		'domains-refreshed' => array( __( 'The list of domains was read again from the provider.', 'diluxone-mail' ), 'success' ),
 		'domains-failed'    => array( __( 'The provider could not be asked for its domains. The address can be typed by hand.', 'diluxone-mail' ), 'warning' ),
 		'connection-failed' => array( __( 'The server did not accept the connection, so nothing was saved. What went wrong is below.', 'diluxone-mail' ), 'error' ),
@@ -279,6 +282,23 @@ function diluxone_mail_source_caption( array $field ): void {
 	}
 
 	printf( ' <span class="description diluxone-mail-source">— %s</span>', esc_html( (string) $field['label'] ) );
+}
+
+/**
+ * The hidden field that says which provider a form is editing.
+ *
+ * Every step of the wizard writes into one record, and which one is not in the
+ * form's fields: it travels with the request, so it has to travel with the
+ * submission too.
+ */
+function diluxone_mail_connection_field(): void {
+	$editing = diluxone_mail_editing_id();
+
+	if ( '' === $editing ) {
+		return;
+	}
+
+	printf( '<input type="hidden" name="connection" value="%s">', esc_attr( $editing ) );
 }
 
 /**

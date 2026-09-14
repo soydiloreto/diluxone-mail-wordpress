@@ -247,6 +247,14 @@ function diluxone_mail_tab_url( string $tab, string $scope = 'site', array $args
 
 	$page = 'provider' === diluxone_mail_tab_screen( $tab, $scope ) ? DILUXONE_MAIL_PROVIDER_PAGE : DILUXONE_MAIL_SETTINGS;
 
+	// A step of the wizard belongs to the provider being set up, and every
+	// link between steps has to say which one or the panel reopens on
+	// somebody else's.
+	if ( DILUXONE_MAIL_PROVIDER_PAGE === $page ) {
+		$editing = diluxone_mail_editing_id();
+		$args    = array_merge( $args, '' === $editing ? array( 'new' => '1' ) : array( 'connection' => $editing ) );
+	}
+
 	return diluxone_mail_admin_url( $page, array_merge( array( 'tab' => $tab ), $args ) );
 }
 

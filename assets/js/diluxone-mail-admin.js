@@ -100,6 +100,69 @@
 		apply();
 	}
 
+	/**
+	 * Dragging a provider to where it belongs in the order.
+	 *
+	 * The order is the only thing that decides anything on that screen, so
+	 * changing it is a gesture rather than a form. The arrows do the same job
+	 * without this — a row that can only be moved by dragging is a row that
+	 * cannot be moved with a keyboard.
+	 */
+	function order() {
+		var table = document.querySelector( '.diluxone-mail-connections tbody' );
+		var form = document.getElementById( 'diluxone-mail-order' );
+
+		if ( ! table || ! form ) {
+			return;
+		}
+
+		var dragging = null;
+
+		table.addEventListener( 'dragstart', function ( event ) {
+			dragging = event.target.closest( 'tr' );
+
+			if ( dragging ) {
+				dragging.classList.add( 'is-dragging' );
+				event.dataTransfer.effectAllowed = 'move';
+			}
+		} );
+
+		table.addEventListener( 'dragover', function ( event ) {
+			if ( ! dragging ) {
+				return;
+			}
+
+			event.preventDefault();
+
+			var over = event.target.closest( 'tr' );
+
+			if ( ! over || over === dragging ) {
+				return;
+			}
+
+			var below = over.getBoundingClientRect().top + over.offsetHeight / 2 < event.clientY;
+
+			over.parentNode.insertBefore( dragging, below ? over.nextSibling : over );
+		} );
+
+		table.addEventListener( 'dragend', function () {
+			if ( ! dragging ) {
+				return;
+			}
+
+			dragging.classList.remove( 'is-dragging' );
+			dragging = null;
+
+			var ids = Array.prototype.map.call( table.querySelectorAll( 'tr[data-id]' ), function ( row ) {
+				return row.dataset.id;
+			} );
+
+			form.querySelector( 'input[name="order"]' ).value = ids.join( ',' );
+			form.submit();
+		} );
+	}
+
 	method();
 	credentials();
+	order();
 }() );

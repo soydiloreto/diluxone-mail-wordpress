@@ -18,6 +18,7 @@ $diluxone_mail_domains = (bool) $data['sender_domains']['ok'] && array() !== $da
 
 <form method="post" action="<?php echo esc_url( (string) $data['action_url'] ); ?>" class="diluxone-mail-form">
 	<?php wp_nonce_field( 'diluxone_mail_settings' ); ?>
+	<?php diluxone_mail_connection_field(); ?>
 	<input type="hidden" name="action" value="diluxone_mail_save_settings">
 	<input type="hidden" name="scope" value="<?php echo esc_attr( (string) $data['scope'] ); ?>">
 	<input type="hidden" name="tab" value="sender">
