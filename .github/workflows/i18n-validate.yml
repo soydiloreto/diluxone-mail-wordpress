@@ -139,7 +139,7 @@ jobs:
           exit "$FAILED"
 
       - name: Upload .pot artefact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: diluxone-mail-pot
           path: languages/diluxone-mail.pot
